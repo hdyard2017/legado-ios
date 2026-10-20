@@ -987,7 +987,7 @@ struct ReaderView: View {
                     .frame(height: 28)
                 Text(title)
                     .font(.caption)
-                    .foregroundColor(isActive ? Color.primary : .secondary)
+                    .foregroundColor(isActive ? Color.readingPrimary : Color.readingSecondary)
             }
             .frame(maxWidth: .infinity, minHeight: 58)
             .contentShape(Rectangle())
@@ -1191,7 +1191,7 @@ struct ReaderView: View {
                                             .fill(Color(preset.background))
                                             .frame(width: 54, height: 72)
                                             .overlay(Text("文字") .font(.caption) .foregroundColor(Color(preset.foreground)))
-                                            .overlay(RoundedRectangle(cornerRadius: 7) .stroke(resolvedStyle.id == preset.id ? ReadingTheme.accent : Color.secondary, lineWidth: resolvedStyle.id == preset.id ? 3 : 1))
+                                            .overlay(RoundedRectangle(cornerRadius: 7) .stroke(resolvedStyle.id == preset.id ? ReadingTheme.accent : Color.readingSecondary, lineWidth: resolvedStyle.id == preset.id ? 3 : 1))
                                         Text(preset.name).font(.caption2).foregroundColor(.primary)
                                     }
                                 }
@@ -1286,9 +1286,9 @@ struct ReaderView: View {
                                         Text(choice.title)
                                             .font(.caption2)
                                     }
-                                    .foregroundColor(pageAnimation == choice.value ? Color.white : Color.primary)
+                                    .foregroundColor(pageAnimation == choice.value ? Color.white : Color.readingPrimary)
                                     .frame(width: 58, height: 54)
-                                    .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(pageAnimation == choice.value ? ReadingTheme.accent : Color.secondary.opacity(0.1)))
+                                    .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(pageAnimation == choice.value ? ReadingTheme.accent : Color.readingSecondary.opacity(0.1)))
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -1366,10 +1366,10 @@ struct ReaderView: View {
         Button(action: action) {
             Text(title)
                 .font(.caption.weight(.medium))
-                .foregroundColor(selected ? Color.white : Color.primary)
+                .foregroundColor(selected ? Color.white : Color.readingPrimary)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 7)
-                .background(Capsule().fill(selected ? ReadingTheme.accent : Color.secondary.opacity(0.1)))
+                .background(Capsule().fill(selected ? ReadingTheme.accent : Color.readingSecondary.opacity(0.1)))
         }
         .buttonStyle(.plain)
     }

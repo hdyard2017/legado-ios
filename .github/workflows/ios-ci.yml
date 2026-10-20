@@ -64,6 +64,14 @@ jobs:
             exit 1
           fi
 
+      # iOS 15/16/17 API 残留预检：本地即可跑，无需 Xcode。
+      # 命中项分两类：已在 #available 守卫内的合法用法（人工确认过），
+      # 以及真正需要改写的违规用法。
+      - name: Scan for iOS 15+ API usage
+        run: |
+          python3 scripts/scan_ios15_apis.py App || true
+          echo "扫描完成，命中项需人工确认是否在 #available 守卫内。"
+
       # 与 scripts/self-check.sh 第 3 步保持一致：SwiftPM 在 CI 上需要独立缓存目录，
       # 且 --disable-sandbox 是该仓库既有约定。
       - name: Run core tests

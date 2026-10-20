@@ -292,7 +292,7 @@ private struct RSSArticleCard: View {
         }
         .background(style == 3 ? Color(.secondarySystemBackground) : .clear)
         .clipShape(RoundedRectangle(cornerRadius: style == 3 ? 12 : 0, style: .continuous))
-        .overlay(style == 3 ? AnyView(RoundedRectangle(cornerRadius: 12).stroke(.primary.opacity(0.08))) : AnyView(Color.clear))
+        .overlay(style == 3 ? AnyView(RoundedRectangle(cornerRadius: 12).stroke(Color.readingPrimary.opacity(0.08))) : AnyView(Color.clear))
     }
 
     @ViewBuilder private var articleImage: some View {

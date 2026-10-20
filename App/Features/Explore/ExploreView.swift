@@ -264,10 +264,10 @@ private struct ExploreSourceView: View {
                         .font(.subheadline.weight(.medium))
                         .padding(.horizontal, 12)
                         .frame(minHeight: 44)
-                        .foregroundColor(model.selectedKind?.id == kind.id ? Color.primary : .secondary)
+                        .foregroundColor(model.selectedKind?.id == kind.id ? Color.readingPrimary : Color.readingSecondary)
                         .overlay(
                             model.selectedKind?.id == kind.id
-                                ? AnyView(Rectangle().fill(Color.primary).frame(height: 2))
+                                ? AnyView(Rectangle().fill(Color.readingPrimary).frame(height: 2))
                                 : AnyView(Color.clear)
                         , alignment: .bottom)
                         .accessibilityAddTraits(model.selectedKind?.id == kind.id ? .isSelected : [])

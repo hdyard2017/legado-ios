@@ -1977,3 +1977,29 @@ private struct ReadingItemAlertModifier<Item: Identifiable>: ViewModifier {
         )
     }
 }
+
+// MARK: - 颜色工具（iOS 14 可用）
+//
+// iOS 15 起 SwiftUI 为 `Color` 补上了 `primary` / `secondary` / `tertiary`
+// 静态成员，以及 `setFill()` / `setStroke()` 绘制方法。
+// 这些在 iOS 14 SDK 中**根本不存在**，用 `#available` 也无法软化，
+// 必须换成本文件提供的等价实现。
+extension Color {
+    /// iOS 15 起才有的 `Color.primary` 静态成员在 iOS 14 的等价物。
+    ///
+    /// iOS 14 用 `UIColor.label` / `UIColor.secondaryLabel` 表达主次文字色，
+    /// 语义与 `Color.primary` / `Color.secondary` 一致，且能自动适配深色模式。
+    static var readingPrimary: Color { Color(UIColor.label) }
+    static var readingSecondary: Color { Color(UIColor.secondaryLabel) }
+    static var readingTertiary: Color { Color(UIColor.tertiaryLabel) }
+
+    /// iOS 15 的 `Color.setFill()` 在 iOS 14 的等价物（转为 UIKit 绘制）。
+    func readingSetFill() {
+        UIColor(self).setFill()
+    }
+
+    /// iOS 15 的 `Color.setStroke()` 在 iOS 14 的等价物（转为 UIKit 绘制）。
+    func readingSetStroke() {
+        UIColor(self).setStroke()
+    }
+}

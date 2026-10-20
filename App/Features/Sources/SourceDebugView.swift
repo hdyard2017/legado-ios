@@ -261,7 +261,7 @@ struct SourceBatchTestView: View {
                         Text("已完成 \(model.completedCount)/\(model.totalCount)")
                         Spacer()
                         Text("失败 \(model.failedCount) · 已选 \(model.selectedFailedIDs.count)")
-                            .foregroundColor(model.failedCount == 0 ? Color.secondary : Color.red)
+                            .foregroundColor(model.failedCount == 0 ? Color.readingSecondary : Color.red)
                     }
                     .font(.system(.subheadline, design: .monospaced))
                 }
@@ -415,7 +415,7 @@ private struct DebugStepCard: View {
         }
         .padding(14)
         .background(RoundedRectangle(cornerRadius: 17, style: .continuous).fill(.background))
-        .overlay(RoundedRectangle(cornerRadius: 17, style: .continuous).stroke(.primary.opacity(0.06)))
+        .overlay(RoundedRectangle(cornerRadius: 17, style: .continuous).stroke(Color.readingPrimary.opacity(0.06)))
     }
 
     private var color: Color {

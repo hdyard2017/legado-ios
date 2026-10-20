@@ -292,7 +292,7 @@ private struct SourceRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(source.bookSourceName)
                     .font(.body)
-                    .foregroundColor(source.enabled ? Color.primary : .secondary)
+                    .foregroundColor(source.enabled ? Color.readingPrimary : Color.readingSecondary)
                 Text(source.groups.isEmpty ? (URL(string: source.bookSourceUrl)?.host ?? source.bookSourceUrl) : source.groups.joined(separator: " · "))
                     .font(.caption)
                     .foregroundColor(.secondary)

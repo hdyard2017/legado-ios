@@ -149,7 +149,7 @@ enum ReadingTheme {
     static let accentSoft = adaptive(0xEEEEEF, dark: 0x29292C)
     static let coral = Color(red: 0.76, green: 0.48, blue: 0.27)
     static let paper = Color(red: 0.965, green: 0.945, blue: 0.895)
-    static let ink = Color.primary
+    static let ink = Color.readingPrimary
     static let canvas = adaptive(0xFCFCFC, dark: 0x111113)
     static let groupedCanvas = adaptive(0xF3F3F4, dark: 0x1C1C1F)
     static let surface = adaptive(0xFFFFFF, dark: 0x232326)

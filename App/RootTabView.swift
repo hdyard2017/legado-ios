@@ -332,7 +332,7 @@ private struct BookshelfView: View {
                 ForEach(library.visibleGroups) { group in
                     Button(group.groupName) { selectedGroupID = group.id }
                         .font(.subheadline.weight(selectedGroupID == group.id ? .semibold : .regular))
-                        .foregroundColor(selectedGroupID == group.id ? Color.primary : .secondary)
+                        .foregroundColor(selectedGroupID == group.id ? Color.readingPrimary : Color.readingSecondary)
                         .frame(minHeight: 44)
                         .overlay(
                             selectedGroupID == group.id ? AnyView(Rectangle().fill(ReadingTheme.accent).frame(height: 2)) : AnyView(Color.clear)
@@ -1160,11 +1160,11 @@ private struct SearchLoadingRow: View {
     var body: some View {
         ReadingCard {
             HStack(spacing: 15) {
-                RoundedRectangle(cornerRadius: 8).fill(.secondary.opacity(0.12)).frame(width: 58, height: 82)
+                RoundedRectangle(cornerRadius: 8).fill(Color.readingSecondary.opacity(0.12)).frame(width: 58, height: 82)
                 VStack(alignment: .leading, spacing: 10) {
-                    RoundedRectangle(cornerRadius: 4).fill(.secondary.opacity(0.14)).frame(width: 150, height: 14)
-                    RoundedRectangle(cornerRadius: 4).fill(.secondary.opacity(0.1)).frame(width: 90, height: 11)
-                    RoundedRectangle(cornerRadius: 4).fill(.secondary.opacity(0.08)).frame(maxWidth: .infinity).frame(height: 11)
+                    RoundedRectangle(cornerRadius: 4).fill(Color.readingSecondary.opacity(0.14)).frame(width: 150, height: 14)
+                    RoundedRectangle(cornerRadius: 4).fill(Color.readingSecondary.opacity(0.1)).frame(width: 90, height: 11)
+                    RoundedRectangle(cornerRadius: 4).fill(Color.readingSecondary.opacity(0.08)).frame(maxWidth: .infinity).frame(height: 11)
                 }
             }
         }
@@ -1524,7 +1524,7 @@ private struct ProfileSettingIcon: View {
                 Image(systemName: systemName)
                     .font(.system(size: 20, weight: .regular))
                     .symbolRenderingMode(.palette)
-                    .foregroundColor(ProfileTheme.ink, ProfileTheme.detail)
+                    .foregroundColor(ProfileTheme.ink)
             }
         }
     }
@@ -1538,7 +1538,7 @@ private struct ProfileSettingIcon: View {
         ctx.setLineJoin(.round)
 
         func strokePath(_ path: UIBezierPath, _ color: Color, width: CGFloat) {
-            color.setStroke()
+            color.readingSetStroke()
             path.lineWidth = width
             path.stroke()
         }
@@ -1550,7 +1550,7 @@ private struct ProfileSettingIcon: View {
             half.addArc(withCenter: CGPoint(x: 12, y: 12), radius: 9.5,
                         startAngle: .pi / 2, endAngle: .pi * 1.5, clockwise: true)
             half.close()
-            ProfileTheme.ink.setFill()
+            ProfileTheme.ink.readingSetFill()
             half.fill()
             strokePath(UIBezierPath(ovalIn: circleRect), ProfileTheme.ink, width: 1.65)
 
@@ -1563,7 +1563,7 @@ private struct ProfileSettingIcon: View {
             for (index, height) in [4.0, 12.0, 21.0, 14.0, 5.0].enumerated() {
                 let bar = CGRect(x: 2 + Double(index) * 4.4, y: (24 - height) / 2,
                                  width: 2.4, height: height)
-                (index > 2 ? ProfileTheme.detail : ProfileTheme.ink).setFill()
+                (index > 2 ? ProfileTheme.detail : ProfileTheme.ink).readingSetFill()
                 UIBezierPath(roundedRect: bar, cornerRadius: 1.2).fill()
             }
 
@@ -2062,7 +2062,7 @@ private struct ReadingPreferencesView: View {
                             RoundedRectangle(cornerRadius: 5)
                                 .fill(Color(preset.background))
                                 .frame(width: 38, height: 28)
-                                .overlay(RoundedRectangle(cornerRadius: 5).stroke(Color.secondary.opacity(0.5)))
+                                .overlay(RoundedRectangle(cornerRadius: 5).stroke(Color.readingSecondary.opacity(0.5)))
                             Text(preset.name).foregroundColor(.primary)
                             Spacer()
                             if ReaderStylePreset.resolve(theme).id == preset.id {
