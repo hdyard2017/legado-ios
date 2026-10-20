@@ -112,7 +112,7 @@ private struct ReadingSearchModifier: ViewModifier {
                                 .focused($isFocused)
                                 .readingInputConfiguration(autocapitalization: .never)
                                 .readingInputConfiguration(disableAutocorrection: true)
-                                .submitLabel(.search)
+                                .readingSubmitLabel(.search)
                             if !text.isEmpty {
                                 Button {
                                     text = ""

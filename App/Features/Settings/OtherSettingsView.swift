@@ -95,7 +95,7 @@ struct OtherSettingsView: View {
 }
 
 struct NetworkSettingsView: View {
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.readingDismiss) private var dismiss
     @State private var settings = ApplicationSettingsStore.shared.settings
     @State private var errorMessage: String?
     @State private var isSaving = false

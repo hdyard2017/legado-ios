@@ -159,7 +159,7 @@ struct TxtTocRuleManagementView: View {
 }
 
 private struct TxtTocRuleEditView: View {
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.readingDismiss) private var dismiss
     @State private var value: TxtTocRule
     @State private var sample = ""
     @State private var saving = false
@@ -193,7 +193,7 @@ private struct TxtTocRuleEditView: View {
                 Toggle("启用", isOn: $value.enable)
                 Section("测试文本") {
                     TextEditor(text: $sample).frame(minHeight: 130)
-                    Text(testResult).font(.caption.monospaced()).foregroundStyle(.secondary).textSelection(.enabled)
+                    Text(testResult).font(.caption.monospaced()).foregroundStyle(.secondary).readingTextSelection()
                 }
             }
             .navigationTitle("TXT目录规则")

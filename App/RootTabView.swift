@@ -510,7 +510,7 @@ private struct ContinueReadingCard: View {
 }
 
 private struct BookGroupManagerView: View {
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.readingDismiss) private var dismiss
     @EnvironmentObject private var library: BookLibraryModel
     @State private var newName = ""
     @State private var showsCreate = false
@@ -594,7 +594,7 @@ private struct BookGroupManagerView: View {
 }
 
 private struct BookGroupSelectView: View {
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.readingDismiss) private var dismiss
     @EnvironmentObject private var library: BookLibraryModel
     let book: Book
     @State private var selected: Set<Int64>
@@ -644,7 +644,7 @@ private struct BookGroupSelectView: View {
 }
 
 private struct LocalBookImportReviewView: View {
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.readingDismiss) private var dismiss
     @EnvironmentObject private var library: BookLibraryModel
     let urls: [URL]
     let onFinish: () -> Void
@@ -869,7 +869,7 @@ struct SearchView: View {
         .navigationTitle("搜索")
         .readingSearchable(text: $keyword, isPresented: $searchIsPresented, prompt: "书名或作者")
         .readingScrollDismissesKeyboard()
-        .onSubmit(of: [.text, .search]) { startSearch() }
+        .readingOnSubmit(of: [.text, .search]) { startSearch() }
         .onDisappear {
             if model.state == .searching || model.isLoadingMore { model.cancel() }
         }
@@ -1760,7 +1760,7 @@ private struct BookmarkExportDocument: FileDocument {
 
 private struct BookmarkEditorView: View {
     @EnvironmentObject private var activity: ReadingActivityModel
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.readingDismiss) private var dismiss
     let bookmark: Bookmark
     @State private var bookText: String
     @State private var content: String
@@ -1886,7 +1886,7 @@ private struct BookmarkReaderDestination: View {
 }
 
 private struct SearchScopeSheet: View {
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.readingDismiss) private var dismiss
     let sources: [BookSource]
     let groups: [String]
     @Binding var selectedGroups: Set<String>

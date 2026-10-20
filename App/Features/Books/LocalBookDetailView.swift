@@ -23,7 +23,7 @@ final class LocalBookDetailViewModel: ObservableObject {
 
 struct LocalBookDetailView: View {
     @EnvironmentObject private var library: BookLibraryModel
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.readingDismiss) private var dismiss
     let book: Book
     @StateObject private var model = LocalBookDetailViewModel()
     @State private var showsTableOfContents = false
@@ -109,7 +109,7 @@ struct LocalBookDetailView: View {
 }
 
 private struct LocalBookTableOfContentsView: View {
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.readingDismiss) private var dismiss
     let book: Book
     let chapters: [BookChapter]
     @State private var query = ""

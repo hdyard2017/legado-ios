@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 
 struct SourceEditorView: View {
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.readingDismiss) private var dismiss
     @EnvironmentObject private var library: SourceLibraryModel
     let original: BookSource?
     let onSaved: ((BookSource) -> Void)?

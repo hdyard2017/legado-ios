@@ -53,7 +53,7 @@ final class SourceSwitchViewModel: ObservableObject {
 }
 
 struct SourceSwitchView: View {
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.readingDismiss) private var dismiss
     @StateObject private var model: SourceSwitchViewModel
     let sources: [BookSource]
     let onSwitched: @MainActor (BookSourceSwitchReport, BookSource) -> Void

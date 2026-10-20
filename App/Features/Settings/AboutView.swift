@@ -62,7 +62,7 @@ struct AboutView: View {
             }
             .font(.footnote)
             .lineSpacing(4)
-            .textSelection(.enabled)
+            .readingTextSelection()
             Section("数据与隐私") {
                 Text("书架、阅读进度、书源和诊断日志保存在本机。导入书源、阅读在线内容和刷新订阅时，会连接相应来源的网站。")
                 Text("应用不会自动上传诊断日志；可在日志页面手动导出。")
@@ -88,7 +88,7 @@ private struct OpenSourceLicensesView: View {
             ScrollView {
                 Text((Bundle.main.url(forResource: resource, withExtension: "txt")
                     .flatMap { try? String(contentsOf: $0, encoding: .utf8) }) ?? "许可文件无法读取")
-                    .font(.system(.footnote, design: .monospaced)).textSelection(.enabled)
+                    .font(.system(.footnote, design: .monospaced)).readingTextSelection()
                     .frame(maxWidth: .infinity, alignment: .leading).padding()
             }.navigationTitle(title).navigationBarTitleDisplayMode(.inline)
         } label: { ReadingLabeledContent(title, value: detail) }

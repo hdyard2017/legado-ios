@@ -420,7 +420,7 @@ private enum RSSNativeRoute: Identifiable {
 }
 
 private struct RSSDownloadView: View {
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.readingDismiss) private var dismiss
     let url: String
     let fileName: String
     let source: RssSource
@@ -467,7 +467,7 @@ private struct RSSBinaryDocument: FileDocument {
 }
 
 private struct RSSPhotoView: View {
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.readingDismiss) private var dismiss
     let value: String
     let source: RssSource
     @State private var image: UIImage?
@@ -547,7 +547,7 @@ private final class RSSSpeechController: NSObject, ObservableObject, AVSpeechSyn
 
 private struct RSSImportSheet: View {
     @EnvironmentObject private var library: RSSLibraryModel
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.readingDismiss) private var dismiss
     @State private var text = ""
     var body: some View {
         ReadingNavigationStack {
@@ -573,7 +573,7 @@ private struct RSSExportDocument: FileDocument {
 }
 
 private struct RSSStarEditSheet: View {
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.readingDismiss) private var dismiss
     @State private var value: RssStar
     let save: (RssStar) -> Void
     init(star: RssStar, save: @escaping (RssStar) -> Void) { _value = State(initialValue: star); self.save = save }
@@ -582,7 +582,7 @@ private struct RSSStarEditSheet: View {
             Form {
                 TextField("标题", text: $value.title)
                 TextField("分组", text: $value.group)
-                ReadingLabeledContent("链接", value: value.link).textSelection(.enabled)
+                ReadingLabeledContent("链接", value: value.link).readingTextSelection()
             }.navigationTitle("编辑RSS收藏").toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("取消") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) { Button("保存") { save(value); dismiss() }.disabled(value.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) }

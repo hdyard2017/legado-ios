@@ -2,7 +2,7 @@ import SwiftUI
 
 struct RSSSourceEditorView: View {
     @EnvironmentObject private var library: RSSLibraryModel
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.readingDismiss) private var dismiss
     @State private var source: RssSource
     private let originalURL: String?
 

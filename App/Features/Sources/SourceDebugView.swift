@@ -75,7 +75,7 @@ struct SourceDebugView: View {
                 TextField("输入该书源能搜到的书名", text: $model.keyword)
                     .textFieldStyle(.roundedBorder)
                     .readingInputConfiguration(autocapitalization: .never)
-                    .submitLabel(.go)
+                    .readingSubmitLabel(.go)
                     .onSubmit { model.run(source: source) }
                 Button { model.run(source: source) } label: {
                     Label(model.isRunning ? "正在调试…" : "运行完整链路", systemImage: "play.fill")

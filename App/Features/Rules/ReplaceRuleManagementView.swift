@@ -102,7 +102,7 @@ struct ReplaceRuleManagementView: View {
 }
 
 private struct ReplaceRuleTextImportView: View {
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.readingDismiss) private var dismiss
     @EnvironmentObject private var library: ReplaceRuleLibraryModel
     @State private var value = ""
     var body: some View {

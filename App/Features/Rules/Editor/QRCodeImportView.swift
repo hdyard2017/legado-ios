@@ -4,7 +4,7 @@ import Vision
 import VisionKit
 
 struct QRCodeImportView: View {
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.readingDismiss) private var dismiss
     let onValue: (String) -> Void
     @State private var cameraAuthorized = false
     @State private var cameraMessage = "正在检查相机…"

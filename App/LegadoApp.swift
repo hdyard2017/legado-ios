@@ -33,6 +33,7 @@ struct LegadoApp: App {
     var body: some Scene {
         WindowGroup {
             RootTabView()
+                .readingDismissEnvironment()
                 .environmentObject(sourceLibrary)
                 .environmentObject(bookLibrary)
                 .environmentObject(replaceRuleLibrary)

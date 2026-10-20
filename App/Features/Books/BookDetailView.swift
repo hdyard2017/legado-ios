@@ -294,7 +294,7 @@ struct BookDetailView: View {
 }
 
 private struct BookTableOfContentsView: View {
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.readingDismiss) private var dismiss
     let book: Book
     let chapters: [BookChapter]
     let source: BookSource

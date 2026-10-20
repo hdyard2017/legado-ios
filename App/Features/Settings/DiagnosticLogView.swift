@@ -44,7 +44,7 @@ struct DiagnosticLogView: View {
                             Text(entry.date, format: .dateTime.month().day().hour().minute().second())
                                 .font(.caption2).foregroundStyle(.secondary)
                         }
-                        Text(entry.message).font(.system(.footnote, design: .monospaced)).textSelection(.enabled)
+                        Text(entry.message).font(.system(.footnote, design: .monospaced)).readingTextSelection()
                     }.padding(.vertical, 3)
                 }
             }

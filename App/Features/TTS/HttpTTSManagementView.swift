@@ -175,7 +175,7 @@ struct HttpTTSManagementView: View {
 }
 
 private struct HttpTTSEditorView: View {
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.readingDismiss) private var dismiss
     @State private var engine: HttpTTS
     let onSave: (HttpTTS) -> Void
     @StateObject private var speech = ReaderSpeechController()
@@ -280,7 +280,7 @@ private struct HttpTTSLoginRow: Decodable, Identifiable {
 }
 
 private struct HttpTTSLoginView: View {
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.readingDismiss) private var dismiss
     let engine: HttpTTS
     let onSave: (String) -> Void
     @State private var rows: [HttpTTSLoginRow] = []

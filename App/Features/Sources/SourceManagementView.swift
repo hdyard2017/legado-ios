@@ -227,7 +227,7 @@ struct SourceManagementView: View {
 }
 
 private struct SourceTextImportView: View {
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.readingDismiss) private var dismiss
     @EnvironmentObject private var library: SourceLibraryModel
     @State private var mode = 0
     @State private var value = ""
@@ -317,7 +317,7 @@ private struct SourceRow: View {
 }
 
 private struct SourceGroupManagerView: View {
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.readingDismiss) private var dismiss
     @EnvironmentObject private var library: SourceLibraryModel
     @State private var newGroup = ""
     @State private var renaming: String?
@@ -379,7 +379,7 @@ private struct SourceGroupManagerView: View {
 }
 
 private struct SourceBatchGroupView: View {
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.readingDismiss) private var dismiss
     @EnvironmentObject private var library: SourceLibraryModel
     let sourceIDs: Set<String>
     @State private var customGroup = ""
@@ -495,7 +495,7 @@ private struct SourceDetailView: View {
 }
 
 struct SourceImportReviewView: View {
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.readingDismiss) private var dismiss
     @EnvironmentObject private var library: SourceLibraryModel
     let pending: SourceLibraryModel.PendingImport
     @State private var selectedIDs: Set<String>

@@ -793,3 +793,176 @@ private extension ReadingControlSize {
         }
     }
 }
+
+// MARK: - dismiss 动作（iOS 14 兼容）
+
+/// 关闭当前视图的统一入口，替代 iOS 15 才提供的 `@Environment(\.dismiss)`。
+///
+/// 关键约束：`DismissAction` 类型本身在 iOS 14 SDK 中不存在，
+/// 因此这里**完全不使用**该类型，只依赖 iOS 13 就已提供的
+/// `\.presentationMode`，它在 iOS 15+ 上依然有效。
+///
+/// 行为说明：`presentationMode` 对 sheet / popover 有效；
+/// 纯 `NavigationLink` push 出来的页面在 iOS 14 上无官方 dismiss 手段，
+/// 沿用作者原有的 `ReadingNavigationStack`（内部为 `NavigationView`），
+/// 关闭动作请通过 `ReadingNavigationBack` 触发。
+struct ReadingDismissAction {
+    private let presentationMode: PresentationMode
+
+    init(presentationMode: PresentationMode) {
+        self.presentationMode = presentationMode
+    }
+
+    func callAsFunction() {
+        presentationMode.dismiss()
+    }
+}
+
+private struct ReadingDismissKey: EnvironmentKey {
+    /// 默认值只在非交互场景（如预览）用到，占位即可。
+    static let defaultValue = ReadingDismissAction(presentationMode: PresentationMode())
+}
+
+extension EnvironmentValues {
+    /// iOS 14+ 可用的 dismiss 入口。
+    var readingDismiss: ReadingDismissAction {
+        get { self[ReadingDismissKey.self] }
+        set { self[ReadingDismissKey.self] = newValue }
+    }
+}
+
+private struct ReadingDismissEnvironmentModifier: ViewModifier {
+    @Environment(\.presentationMode) private var presentationMode
+
+    func body(content: Content) -> some View {
+        content.environment(\.readingDismiss,
+                           ReadingDismissAction(presentationMode: presentationMode))
+    }
+}
+
+extension View {
+    /// 注入 `readingDismiss`。需在视图树根部调用一次。
+    func readingDismissEnvironment() -> some View {
+        modifier(ReadingDismissEnvironmentModifier())
+    }
+}
+
+/// 关闭当前页面。在 iOS 14 上替代 `dismiss()`，供 push 场景使用。
+///
+/// 用 `@Binding` 持有导航状态：调用方需自行把该 binding 接到
+/// `NavigationStack` / `NavigationView` 的 path 上。
+struct ReadingNavigationBack: ViewModifier {
+    @Binding var path: NavigationPath
+
+    func body(content: Content) -> some View {
+        content.toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    if !path.isEmpty { path.removeLast() }
+                } label: {
+                    Image(systemName: "chevron.backward")
+                }
+                .disabled(path.isEmpty)
+            }
+        }
+    }
+}
+
+// MARK: - 文本选择与提交（iOS 15+）
+
+extension View {
+    /// `textSelection(.enabled)` 的 iOS 14 等价实现。
+    ///
+    /// iOS 15 才提供 SwiftUI 原生的文本选择能力，iOS 14 上无法开启，
+    /// 因此该修饰符在低版本退化为空操作，保证阅读体验不报错。
+    func readingTextSelection(_ enabled: Bool = true) -> some View {
+        modifier(ReadingTextSelectionModifier(enabled: enabled))
+    }
+
+    /// `submitLabel(_:)` 的 iOS 14 等价实现，iOS 14 无对应能力，退化为空操作。
+    func readingSubmitLabel(_ label: ReadingSubmitLabel) -> some View {
+        modifier(ReadingSubmitLabelModifier(label: label))
+    }
+
+    /// `onSubmit(of:triggers:)` 的 iOS 14 等价入口。
+    ///
+    /// iOS 14 没有 `SubmitTriggers`，只有无参 `onSubmit`，
+    /// 因此这里的触发器参数仅在 iOS 15+ 生效，低版本统一绑定为回车触发。
+    func readingOnSubmit(of triggers: ReadingSubmitTriggers, action: @escaping () -> Void) -> some View {
+        modifier(ReadingOnSubmitModifier(triggers: triggers, action: action))
+    }
+}
+
+private struct ReadingTextSelectionModifier: ViewModifier {
+    var enabled: Bool
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if #available(iOS 15.0, *) {
+            content.textSelection(enabled ? .enabled : .disabled)
+        } else {
+            content
+        }
+    }
+}
+
+private struct ReadingSubmitLabelModifier: ViewModifier {
+    var label: ReadingSubmitLabel
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if #available(iOS 15.0, *) {
+            content.submitLabel(label.swiftUIValue)
+        } else {
+            content
+        }
+    }
+}
+
+private struct ReadingOnSubmitModifier: ViewModifier {
+    var triggers: ReadingSubmitTriggers
+    var action: () -> Void
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if #available(iOS 15.0, *) {
+            content.onSubmit(of: triggers.swiftUIValue, action: action)
+        } else {
+            content.onSubmit(action)
+        }
+    }
+}
+
+/// 自动大写策略的跨版本表示。
+enum ReadingSubmitLabel {
+    case done
+    case go
+    case search
+    case send
+
+    @available(iOS 15.0, *)
+    var swiftUIValue: SubmitLabel {
+        switch self {
+        case .done: return .done
+        case .go: return .go
+        case .search: return .search
+        case .send: return .send
+        }
+    }
+}
+
+/// 提交触发条件的跨版本表示。
+///
+/// 做成 OptionSet 而非枚举，才能直接写 `[.text, .search]` 这种数组字面量，
+/// 与 iOS 15 的 `SubmitTriggers` 调用形态保持一致。
+struct ReadingSubmitTriggers: OptionSet {
+    let rawValue: Int
+
+    static let text = ReadingSubmitTriggers(rawValue: 1 << 0)
+    static let search = ReadingSubmitTriggers(rawValue: 1 << 1)
+
+    @available(iOS 15.0, *)
+    var swiftUIValue: SubmitTriggers {
+        var result: SubmitTriggers = []
+        if contains(.text) { result.insert(.text) }
+        if contains(.search) { result.insert(.search) }
+        return result
+    }
+}

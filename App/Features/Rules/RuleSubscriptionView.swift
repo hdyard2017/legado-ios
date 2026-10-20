@@ -137,7 +137,7 @@ struct RuleSubscriptionView: View {
 }
 
 private struct RuleSubscriptionEditView: View {
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.readingDismiss) private var dismiss
     @State private var value: RuleSub
     @State private var saving = false
     let save: (RuleSub) async -> Bool

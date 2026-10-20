@@ -52,7 +52,7 @@ struct RSSSourceDebugView: View {
                 if !report.articles.isEmpty {
                     Section("文章样本") { ForEach(report.articles.prefix(10)) { Text($0.title) } }
                 }
-                if let preview = report.contentPreview { Section("正文样本") { Text(preview).textSelection(.enabled) } }
+                if let preview = report.contentPreview { Section("正文样本") { Text(preview).readingTextSelection() } }
             }
         }
         .navigationTitle("RSS源调试")
@@ -65,7 +65,7 @@ struct RSSSourceDebugView: View {
             }
         }
         .sheet(isPresented: Binding(get: { rawText != nil }, set: { if !$0 { rawText = nil } })) {
-            ReadingNavigationStack { ScrollView { Text(rawText ?? "").font(.caption.monospaced()).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading).padding() }.navigationTitle(rawTitle).toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { rawText = nil } } } }
+            ReadingNavigationStack { ScrollView { Text(rawText ?? "").font(.caption.monospaced()).readingTextSelection().frame(maxWidth: .infinity, alignment: .leading).padding() }.navigationTitle(rawTitle).toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { rawText = nil } } } }
         }
     }
 

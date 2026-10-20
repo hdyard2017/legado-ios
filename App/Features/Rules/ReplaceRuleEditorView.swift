@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 
 struct ReplaceRuleEditorView: View {
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.readingDismiss) private var dismiss
     @EnvironmentObject private var library: ReplaceRuleLibraryModel
     @State private var rule: ReplaceRule
     @State private var mode: Int
@@ -142,7 +142,7 @@ struct ReplaceRuleEditorView: View {
                           systemImage: result.report.effectiveRuleIDs.isEmpty ? "info.circle" : "checkmark.circle")
                     ReadingLabeledContent("标题", value: result.report.title)
                     Text(result.report.content.isEmpty ? "（正文为空）" : result.report.content)
-                        .font(.body.monospaced()).textSelection(.enabled)
+                        .font(.body.monospaced()).readingTextSelection()
                 }
                 if !result.report.diagnostics.isEmpty {
                     Section("执行错误") {

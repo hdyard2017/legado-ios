@@ -5,7 +5,7 @@ import UniformTypeIdentifiers
 
 struct ReaderView: View {
 
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.readingDismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @EnvironmentObject private var library: BookLibraryModel
