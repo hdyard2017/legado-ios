@@ -60,11 +60,10 @@ struct QRCodeImportView: View {
                 }
                 cameraMessage = cameraAuthorized ? "当前设备不支持实时扫描，请从照片选择二维码。" : "未获得相机权限，仍可从照片选择二维码。"
             }
-            .readingAlert("识别失败", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
+            .readingAlert("识别失败", messageText: errorMessage ?? "", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
                 Button("好") {}
                 .readingRole(.cancel)
-            } message: { Text(errorMessage ?? "") }
-        }
+            }}
     }
 
     @ViewBuilder

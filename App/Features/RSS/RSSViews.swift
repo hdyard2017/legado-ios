@@ -62,9 +62,9 @@ struct RSSHomeView: View {
         })
         let status = AnyView(exporting
             .overlay(library.isWorking ? AnyView(ProgressView().readingControlSize(.large)) : AnyView(Color.clear))
-            .readingAlert("RSS操作失败", isPresented: Binding(get: { library.errorMessage != nil }, set: { if !$0 { library.errorMessage = nil } })) {
+            .readingAlert("RSS操作失败", isPresented: Binding(get: { library.errorMessage != nil }, set: { if !$0 { library.errorMessage = nil } }), messageText: library.errorMessage ?? "") {
             Button("好") { library.errorMessage = nil }
-        } message: { Text(library.errorMessage ?? "") })
+        })
         return status.readingConfirmationDialog(section == 1 ? "确定清空全部RSS收藏？" : "确定清空全部RSS阅读记录？", isPresented: $confirmsClear, titleVisibility: .visible) {
             Button("清空") { Task { if section == 1 { await library.clearStars() } else { await library.clearRecords() } } }
             .readingRole(.destructive)
@@ -492,7 +492,7 @@ private struct RSSPhotoView: View {
                         else if loading { ProgressView() }
                         else { ReadingUnavailableView("图片加载失败", systemImage: "photo.badge.exclamationmark") }
                     }.frame(minWidth: proxy.size.width, minHeight: proxy.size.height)
-                }.background(.black)
+                }.background(Color.black)
             }
             .navigationTitle(source.sourceName).navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -500,8 +500,7 @@ private struct RSSPhotoView: View {
                 ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() } }
             }
             .readingTask(id:  value) { await load() }
-            .readingAlert("图片", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) { Button("好") { message = nil } } message: { Text(message ?? "") }
-        }
+            .readingAlert("图片", messageText: message ?? "", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) { Button("好") { message = nil } }}
     }
 
     private func load() async {

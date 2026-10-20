@@ -76,7 +76,7 @@ struct SourceDebugView: View {
                     .textFieldStyle(.roundedBorder)
                     .readingInputConfiguration(autocapitalization: .never)
                     .readingSubmitLabel(.go)
-                    .onSubmit { model.run(source: source) }
+                    .readingOnSubmit { model.run(source: source) }
                 Button { model.run(source: source) } label: {
                     Label(model.isRunning ? "正在调试…" : "运行完整链路", systemImage: "play.fill")
                         .font(.headline).frame(maxWidth: .infinity)

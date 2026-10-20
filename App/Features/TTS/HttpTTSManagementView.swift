@@ -159,16 +159,13 @@ struct HttpTTSManagementView: View {
         ) { result in
             if case .failure(let error) = result { model.errorMessage = error.localizedDescription }
         }
-        .readingAlert("在线朗读引擎", isPresented: Binding(
+        .readingAlert("在线朗读引擎", messageText: model.errorMessage ?? "", isPresented: Binding(
             get: { model.errorMessage != nil },
             set: { if !$0 { model.errorMessage = nil } }
         )) {
             Button("确定") { model.errorMessage = nil }
             .readingRole(.cancel)
-        } message: {
-            Text(model.errorMessage ?? "")
-        }
-    }
+        }}
 }
 
 private struct HttpTTSEditorView: View {

@@ -56,13 +56,10 @@ struct CacheManagementView: View {
         .navigationTitle("缓存管理")
         .readingTask { await model.load() }
         .overlay(model.isWorking ? AnyView(ProgressView()) : AnyView(Color.clear))
-        .readingAlert("缓存操作失败", isPresented: Binding(
+        .readingAlert("缓存操作失败", messageText: model.errorMessage ?? "未知错误", isPresented: Binding(
             get: { model.errorMessage != nil },
             set: { if !$0 { model.errorMessage = nil } }
         )) {
             Button("好") { model.errorMessage = nil }
-        } message: {
-            Text(model.errorMessage ?? "未知错误")
-        }
-    }
+        }}
 }

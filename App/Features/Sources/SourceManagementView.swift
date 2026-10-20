@@ -658,11 +658,10 @@ struct SourceImportReviewView: View {
             }
         }
         .readingInteractiveDismissDisabled()
-        .readingAlert("导入保存失败", isPresented: Binding(get: { importError != nil }, set: { if !$0 { importError = nil } })) {
+        .readingAlert("导入保存失败", messageText: importError ?? "", isPresented: Binding(get: { importError != nil }, set: { if !$0 { importError = nil } })) {
             Button("好") {}
             .readingRole(.cancel)
-        } message: { Text(importError ?? "") }
-    }
+        }}
 
     private func importCountCard(
         title: String,

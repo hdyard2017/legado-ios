@@ -151,11 +151,10 @@ struct TxtTocRuleManagementView: View {
         ) { result in
             if case .failure(let error) = result { model.message = error.localizedDescription }
         }
-        .readingAlert("TXT目录规则", isPresented: Binding(
+        .readingAlert("TXT目录规则", messageText: model.message ?? "", isPresented: Binding(
             get: { model.message != nil },
             set: { if !$0 { model.message = nil } }
-        )) { Button("好") { model.message = nil } } message: { Text(model.message ?? "") }
-    }
+        )) { Button("好") { model.message = nil } }}
 }
 
 private struct TxtTocRuleEditView: View {

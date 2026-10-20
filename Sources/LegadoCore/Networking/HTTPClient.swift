@@ -308,6 +308,19 @@ public final class URLSessionHTTPTransport: ProxyHTTPTransport, StreamingHTTPTra
         }
         let session = try configuredSession(settings: settings)
         let started = Date()
+
+        // iOS 15 才提供 `URLSession.bytes(for:)` 与 `URLSession.AsyncBytes`。
+        // iOS 14 没有逐字节流式接口，退化为「先取完整数据，再分块吐出」，
+        // 内存占用略高但行为（分块流 + 取消）保持一致。
+        if #available(iOS 15.0, macOS 12.0, *) {
+            return try await stream15(session: session, request: request, started: started)
+        }
+        return try await stream14(session: session, request: request, started: started)
+    }
+
+    /// iOS 15+ 的流式下载：直接使用 `URLSession.bytes(for:)`。
+    @available(iOS 15.0, macOS 12.0, *)
+    private func stream15(session: URLSession, request: URLRequest, started: Date) async throws -> HTTPStreamResponse {
         let bytes: URLSession.AsyncBytes
         let response: URLResponse
         do {
@@ -343,6 +356,61 @@ public final class URLSessionHTTPTransport: ProxyHTTPTransport, StreamingHTTPTra
                             continuation.yield(chunk)
                             chunk.removeAll(keepingCapacity: true)
                         }
+                    }
+                    if !chunk.isEmpty { continuation.yield(chunk) }
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+        return .init(
+            statusCode: http.statusCode,
+            headers: headers,
+            finalURL: finalURL,
+            expectedContentLength: http.expectedContentLength >= 0 ? http.expectedContentLength : nil,
+            chunks: chunks
+        )
+    }
+
+    /// iOS 14 的流式下载降级实现。
+    ///
+    /// iOS 14 没有 `URLSession.bytes(for:)`，只能用 `data(for:)` 拿完整数据，
+    /// 再按 32KB 一块地从 `AsyncThrowingStream` 吐出去，
+    /// 保持与高版本一致的分块流与取消语义。
+    private func stream14(session: URLSession, request: URLRequest, started: Date) async throws -> HTTPStreamResponse {
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await session.data(for: request)
+        } catch {
+            DiagnosticLog.shared.network(request, error: error, startedAt: started)
+            throw error
+        }
+        guard let http = response as? HTTPURLResponse, let finalURL = http.url else {
+            throw HTTPClientError.nonHTTPResponse
+        }
+        let headers = Self.headers(from: http)
+        DiagnosticLog.shared.network(request, status: http.statusCode, startedAt: started)
+        guard (200 ... 299).contains(http.statusCode) else {
+            throw HTTPClientError.statusResponse(.init(
+                data: data,
+                statusCode: http.statusCode,
+                headers: headers,
+                finalURL: finalURL
+            ))
+        }
+        let chunks = AsyncThrowingStream<Data, Error> { continuation in
+            let task = Task {
+                do {
+                    var chunk = Data()
+                    chunk.reserveCapacity(32 * 1_024)
+                    try Task.checkCancellation()
+                    chunk.append(data)
+                    if chunk.count >= 32 * 1_024 {
+                        continuation.yield(chunk)
+                        chunk.removeAll(keepingCapacity: true)
                     }
                     if !chunk.isEmpty { continuation.yield(chunk) }
                     continuation.finish()

@@ -152,9 +152,17 @@ public struct BookExploreService: Sendable {
                 return try JSONDecoder().decode([ExploreKind].self, from: Data(trimmed.utf8))
             } catch let strictError {
                 do {
+                    // `.json5Allowed` 是 iOS 15 才有的 JSONSerialization 选项，
+                    // iOS 14 不支持宽松 JSON5 语法，这里退化为标准 JSON 解析。
+                    let options: JSONSerialization.ReadingOptions = {
+                        if #available(iOS 15.0, macOS 12.0, *) {
+                            return [.fragmentsAllowed, .json5Allowed]
+                        }
+                        return [.fragmentsAllowed]
+                    }()
                     let object = try JSONSerialization.jsonObject(
                         with: Data(trimmed.utf8),
-                        options: [.fragmentsAllowed, .json5Allowed]
+                        options: options
                     )
                     let normalized = try JSONEncoder().encode(JSONValue.bridge(object))
                     return try JSONDecoder().decode([ExploreKind].self, from: normalized)

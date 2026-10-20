@@ -169,7 +169,15 @@ struct FileManagementView: View {
             case .failure(let error): model.errorMessage = error.localizedDescription
             }
         }
-        .readingAlert("重命名文件", isPresented: Binding(get: { renameURL != nil }, set: { if !$0 { renameURL = nil } }), presenting: renameURL) { url in
+        .readingAlert("重命名文件", isPresented: Binding(get: { renameURL != nil }, set: { if !$0 { renameURL = nil } }), presenting: renameURL, messageText: "保留 TXT 格式，书架中的书名、书签和阅读进度不变。", buttons: [
+            ReadingAlertButton("取消", kind: .cancel),
+            ReadingAlertButton("保存", kind: .destructive) { [renameURL] in
+                guard let url = renameURL else { return }
+                let name = newName
+                renameURL = nil
+                Task { await model.run(library) { try await library.renameLocalFile(at: url, to: name) } }
+            }
+        ]) { url in
             TextField("文件名", text: $newName)
             Button("取消") { renameURL = nil }
             .readingRole(.cancel)
@@ -178,14 +186,28 @@ struct FileManagementView: View {
                 renameURL = nil
                 Task { await model.run(library) { try await library.renameLocalFile(at: url, to: name) } }
             }
-        } message: { _ in
-            Text("保留 TXT 格式，书架中的书名、书签和阅读进度不变。")
         }
     }
 
     private var deletionView: some View {
         importAndRenameView
-        .readingConfirmationDialog("删除 \(pendingDeletion.count) 个文件？", isPresented: Binding(get: { !pendingDeletion.isEmpty }, set: { if !$0 { pendingDeletion = [] } }), titleVisibility: .visible, presenting: pendingDeletion) { urls in
+        .readingConfirmationDialog("删除 \(pendingDeletion.count) 个文件？", isPresented: Binding(get: { !pendingDeletion.isEmpty }, set: { if !$0 { pendingDeletion = [] } }), titleVisibility: .visible, presenting: pendingDeletion, messageText: "将删除应用内文件及对应书架条目，系统“文件”中用于导入的原文件保留。", buttons: [
+            ReadingAlertButton("取消", kind: .cancel),
+            ReadingAlertButton("删除文件并移出书架", kind: .destructive) { [pendingDeletion] in
+                pendingDeletion = []
+                Task {
+                    await model.run(library) {
+                        var failures: [String] = []
+                        for url in pendingDeletion {
+                            do { try await library.deleteLocalFile(at: url) }
+                            catch { failures.append("\(filename(for: url))：\(error.localizedDescription)") }
+                        }
+                        selection.removeAll()
+                        if !failures.isEmpty { model.errorMessage = failures.joined(separator: "\n") }
+                    }
+                }
+            }
+        ]) { urls in
             Button("删除文件并移出书架") {
                 pendingDeletion = []
                 Task {
@@ -203,8 +225,6 @@ struct FileManagementView: View {
             .readingRole(.destructive)
             Button("取消") { pendingDeletion = [] }
             .readingRole(.cancel)
-        } message: { _ in
-            Text("将删除应用内文件及对应书架条目，系统“文件”中用于导入的原文件保留。")
         }
     }
 
@@ -219,23 +239,28 @@ struct FileManagementView: View {
                 }
             }
         }
-        .readingConfirmationDialog("缓存正文不完整", isPresented: $confirmsPartialExport, titleVisibility: .visible, presenting: model.partialExport) { file in
+        .readingConfirmationDialog("缓存正文不完整", isPresented: $confirmsPartialExport, titleVisibility: .visible, presenting: model.partialExport, messageText: "部分章节未缓存，导出文件会标记未缓存章节。", buttons: [
+            ReadingAlertButton("取消", kind: .cancel) { model.finishExport() },
+            ReadingAlertButton("导出已缓存内容", kind: .destructive) { [model] in
+                if let file = model.partialExport {
+                    model.readyExport = file
+                    model.partialExport = nil
+                }
+            }
+        ]) { file in
             Button("导出已缓存内容") {
                 model.readyExport = file
                 model.partialExport = nil
             }
             Button("取消") { model.finishExport() }
             .readingRole(.cancel)
-        } message: { file in
-            Text("已缓存 \(file.cachedChapters)/\(file.totalChapters) 章。导出文件会标记未缓存章节，可先返回详情缓存完整后再导出。")
         }
         .sheet(item: $model.readyExport, onDismiss: { model.finishExport() }) { file in
             FileExportPicker(url: file.url) { model.readyExport = nil }
         }
-        .readingAlert("文件操作失败", isPresented: Binding(get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } })) {
+        .readingAlert("文件操作失败", messageText: model.errorMessage ?? "未知错误", isPresented: Binding(get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } })) {
             Button("好") { model.errorMessage = nil }
-        } message: { Text(model.errorMessage ?? "未知错误") }
-    }
+        }}
 
     @ViewBuilder private var localFilesSection: some View {
         Section {
@@ -312,7 +337,7 @@ struct FileManagementView: View {
 
     private func fileLabel(_ file: LocalFileEntry) -> some View {
         HStack(spacing: 12) {
-            Image(systemName: "doc.text").foregroundColor(.tint)
+            Image(systemName: "doc.text").foregroundColor(Color.accentColor)
             VStack(alignment: .leading, spacing: 4) {
                 Text(filename(for: file.url)).foregroundColor(.primary).lineLimit(2)
                 HStack(spacing: 8) {

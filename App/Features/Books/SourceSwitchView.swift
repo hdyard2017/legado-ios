@@ -107,15 +107,12 @@ struct SourceSwitchView: View {
         }
         .readingTask { await model.load(sources: sources) }
         .onDisappear { model.cancelSelection() }
-        .readingAlert("换源失败", isPresented: Binding(
+        .readingAlert("换源失败", messageText: model.errorMessage ?? "", isPresented: Binding(
             get: { model.errorMessage != nil },
             set: { if !$0 { model.clearError() } }
         )) {
             Button("好") { model.clearError() }
-        } message: {
-            Text(model.errorMessage ?? "")
-        }
-    }
+        }}
 
     private func candidateRow(_ candidate: BookSourceCandidate) -> some View {
         Button {

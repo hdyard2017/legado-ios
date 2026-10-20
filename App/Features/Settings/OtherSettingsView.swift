@@ -59,18 +59,16 @@ struct OtherSettingsView: View {
         .onAppear { settings = ApplicationSettingsStore.shared.settings }
         .readingConfirmationDialog(maintenance?.rawValue ?? "", isPresented: Binding(
             get: { maintenance != nil }, set: { if !$0 { maintenance = nil } }
-        ), titleVisibility: .visible) {
+        ), titleVisibility: .visible, messageText: maintenance == .webCache ? "清理网页和图片的临时缓存，保留登录 Cookie、书架和阅读进度。" : "回收数据库中的空闲空间，保留全部书籍、规则和阅读记录。") {
             if let operation = maintenance {
                 Button(operation.rawValue) { Task { await perform(operation) } }
             }
             Button("取消") { maintenance = nil }
             .readingRole(.cancel)
-        } message: {
-            Text(maintenance == .webCache ? "清理网页和图片的临时缓存，保留登录 Cookie、书架和阅读进度。" : "回收数据库中的空闲空间，保留全部书籍、规则和阅读记录。")
         }
-        .readingAlert("操作结果", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
+        .readingAlert("操作结果", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } }), messageText: message ?? "") {
             Button("好") { message = nil }
-        } message: { Text(message ?? "") }
+        }
     }
 
     @MainActor private func perform(_ operation: Maintenance) async {
@@ -161,9 +159,9 @@ struct NetworkSettingsView: View {
             }
         }
         .disabled(isSaving)
-        .readingAlert("保存失败", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
+        .readingAlert("保存失败", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } }), messageText: errorMessage ?? "") {
             Button("好") { errorMessage = nil }
-        } message: { Text(errorMessage ?? "") }
+        }
     }
 
     @MainActor private func save() async {

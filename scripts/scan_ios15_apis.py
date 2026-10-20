@@ -84,6 +84,10 @@ FAMILIES: list[tuple[str, str, str, str]] = [
     ("Color.setStroke", r"\.setStroke\s*\(\s*\)", "15.0", "Color.readingSetStroke()"),
     ("foregroundColor2", r"\.foregroundColor\s*\([^()]*?,[^()]*?\)", "15.0", "单色 + symbolRenderingMode"),
     ("symbolRenderingMode", r"\.symbolRenderingMode\s*\(", "15.0", "ReadingPaletteSymbol"),
+    ("onSubmit", r"\.onSubmit\s*[({]", "15.0", "readingOnSubmit"),
+    ("onSubmit.of", r"\.onSubmit\s*\(\s*of\s*:", "15.0", "readingOnSubmit(of:)"),
+    ("AsyncBytes", r"\bURLSession\.AsyncBytes\b|\bsession\.bytes\s*\(", "15.0", "降级为 data(for:) + 分块"),
+    ("json5Allowed", r"\.json5Allowed\b", "15.0", "仅 .fragmentsAllowed"),
     # --- iOS 17 ---
     ("scrollTargetBehavior", r"\.scrollTargetBehavior\s*\(", "17.0", "自建"),
     ("scrollPosition", r"\.scrollPosition\s*\(", "17.0", "自建"),

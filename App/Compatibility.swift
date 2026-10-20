@@ -843,7 +843,7 @@ struct ReadingDismissAction: @unchecked Sendable {
         box = DismissBox()
     }
 
-    fileprivate init(action: @escaping () -> Void) {
+    fileprivate init(action: @escaping @MainActor @Sendable () -> Void) {
         box = DismissBox(action: action)
     }
 
@@ -860,13 +860,13 @@ struct ReadingDismissAction: @unchecked Sendable {
 /// `@unchecked Sendable`：容器本身不可变，持有的闭包被约束在主线程执行，
 /// 因此可以安全地跨隔离域传递。
 final class DismissBox: @unchecked Sendable {
-    private let action: @MainActor () -> Void
+    private let action: @MainActor @Sendable () -> Void
 
     init() {
         action = {}
     }
 
-    init(action: @escaping @MainActor () -> Void) {
+    init(action: @escaping @MainActor @Sendable () -> Void) {
         self.action = action
     }
 
@@ -999,7 +999,9 @@ private struct ReadingOnSubmitModifier: ViewModifier {
         if #available(iOS 15.0, *) {
             content.readingOnSubmit15(triggers: triggers, action: action)
         } else {
-            content.onSubmit(action)
+            // iOS 14 的 SwiftUI 没有 `onSubmit`（无参版也是 iOS 15 才有的），
+            // 退化为监听 UITextField 的回车通知。
+            content.readingSubmitOnReturn(action: action)
         }
     }
 }
@@ -1013,6 +1015,43 @@ extension View {
     @available(iOS 15.0, *)
     func readingOnSubmit15(triggers: ReadingSubmitTriggers, action: @escaping () -> Void) -> some View {
         onSubmit(of: triggers.swiftUIValue) { action() }
+    }
+
+    /// iOS 15 分支的 `onSubmit { }`（无参版，同样是 iOS 15 才引入）。
+    @available(iOS 15.0, *)
+    func readingOnSubmit15(action: @escaping () -> Void) -> some View {
+        onSubmit { action() }
+    }
+
+    /// 跨版本的「回车提交」。
+    ///
+    /// - iOS 15+：使用系统 `onSubmit`。
+    /// - iOS 14：SwiftUI 没有 `onSubmit`，
+    ///   退化为监听 `UITextField` 的回车通知。
+    func readingOnSubmit(action: @escaping () -> Void) -> some View {
+        if #available(iOS 15.0, *) {
+            readingOnSubmit15(action: action)
+        } else {
+            readingSubmitOnReturn(action: action)
+        }
+    }
+
+    /// iOS 14 的回车提交实现。
+    func readingSubmitOnReturn(action: @escaping () -> Void) -> some View {
+        modifier(ReadingReturnKeyModifier(action: action))
+    }
+}
+
+/// 监听 UITextField 的回车通知，模拟 iOS 15 的 `onSubmit`。
+private struct ReadingReturnKeyModifier: ViewModifier {
+    let action: () -> Void
+
+    func body(content: Content) -> some View {
+        content.onReceive(
+            NotificationCenter.default.publisher(for: UITextField.textDidEndOnExitNotification)
+        ) { _ in
+            action()
+        }
     }
 }
 
@@ -1136,10 +1175,11 @@ extension View {
     func readingAlert<T: StringProtocol>(
         _ title: T,
         isPresented: Binding<Bool>,
-        @ViewBuilder actions: () -> some View,
         message: (() -> Text)? = nil,
+        messageText: String? = nil,
         buttons: [ReadingAlertButton] = [],
-        style: ReadingAlertStyle = .alert
+        style: ReadingAlertStyle = .alert,
+        @ViewBuilder actions: () -> some View
     ) -> some View {
         // 闭包要作为存储属性传给 modifier，必须是 escaping；
         // 且 `() -> some View` 不能直接作为存储属性类型
@@ -1150,6 +1190,39 @@ extension View {
             isPresented: isPresented,
             actions: { AnyView(actionViews) },
             message: message,
+            plainMessage: messageText,
+            buttons: buttons,
+            style: style
+        ))
+    }
+
+    /// 带 `presenting:` 的跨版本 alert。
+    ///
+    /// 对应 iOS 15 的
+    /// `alert(_:isPresented:presenting:actions:message:)`：
+    /// `presenting` 传 nil 时弹窗不显示，因此 iOS 14 分支同样成立；
+    /// `actions` 与 `message` 闭包会收到被呈现的数据。
+    /// 带 `presenting:` 与**纯文本正文**的跨版本 alert。
+    ///
+    /// iOS 14 分支用 UIKit 弹窗，需要确定的字符串；
+    /// iOS 15+ 则用 `messageView` 呈现（可含插值）。
+    func readingAlert<T: StringProtocol, D>(
+        _ title: T,
+        isPresented: Binding<Bool>,
+        presenting data: D?,
+        messageText: String? = nil,
+        message: ((D) -> Text)? = nil,
+        buttons: [ReadingAlertButton] = [],
+        style: ReadingAlertStyle = .alert,
+        @ViewBuilder actions: (D) -> some View
+    ) -> some View {
+        let actionViews = actions(data)
+        return modifier(ReadingAlertModifier(
+            title: String(title),
+            isPresented: isPresented,
+            actions: { AnyView(actionViews) },
+            message: message.map { view in { view(data) } },
+            plainMessage: messageText,
             buttons: buttons,
             style: style
         ))
@@ -1163,18 +1236,47 @@ extension View {
         _ title: T,
         isPresented: Binding<Bool>,
         titleVisibility: ReadingTitleVisibility = .automatic,
-        @ViewBuilder actions: () -> some View,
         message: (() -> Text)? = nil,
-        buttons: [ReadingAlertButton] = []
+        messageText: String? = nil,
+        buttons: [ReadingAlertButton] = [],
+        @ViewBuilder actions: () -> some View
     ) -> some View {
         readingAlert(
             title,
             isPresented: isPresented,
-            actions: actions,
             message: message,
+            messageText: messageText,
+            buttons: buttons,
+            style: .actionSheet,
+            actions: actions
+        )
+    }
+
+    /// 带 `presenting:` 的跨版本 confirmationDialog。
+    ///
+    /// 对应 iOS 15 的
+    /// `confirmationDialog(_:isPresented:titleVisibility:presenting:actions:message:)`。
+    /// 带 `presenting:` 与**纯文本正文**的跨版本 confirmationDialog。
+    func readingConfirmationDialog<T: StringProtocol, D>(
+        _ title: T,
+        isPresented: Binding<Bool>,
+        titleVisibility: ReadingTitleVisibility = .automatic,
+        presenting data: D?,
+        messageText: String? = nil,
+        message: ((D) -> Text)? = nil,
+        buttons: [ReadingAlertButton] = [],
+        @ViewBuilder actions: (D) -> some View
+    ) -> some View {
+        let actionViews = actions(data)
+        return modifier(ReadingAlertModifier(
+            title: String(title),
+            isPresented: isPresented,
+            actions: { AnyView(actionViews) },
+            message: message.map { view in { view(data) } },
+            plainMessage: messageText,
             buttons: buttons,
             style: .actionSheet
-        )
+        ))
     }
 }
 
@@ -1186,6 +1288,9 @@ private struct ReadingAlertModifier: ViewModifier {
     /// "property declares an opaque return type, but has no initializer expression"。
     let actions: () -> AnyView
     let message: (() -> Text)?
+    /// iOS 14 分支使用的正文纯文本。
+    /// 优先用它；为 nil 时才尝试从 `Text` 里提取。
+    let plainMessage: String?
     let buttons: [ReadingAlertButton]
     let style: ReadingAlertStyle
 
@@ -1201,7 +1306,7 @@ private struct ReadingAlertModifier: ViewModifier {
             content.readingUIKitAlert(
                 title: title,
                 isPresented: isPresented,
-                message: message.map(ReadingTextContent.plainText) ?? "",
+                message: plainMessage ?? message.map(ReadingTextContent.plainText) ?? "",
                 buttons: buttons,
                 style: style
             )
@@ -1215,29 +1320,15 @@ private struct ReadingAlertModifier: ViewModifier {
 /// 全部是字符串插值或三元表达式。
 ///
 /// 实现要点：
-/// - iOS 15+：用 `Text` 遵循 `CustomStringConvertible` 的能力，
-///   通过 `String(describing:)` 拿到可读文本。
-/// - iOS 14：SwiftUI 的 `Text` 没有公开的取值接口，
-///   这里用 `Mirror` 反射读取其内部存储的 `LocalizedStringKey`，
-///   拿不到时返回空串（弹窗正文降级为空，不影响功能）。
+/// - SwiftUI 的 `Text` 遵循 `CustomStringConvertible`，
+///   其 `description` 是**公开 API**，iOS 13+ 都可用；
+///   用 `String(describing:)` 即可拿到可读文本。
+/// - 早期实现曾用 `Mirror` 反射读 `LocalizedStringKey.key`，
+///   但 `key` 是 internal 保护级别，编译会报
+///   "'key' is inaccessible due to 'internal' protection level"，故不再使用。
 enum ReadingTextContent {
     static func plainText(_ makeText: () -> Text) -> String {
-        let text = makeText()
-        if #available(iOS 15.0, *) {
-            return String(describing: text)
-        }
-        return reflectedText(of: text)
-    }
-
-    /// 通过反射读取 `Text` 内部持有的 `LocalizedStringKey`。
-    private static func reflectedText(of text: Text) -> String {
-        let mirror = Mirror(reflecting: text)
-        for child in mirror.children {
-            if let key = child.value as? LocalizedStringKey {
-                return key.key
-            }
-        }
-        return ""
+        String(describing: makeText())
     }
 }
 
@@ -1661,7 +1752,12 @@ extension View {
         @ViewBuilder content: () -> some View
     ) -> some View {
         if #available(iOS 15.0, *) {
-            safeAreaInset(edge: edge, spacing: spacing, content: content)
+            // 必须用尾随闭包形式：写成 `content: content` 会报
+            // "no exact matches in call to instance method 'safeAreaInset'"，
+            // 因为 iOS 15 的 spacing 是 CGFloat? 且 content 需要 ViewBuilder。
+            safeAreaInset(edge: edge, spacing: spacing) {
+                content()
+            }
         } else {
             switch edge {
             case .top:
@@ -1772,7 +1868,9 @@ private struct ReadingSearchBoxModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         if #available(iOS 15.0, *) {
-            content.searchable(text: text, prompt: prompt)
+            // `@Binding` 属性访问时会被自动解包成 String，
+            // 而 `searchable(text:)` 需要 Binding<String>，因此传 `$text`。
+            content.searchable(text: $text, prompt: prompt)
         } else {
             // iOS 14：在列表上方插入一个搜索框。
             // 这里用 overlay 而非 safeAreaInset——后者会再套一层修饰符，
@@ -1838,8 +1936,10 @@ extension View {
     ///
     /// iOS 15 才支持滑动操作；iOS 14 上退化为空操作，
     /// 用户仍可通过点击进入详情页完成同样的操作。
+    /// - Parameter edge: 滑动方向。系统的 `swipeActions` 只支持左右，
+    ///   因此用 `HorizontalEdge` 而不是通用的 `Edge`。
     func readingSwipeActions(
-        edge: Edge = .trailing,
+        edge: HorizontalEdge = .trailing,
         allowsFullSwipe: Bool = true,
         @ViewBuilder content: () -> some View
     ) -> some View {
@@ -1855,7 +1955,7 @@ extension View {
 }
 
 private struct ReadingSwipeActionsModifier: ViewModifier {
-    var edge: Edge
+    var edge: HorizontalEdge
     var allowsFullSwipe: Bool
     /// 必须是 `() -> AnyView`：`() -> some View` 作为存储属性
     /// 没有底层类型可推断，编译器会报
@@ -1932,6 +2032,11 @@ extension View {
     ///
     /// iOS 15 才支持该修饰符；iOS 14 没有等价能力，退化为空操作。
     /// 影响仅限数字的等宽对齐，视觉差异很小。
+    /// 必须标注 `@ViewBuilder`：`if` 的两个分支分别返回
+    /// `some View`（`monospacedDigit()` 的结果）与 `Self`，
+    /// 没有 ViewBuilder 时会报
+    /// "branches have mismatching types 'some View' and 'Self'"。
+    @ViewBuilder
     func readingMonospacedDigit() -> some View {
         if #available(iOS 15.0, *) {
             self.monospacedDigit()
@@ -1954,9 +2059,9 @@ extension View {
     /// `ReadingAlertButton` 描述，可完整保留「取消 + 确认」两个动作。
     func readingConfirmationAlert<Item: Identifiable>(
         item: Binding<Item?>,
-        title: (Item) -> String,
-        message: (Item) -> String,
-        confirmTitle: (Item) -> String,
+        title: @escaping (Item) -> String,
+        message: @escaping (Item) -> String,
+        confirmTitle: @escaping (Item) -> String,
         onConfirm: @escaping (Item) -> Void
     ) -> some View {
         modifier(ReadingConfirmationAlertModifier(
@@ -1990,7 +2095,12 @@ private struct ReadingConfirmationAlertModifier<Item: Identifiable>: ViewModifie
                     if let value = item.wrappedValue { onConfirm(value) }
                 }
             ]
-        )
+        ) {
+            Button("取消") { item.wrappedValue = nil }
+            Button(item.wrappedValue.map(confirmTitle) ?? "确定") {
+                if let value = item.wrappedValue { onConfirm(value) }
+            }
+        }
     }
 }
 
@@ -2008,8 +2118,8 @@ extension View {
     ///   - onConfirm: 点击确认时执行，通常用于清理触发源。
     func readingAlert<Item: Identifiable>(
         item: Binding<Item?>,
-        title: (Item) -> String,
-        message: (Item) -> String,
+        title: @escaping (Item) -> String,
+        message: @escaping (Item) -> String,
         confirmTitle: String = "好",
         onConfirm: @escaping (Item) -> Void = { _ in }
     ) -> some View {
@@ -2051,7 +2161,6 @@ private struct ReadingItemAlertModifier<Item: Identifiable>: ViewModifier {
         )
     }
 }
-
 // MARK: - 颜色工具（iOS 14 可用）
 //
 // iOS 15 起 SwiftUI 为 `Color` 补上了 `primary` / `secondary` / `tertiary`

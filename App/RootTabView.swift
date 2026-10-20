@@ -249,18 +249,14 @@ private struct BookshelfView: View {
         .readingAlert("本地书导入失败", isPresented: Binding(
             get: { library.errorMessage != nil },
             set: { if !$0 { library.clearError() } }
-        )) {
+        ), messageText: library.errorMessage ?? "未知错误") {
             Button("好") { library.clearError() }
-        } message: {
-            Text(library.errorMessage ?? "未知错误")
         }
         .readingAlert("书架更新", isPresented: Binding(
             get: { library.updateMessage != nil },
             set: { if !$0 { library.clearUpdateMessage() } }
-        )) {
+        ), messageText: library.updateMessage ?? "") {
             Button("好") { library.clearUpdateMessage() }
-        } message: {
-            Text(library.updateMessage ?? "")
         }
     }
 
