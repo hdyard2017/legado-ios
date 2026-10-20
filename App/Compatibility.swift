@@ -1047,22 +1047,99 @@ extension View {
     }
 }
 
-/// 监听 UITextField 的回车事件，模拟 iOS 15 的 `onSubmit`。
+/// 接管文本框的回车键，模拟 iOS 15 的 `onSubmit`。
+///
+/// iOS 14 的 SwiftUI 没有 `onSubmit`，而 UIKit 侧对应的通知名
+/// （`UITextField.textDidEndOnExitNotification` / `Notification.Name.UITextFieldTextDidEndOnExit`）
+/// 在不同 SDK 版本里并不统一，容易踩空。
+///
+/// 这里用**最稳的方式**：给当前第一响应者 `UITextField` 添加
+/// `UIControl.Event.editingDidEndOnExit` 的 target-action。
+/// 该事件在用户按下回车键时触发，且**不触碰 delegate**，
+/// 不会破坏文本框原有的代理逻辑。
 private struct ReadingReturnKeyModifier: ViewModifier {
     let action: () -> Void
 
     func body(content: Content) -> some View {
-        // 用 UIKit 的公开通知常量 `UITextFieldTextDidEndOnExit`
-        // （`Notification.Name.UITextFieldTextDidEndOnExit`），
-        // 它在用户按下回车键时发出。
-        //
-        // 注意：不能写成 `UITextField.textDidEndOnExitNotification`，
-        // UIKit 里并没有这个静态成员。
-        content.onReceive(
-            NotificationCenter.default.publisher(for: Notification.Name.UITextFieldTextDidEndOnExit)
-        ) { _ in
+        content.background(
+            ReadingReturnKeyObserver(action: action)
+                .frame(width: 0, height: 0)
+                .opacity(0)
+        )
+    }
+}
+
+/// 定位当前第一响应者文本框并接管其回车键。
+private struct ReadingReturnKeyObserver: UIViewRepresentable {
+    let action: () -> Void
+
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView(frame: .zero)
+        view.isUserInteractionEnabled = false
+        // 视图出现后异步查找第一响应者（此时文本框可能还没获得焦点）。
+        DispatchQueue.main.async {
+            context.coordinator.attach()
+        }
+        return view
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {
+        DispatchQueue.main.async {
+            context.coordinator.attach()
+        }
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(action: action) }
+
+    final class Coordinator: NSObject {
+        private let action: () -> Void
+        private weak var observed: UITextField?
+
+        init(action: @escaping () -> Void) {
+            self.action = action
+        }
+
+        deinit {
+            // 移除 target-action，避免文本框持有已释放的协调器。
+            observed?.removeTarget(self, action: #selector(handleExit), for: .editingDidEndOnExit)
+        }
+
+        /// 找到当前第一响应者文本框并挂上回车监听。
+        func attach() {
+            guard let field = Self.currentFirstResponder() as? UITextField else { return }
+            guard observed !== field else { return }
+            observed?.removeTarget(self, action: #selector(handleExit), for: .editingDidEndOnExit)
+            observed = field
+            field.addTarget(self, action: #selector(handleExit), for: .editingDidEndOnExit)
+        }
+
+        @objc private func handleExit() {
             action()
         }
+
+        /// 在视图树中查找当前处于第一响应者状态的视图。
+        static func currentFirstResponder() -> UIResponder? {
+            // UIKit 没有公开的「当前第一响应者」查询接口，
+            // 这里通过窗口的视图树递归查找正在编辑的文本框。
+            let scenes = UIApplication.shared.connectedScenes
+                .compactMap { $0 as? UIWindowScene }
+            let window = scenes.flatMap { $0.windows }.first { $0.isKeyWindow }
+                ?? scenes.flatMap { $0.windows }.first
+            return window?.findFirstResponder()
+        }
+    }
+}
+
+extension UIView {
+    /// 递归查找当前处于第一响应者状态的视图。
+    func findFirstResponder() -> UIResponder? {
+        if isFirstResponder { return self }
+        for subview in subviews {
+            if let found = subview.findFirstResponder() {
+                return found
+            }
+        }
+        return nil
     }
 }
 
@@ -1770,31 +1847,28 @@ extension View {
     /// iOS 15 才提供该修饰符。iOS 14 上按边缘用 VStack 前后包裹——
     /// 这在列表/表单场景下与 safeAreaInset 的视觉效果基本一致，
     /// 且实现足够轻量，不会在大型 List 上触发编译器类型检查超时。
+    ///
+    /// - Important: 这里**不使用**系统的 `safeAreaInset`。
+    ///   该修饰符是 iOS 15 才引入的，写在 `if #available` 块里仍会报
+    ///   "no exact matches in call to instance method 'safeAreaInset'"——
+    ///   与 `SubmitTriggers` 同理：iOS 14 SDK 里根本没有这个方法。
+    ///   因此两版统一用 VStack 包裹实现，视觉与系统版本基本一致。
     @ViewBuilder
     func readingSafeAreaInset(
         edge: Edge,
         spacing: CGFloat = 0,
         @ViewBuilder content: () -> some View
     ) -> some View {
-        if #available(iOS 15.0, *) {
-            // 必须用尾随闭包形式：写成 `content: content` 会报
-            // "no exact matches in call to instance method 'safeAreaInset'"，
-            // 因为 iOS 15 的 spacing 是 CGFloat? 且 content 需要 ViewBuilder。
-            safeAreaInset(edge: edge, spacing: CGFloat?(spacing)) {
+        switch edge {
+        case .top:
+            VStack(spacing: spacing) {
                 content()
+                self
             }
-        } else {
-            switch edge {
-            case .top:
-                VStack(spacing: spacing) {
-                    content()
-                    self
-                }
-            default:
-                VStack(spacing: spacing) {
-                    self
-                    content()
-                }
+        default:
+            VStack(spacing: spacing) {
+                self
+                content()
             }
         }
     }
