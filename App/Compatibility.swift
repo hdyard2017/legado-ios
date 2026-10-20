@@ -1091,6 +1091,9 @@ private struct ReadingReturnKeyObserver: UIViewRepresentable {
 
     func makeCoordinator() -> Coordinator { Coordinator(action: action) }
 
+    /// 与项目内其他 `UIViewRepresentable` 的协调器保持一致，
+    /// 不额外标注 `@MainActor`——`UIViewRepresentable` 的
+    /// `makeCoordinator` / `updateUIView` 本身已在主线程上下文。
     final class Coordinator: NSObject {
         private let action: () -> Void
         private weak var observed: UITextField?
@@ -1113,6 +1116,7 @@ private struct ReadingReturnKeyObserver: UIViewRepresentable {
             field.addTarget(self, action: #selector(handleExit), for: .editingDidEndOnExit)
         }
 
+        /// 回车键被按下。
         @objc private func handleExit() {
             action()
         }
