@@ -108,12 +108,12 @@ struct ReplaceRuleEditorView: View {
             Section {
                 HStack {
                     Text("超时 (ms)")
-                    TextField("3000", value: $rule.timeoutMillisecond, format: .number.grouping(.never))
+                    ReadingNumberField(title: "3000", value: $rule.timeoutMillisecond)
                         .keyboardType(.numbersAndPunctuation).multilineTextAlignment(.trailing)
                 }
                 HStack {
                     Text("排序编号")
-                    TextField("0", value: $rule.sortOrder, format: .number.grouping(.never))
+                    ReadingNumberField(title: "0", value: $rule.sortOrder)
                         .keyboardType(.numbersAndPunctuation).multilineTextAlignment(.trailing)
                 }
                 Text("超时小于等于 0 时使用 3000 ms。单次正则最多运行 60 秒。规则按排序编号依次执行；资源超限或超时会保留原文并报告错误。")

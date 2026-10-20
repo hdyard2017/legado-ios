@@ -1393,3 +1393,52 @@ private struct ReadingTintModifier: ViewModifier {
         }
     }
 }
+
+// MARK: - 数值输入框（TextField value:format: 是 iOS 15+）
+
+/// 整数输入框，替代 iOS 15 才有的
+/// `TextField(_:value:format:)`。
+///
+/// 该初始化器依赖 `FormatStyle`（iOS 15+），iOS 14 无法编译；
+/// 这里改用 iOS 13 就有的字符串绑定 + 手动解析。
+/// 提交时机：点击外部或回车时写入绑定（通过 onSubmit 与 onChange 触发），
+/// 内容非法则回退为原值。
+struct ReadingNumberField: View {
+    let title: String
+    @Binding var value: Int64
+    @State private var text: String = ""
+
+    init(title: String, value: Binding<Int64>) {
+        self.title = title
+        self._value = value
+    }
+
+    var body: some View {
+        TextField(title, text: $text)
+            .onAppear { text = String(value) }
+            .onChange(of: value) { newValue in
+                // 外部改动时同步显示。
+                text = String(newValue)
+            }
+            .onSubmit { commit() }
+    }
+
+    private func commit() {
+        let trimmed = text.trimmingCharacters(in: .whitespaces)
+        guard let parsed = Int64(trimmed) else {
+            text = String(value)
+            return
+        }
+        if parsed != value { value = parsed }
+    }
+}
+
+extension ReadingNumberField {
+    /// `Int` 绑定重载。
+    init(title: String, value: Binding<Int>) {
+        self.init(title: title, value: Binding<Int64>(
+            get: { Int64(value.wrappedValue) },
+            set: { value.wrappedValue = Int($0) }
+        ))
+    }
+}
