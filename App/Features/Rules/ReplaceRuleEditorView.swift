@@ -83,12 +83,12 @@ struct ReplaceRuleEditorView: View {
 
     private var configuration: some View {
         Group {
-            Section("基本信息") {
+            Section {
                 TextField("名称", text: $rule.name)
                 TextField("分组", text: optional(\.group))
                 Toggle("启用", isOn: $rule.isEnabled)
-            }
-            Section("匹配与替换") {
+            } header: { Text("基本信息") }
+            Section {
                 Toggle("使用正则表达式", isOn: $rule.isRegex)
                 NavigationLink {
                     RuleCodeFieldView(title: "匹配内容", path: "pattern", text: $rule.pattern, language: .regex)
@@ -98,14 +98,14 @@ struct ReplaceRuleEditorView: View {
                 } label: { fieldPreview("替换为（留空即删除）", value: rule.replacement) }
                 Text("正则替换使用 $1、$2 引用捕获组；普通文本替换按字面匹配。")
                     .font(.footnote).foregroundColor(.secondary)
-            }
-            Section("作用范围") {
+            } header: { Text("匹配与替换") }
+            Section {
                 Toggle("章节标题", isOn: $rule.scopeTitle)
                 Toggle("正文", isOn: $rule.scopeContent)
                 ReadingTextField("限定书名或书源（留空为全部）", text: optional(\.scope), axis: .vertical)
                 ReadingTextField("排除书名或书源", text: optional(\.excludeScope), axis: .vertical)
-            }
-            Section("执行设置") {
+            } header: { Text("作用范围") }
+            Section {
                 HStack {
                     Text("超时 (ms)")
                     TextField("3000", value: $rule.timeoutMillisecond, format: .number.grouping(.never))
@@ -118,20 +118,20 @@ struct ReplaceRuleEditorView: View {
                 }
                 Text("超时小于等于 0 时使用 3000 ms。单次正则最多运行 60 秒。规则按排序编号依次执行；资源超限或超时会保留原文并报告错误。")
                     .font(.footnote).foregroundColor(.secondary)
-            }
+            } header: { Text("执行设置") }
         }
     }
 
     private var testForm: some View {
         Group {
-            Section("测试上下文") {
+            Section {
                 TextField("书名（用于作用范围判断）", text: $testBook)
                 TextField("书源地址（用于作用范围判断）", text: $testSource).readingInputConfiguration(autocapitalization: .never)
                 TextField("章节标题", text: $testTitle)
                 NavigationLink {
                     RuleCodeFieldView(title: "测试正文", path: "测试输入", text: $testContent)
                 } label: { fieldPreview("正文", value: testContent) }
-            }
+            } header: { Text("测试上下文") }
             Section {
                 Button { runTest() } label: {
                     HStack { Label(isTesting ? "测试中…" : "运行当前草稿", systemImage: "play.fill"); Spacer(); if isTesting { ProgressView() } }
@@ -139,17 +139,17 @@ struct ReplaceRuleEditorView: View {
                 if !rule.isEnabled { Text("规则处于停用状态，结果将保持原文。可在编辑页启用后测试。").font(.footnote).foregroundColor(.secondary) }
             }
             if let result = testResult {
-                Section("测试结果 · \(result.elapsedMilliseconds.readingFormattedFraction(fractionDigits: 1)) ms") {
+                Section {
                     Label(result.report.effectiveRuleIDs.isEmpty ? "未改变文本（请检查匹配、启用状态及作用范围）" : "规则已生效",
                           systemImage: result.report.effectiveRuleIDs.isEmpty ? "info.circle" : "checkmark.circle")
                     ReadingLabeledContent("标题", value: result.report.title)
                     Text(result.report.content.isEmpty ? "（正文为空）" : result.report.content)
                         .font(.body.monospaced()).readingTextSelection()
-                }
+                } header: { Text("测试结果 · \(result.elapsedMilliseconds.readingFormattedFraction(fractionDigits: 1)) ms") }
                 if !result.report.diagnostics.isEmpty {
-                    Section("执行错误") {
+                    Section {
                         ForEach(result.report.diagnostics) { diagnostic in Text(diagnostic.message).foregroundColor(.red) }
-                    }
+                    } header: { Text("执行错误") }
                 }
             }
         }

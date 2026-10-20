@@ -27,17 +27,17 @@ struct RSSSourceDebugView: View {
 
     var body: some View {
         List {
-            Section("调试输入") {
+            Section {
                 Text(source.sourceName).font(.headline)
                 TextField("关键词，或 分类::地址", text: $model.input)
                     .readingInputConfiguration(autocapitalization: .never, disableAutocorrection: true)
                     .onSubmit { model.run(source) }
                 Button { model.run(source) } label: { Label(model.running ? "正在调试…" : "运行完整链路", systemImage: "play.fill") }
                     .disabled(model.running)
-            }
+            } header: { Text("调试输入") }
             if model.running { Section { HStack { ProgressView(); Text("正在请求并解析列表与正文") } } }
             if let report = model.report {
-                Section(report.passed ? "调试通过" : "发现兼容问题") {
+                Section {
                     ForEach(report.steps) { step in
                         DisclosureGroup {
                             if step.diagnostics.isEmpty { Text("无规则诊断").foregroundColor(.secondary) }
@@ -48,7 +48,7 @@ struct RSSSourceDebugView: View {
                             Label { VStack(alignment: .leading) { Text(step.stage.title); Text(step.summary).font(.caption).foregroundColor(.secondary).lineLimit(2) } } icon: { Image(systemName: icon(step.status)).foregroundColor(color(step.status)) }
                         }
                     }
-                }
+                } header: { Text(report.passed ? "调试通过" : "发现兼容问题") }
                 if !report.articles.isEmpty {
                     Section("文章样本") { ForEach(report.articles.prefix(10)) { Text($0.title) } }
                 }

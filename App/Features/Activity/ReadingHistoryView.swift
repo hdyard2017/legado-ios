@@ -65,11 +65,11 @@ struct ReadingHistoryView: View {
             ToolbarItem(placement: .primaryAction) {
                 Menu("阅读记录选项", systemImage: "ellipsis.circle") {
                     Toggle("记录阅读时长", isOn: $enableReadRecord)
-                    Section("排序") {
+                    Section {
                         sortButton("书名", value: 0)
                         sortButton("阅读时长", value: 1)
                         sortButton("最后阅读", value: 2)
-                    }
+                    } header: { Text("排序") }
                     if !activity.summaries.isEmpty {
                         Button("清空", systemImage: "trash") { confirmsClear = true }
                         .readingRole(.destructive)

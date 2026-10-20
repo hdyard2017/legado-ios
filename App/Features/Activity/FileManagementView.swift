@@ -242,7 +242,7 @@ struct FileManagementView: View {
             ReadingLabeledContent("本地文件", value: "\(model.files.count) 个")
             ReadingLabeledContent("占用空间", value: ByteCountFormatter.string(fromByteCount: model.files.reduce(0) { $0 + $1.bytes }, countStyle: .file))
         }
-        Section("文件") {
+        Section {
             if displayedFiles.isEmpty {
                 ReadingUnavailableView(query.isEmpty ? "还没有本地文件" : "没有匹配的文件", systemImage: "doc.text", description: Text("可从系统“文件”导入 TXT，文件会复制到应用中。"))
                 Button("导入 TXT 文件", systemImage: "plus") { importsFile = true }
@@ -269,9 +269,9 @@ struct FileManagementView: View {
                     Button("导出", systemImage: "square.and.arrow.up") { export(file) }.readingTint(.blue)
                 }
             }
-        }
+        } header: { Text("文件") }
         if !missingBooks.isEmpty {
-            Section("文件已丢失") {
+            Section {
                 ForEach(missingBooks) { book in
                     HStack {
                         Label(book.name, systemImage: "doc.badge.ellipsis")
@@ -282,7 +282,7 @@ struct FileManagementView: View {
                         .readingRole(.destructive)
                     }
                 }
-            }
+            } header: { Text("文件已丢失") }
         }
     }
 

@@ -1118,7 +1118,7 @@ struct ReaderView: View {
     private var styleControls: some View {
         ReadingNavigationStack {
             Form {
-                Section("快速排版") {
+                Section {
                     HStack(spacing: 12) {
                         Button {
                             fontSize = max(5, fontSize - 1)
@@ -1155,9 +1155,9 @@ struct ReaderView: View {
                         readerChoiceChip("宽松", selected: lineSpacing >= 18) { lineSpacing = 22 }
                     }
                     Toggle("两端对齐", isOn: $fullJustify)
-                }
+                } header: { Text("快速排版") }
 
-                Section("阅读背景") {
+                Section {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
                             ForEach(ReaderStylePreset.legadoDefaults) { preset in
@@ -1202,9 +1202,9 @@ struct ReaderView: View {
                     if let backgroundError {
                         Text(backgroundError).font(.footnote).foregroundColor(.red)
                     }
-                }
+                } header: { Text("阅读背景") }
 
-                Section("文字") {
+                Section {
                     valueSlider("字号", value: $fontSize, range: 5...50, format: { "\(Int($0))" })
                     valueSlider("字间距", value: $letterSpacing, range: -0.5...0.5, step: 0.01, format: { String(format: "%.2f", $0) })
                     valueSlider("行间距", value: $lineSpacing, range: 0...50, format: { "\(Int($0))" })
@@ -1237,9 +1237,9 @@ struct ReaderView: View {
                         Text("实线").tag(1)
                         Text("虚线").tag(2)
                     }
-                }
+                } header: { Text("文字") }
 
-                Section("章节标题") {
+                Section {
                     Picker("标题模式", selection: $titleMode) {
                         Text("左对齐").tag(0)
                         Text("居中").tag(1)
@@ -1249,9 +1249,9 @@ struct ReaderView: View {
                     valueSlider("标题字号增量", value: $titleSize, range: -10...30, format: { String(format: "%+.0f", $0) })
                     valueSlider("标题上间距", value: $titleTopSpacing, range: 0...100, format: { "\(Int($0))" })
                     valueSlider("标题下间距", value: $titleBottomSpacing, range: 0...100, format: { "\(Int($0))" })
-                }
+                } header: { Text("章节标题") }
 
-                Section("翻页动画") {
+                Section {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 10) {
                             ForEach(Self.pageAnimationChoices, id: \.0) { choice in
@@ -1277,16 +1277,16 @@ struct ReaderView: View {
                          : "当前模式按整屏翻页；左右滑动或点击左右三分之一区域翻页，点击中间区域打开菜单。")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                }
+                } header: { Text("翻页动画") }
 
-                Section("正文边距") {
+                Section {
                     valueSlider("左边距", value: $paddingLeft, range: 0...100, format: { "\(Int($0))" })
                     valueSlider("右边距", value: $paddingRight, range: 0...100, format: { "\(Int($0))" })
                     valueSlider("上边距", value: $paddingTop, range: 0...100, format: { "\(Int($0))" })
                     valueSlider("下边距", value: $paddingBottom, range: 0...100, format: { "\(Int($0))" })
-                }
+                } header: { Text("正文边距") }
 
-                Section("页眉页脚") {
+                Section {
                     Picker("页眉显示", selection: $headerMode) {
                         Text("状态栏显示时隐藏").tag(0)
                         Text("显示").tag(1)
@@ -1304,21 +1304,21 @@ struct ReaderView: View {
                     tipPicker("页脚右", selection: $tipFooterRight)
                     Toggle("页眉分隔线", isOn: $showHeaderLine)
                     Toggle("页脚分隔线", isOn: $showFooterLine)
-                }
+                } header: { Text("页眉页脚") }
 
-                Section("页眉边距") {
+                Section {
                     valueSlider("左边距", value: $headerPaddingLeft, range: 0...100, format: { "\(Int($0))" })
                     valueSlider("右边距", value: $headerPaddingRight, range: 0...100, format: { "\(Int($0))" })
                     valueSlider("上边距", value: $headerPaddingTop, range: 0...100, format: { "\(Int($0))" })
                     valueSlider("下边距", value: $headerPaddingBottom, range: 0...100, format: { "\(Int($0))" })
-                }
+                } header: { Text("页眉边距") }
 
-                Section("页脚边距") {
+                Section {
                     valueSlider("左边距", value: $footerPaddingLeft, range: 0...100, format: { "\(Int($0))" })
                     valueSlider("右边距", value: $footerPaddingRight, range: 0...100, format: { "\(Int($0))" })
                     valueSlider("上边距", value: $footerPaddingTop, range: 0...100, format: { "\(Int($0))" })
                     valueSlider("下边距", value: $footerPaddingBottom, range: 0...100, format: { "\(Int($0))" })
-                }
+                } header: { Text("页脚边距") }
             }
             .navigationTitle("阅读样式")
             .navigationBarTitleDisplayMode(.inline)
@@ -1522,7 +1522,7 @@ struct ReaderView: View {
                     }
                 }
 
-                Section("屏幕") {
+                Section {
                     Picker("屏幕方向", selection: $screenOrientation) {
                         Text("跟随系统").tag("0")
                         Text("竖向").tag("1")
@@ -1543,9 +1543,9 @@ struct ReaderView: View {
                         UIScreen.main.brightness = CGFloat(brightnessBeforeReading)
                         readerBrightness = brightnessBeforeReading
                     }
-                }
+                } header: { Text("屏幕") }
 
-                Section("朗读") {
+                Section {
                     Picker("全局朗读引擎", selection: $appTTSEngine) {
                         Text("系统 TTS").tag("")
                         ForEach(httpTTSEngines) { engine in
@@ -1584,9 +1584,9 @@ struct ReaderView: View {
                     if let error = speech.errorMessage {
                         Text(error).font(.footnote).foregroundColor(.red)
                     }
-                }
+                } header: { Text("朗读") }
 
-                Section("操作") {
+                Section {
                     Button("自动阅读设置", systemImage: "play.circle") {
                         showsReaderSettings = false
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { showsAutoReadControls = true }
@@ -1595,7 +1595,7 @@ struct ReaderView: View {
                         showsReaderSettings = false
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { showsClickActionSettings = true }
                     }
-                }
+                } header: { Text("操作") }
             }
             .navigationTitle("阅读设置")
             .navigationBarTitleDisplayMode(.inline)

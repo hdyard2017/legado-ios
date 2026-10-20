@@ -532,7 +532,7 @@ private struct BookGroupManagerView: View {
                         Text("系统分组").font(.caption).foregroundColor(.secondary)
                     }
                 }
-                Section("自定义分组") {
+                Section {
                     ForEach(customGroups) { group in
                         HStack {
                             Toggle(isOn: Binding(
@@ -559,7 +559,7 @@ private struct BookGroupManagerView: View {
                     .onMove { offsets, destination in
                         Task { await library.moveGroups(from: offsets, to: destination) }
                     }
-                }
+                } header: { Text("自定义分组") }
             }
             .overlay(if customGroups.isEmpty { ReadingUnavailableView("没有自定义分组", systemImage: "rectangle.3.group", description: Text("点右上角加号新建分组。")) })
             .navigationTitle("书架分组")
@@ -1654,14 +1654,14 @@ private struct AllBookmarksView: View {
                 )
             } else {
                 ForEach(sections) { section in
-                    Section("\(section.bookName)(\(section.author))") {
+                    Section {
                         ForEach(section.bookmarks) { bookmark in
                             bookmarkLink(bookmark)
                                 .contextMenu {
                                     Button("编辑书签", systemImage: "square.and.pencil") { editingBookmark = bookmark }
                                 }
                         }
-                    }
+                    } header: { Text("\(section.bookName)(\(section.author))") }
                 }
             }
         }
@@ -2019,7 +2019,7 @@ private struct ReadingPreferencesView: View {
 
     var body: some View {
         Form {
-            Section("排版") {
+            Section {
                 ReadingLabeledContent("字号", value: String(format: "%.0f", fontSize))
                 Slider(value: $fontSize, in: 5...50, step: 1)
                 ReadingLabeledContent("字间距", value: String(format: "%.2f", letterSpacing))
@@ -2039,14 +2039,14 @@ private struct ReadingPreferencesView: View {
                     Text("实线").tag(1)
                     Text("虚线").tag(2)
                 }
-            }
-            Section("正文边距") {
+            } header: { Text("排版") }
+            Section {
                 paddingSlider("左边距", value: $paddingLeft)
                 paddingSlider("右边距", value: $paddingRight)
                 paddingSlider("上边距", value: $paddingTop)
                 paddingSlider("下边距", value: $paddingBottom)
-            }
-            Section("章节标题") {
+            } header: { Text("正文边距") }
+            Section {
                 Picker("标题模式", selection: $titleMode) {
                     Text("左对齐").tag(0)
                     Text("居中").tag(1)
@@ -2058,8 +2058,8 @@ private struct ReadingPreferencesView: View {
                 Slider(value: $titleTopSpacing, in: 0...100, step: 1)
                 ReadingLabeledContent("下间距", value: String(Int(titleBottomSpacing)))
                 Slider(value: $titleBottomSpacing, in: 0...100, step: 1)
-            }
-            Section("翻页") {
+            } header: { Text("章节标题") }
+            Section {
                 Picker("翻页模式", selection: $pageAnimation) {
                     Text("覆盖").tag(0)
                     Text("滑动").tag(1)
@@ -2067,12 +2067,12 @@ private struct ReadingPreferencesView: View {
                     Text("滚动").tag(3)
                     Text("无动画").tag(4)
                 }
-            }
-            Section("屏幕") {
+            } header: { Text("翻页") }
+            Section {
                 Toggle("阅读时不自动锁屏", isOn: $keepScreenOn)
                 Toggle("阅读时隐藏小横条", isOn: $hideHomeIndicator)
-            }
-            Section("阅读背景") {
+            } header: { Text("屏幕") }
+            Section {
                 ForEach(ReaderStylePreset.legadoDefaults) { preset in
                     Button {
                         theme = preset.id
@@ -2090,8 +2090,8 @@ private struct ReadingPreferencesView: View {
                         }
                     }
                 }
-            }
-            Section("预览") {
+            } header: { Text("阅读背景") }
+            Section {
                 Text("雨落在旧城的瓦檐上，故事从一束灯光开始。")
                     .tracking(letterSpacing * fontSize)
                     .font(.system(size: fontSize, design: .serif))
@@ -2099,7 +2099,7 @@ private struct ReadingPreferencesView: View {
                     .foregroundColor(Color(ReaderStylePreset.resolve(theme).foreground))
                     .padding(.vertical, 12)
                     .listRowBackground(Color(ReaderStylePreset.resolve(theme).background))
-            }
+            } header: { Text("预览") }
         }
         .navigationTitle("阅读设置")
     }

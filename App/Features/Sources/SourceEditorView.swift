@@ -87,7 +87,7 @@ struct SourceEditorView: View {
     @ViewBuilder private var fieldSections: some View {
         if sectionID == "options" { options }
         else {
-            Section(currentSection.title) {
+            Section {
                 ForEach(currentSection.fields) { field in
                     NavigationLink {
                         RuleCodeFieldView(title: field.title, path: field.path, text: string(field.path),
@@ -100,19 +100,19 @@ struct SourceEditorView: View {
                         }
                     }
                 }
-            }
+            } header: { Text(currentSection.title) }
             Section {
                 Text("点击字段可全屏编辑规则。支持 @css:、XPath、$. JSONPath、@js:、{{key}}、{{page}} 和 ## 替换语法。未识别的扩展字段保留在 JSON 中。")
                     .font(.footnote).foregroundColor(.secondary)
             }
         }
         if !validation.isEmpty {
-            Section("静态检查") {
+            Section {
                 ForEach(validation) { issue in
                     Label("\(issue.field)：\(issue.message)", systemImage: issue.severity == .error ? "xmark.circle" : "exclamationmark.triangle")
                         .font(.footnote).foregroundColor(issue.severity == .error ? .red : .orange)
                 }
-            }
+            } header: { Text("静态检查") }
         }
     }
 
@@ -144,27 +144,27 @@ struct SourceEditorView: View {
 
     private var options: some View {
         Group {
-            Section("书源类型") {
+            Section {
                 Picker("类型", selection: Binding(get: { Int(document.value(at: "bookSourceType")?.stringValue ?? "0") ?? 0 },
                     set: { document.set(.number(Double($0)), at: "bookSourceType") })) {
                     Text("文本").tag(0); Text("音频").tag(1); Text("图片").tag(2); Text("文件").tag(3); Text("视频").tag(4)
                 }
-            }
-            Section("开关") {
+            } header: { Text("书源类型") }
+            Section {
                 Toggle("启用书源", isOn: boolean("enabled", fallback: true))
                 Toggle("启用发现", isOn: boolean("enabledExplore", fallback: true))
                 Toggle("Cookie Jar", isOn: boolean("enabledCookieJar", fallback: true))
                 Toggle("事件监听", isOn: boolean("eventListener"))
                 Toggle("定制按钮", isOn: boolean("customButton"))
-            }
-            Section("排序与状态") {
+            } header: { Text("开关") }
+            Section {
                 ForEach(["customOrder", "weight", "lastUpdateTime", "respondTime"], id: \.self) { key in
                     HStack {
                         Text(["customOrder": "排序编号", "weight": "搜索权重", "lastUpdateTime": "更新时间 (ms)", "respondTime": "响应时间 (ms)"][key]!)
                         TextField(key, text: number(key)).keyboardType(.numbersAndPunctuation).multilineTextAlignment(.trailing)
                     }
                 }
-            }
+            } header: { Text("排序与状态") }
         }
     }
 

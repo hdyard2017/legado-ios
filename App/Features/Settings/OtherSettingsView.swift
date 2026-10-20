@@ -18,7 +18,7 @@ struct OtherSettingsView: View {
 
     var body: some View {
         Form {
-            Section("启动与书架") {
+            Section {
                 Picker("启动页面", selection: $defaultHomePage) {
                     Text("书架").tag("bookshelf")
                     Text("发现").tag("explore")
@@ -27,8 +27,8 @@ struct OtherSettingsView: View {
                 }
                 Toggle("启动时更新书架", isOn: $autoRefresh)
                 Toggle("自动更新仅检查读过的书", isOn: $onlyUpdateRead).disabled(!autoRefresh)
-            }
-            Section("网络与存储") {
+            } header: { Text("启动与书架") }
+            Section {
                 NavigationLink {
                     NetworkSettingsView()
                 } label: { Label("网络与缓存设置", systemImage: "network") }
@@ -37,7 +37,7 @@ struct OtherSettingsView: View {
                 } label: { Label("章节缓存管理", systemImage: "internaldrive") }
                 Button("清理网页缓存", systemImage: "globe") { maintenance = .webCache }
                 Button("整理数据库", systemImage: "externaldrive.badge.checkmark") { maintenance = .database }
-            }
+            } header: { Text("网络与存储") }
             Section {
                 Toggle("记录运行日志", isOn: Binding(get: { settings.recordLog }, set: { enabled in
                     var value = ApplicationSettingsStore.shared.settings
@@ -125,7 +125,7 @@ struct NetworkSettingsView: View {
             } header: { Text("自定义 Hosts") } footer: {
                 Text("每行填写 IP地址 域名，例如 192.168.1.2 books.example.com。支持 IPv4、IPv6 和 # 注释。适用于应用内 HTTP/HTTPS 请求；系统网页、登录网页和系统媒体播放器使用系统网络设置。")
             }
-            Section("连接") {
+            Section {
                 Picker("请求超时", selection: $settings.timeoutSeconds) {
                     Text("跟随书源").tag(0)
                     ForEach([5, 10, 15, 30, 60, 120, 180, 300], id: \.self) { Text("\($0) 秒").tag($0) }
@@ -134,8 +134,8 @@ struct NetworkSettingsView: View {
                 Toggle("兼容无效证书的书源", isOn: $settings.ignoreCertificateErrors)
                 Text("证书兼容开启时允许自签名或过期证书；关闭后由系统验证 HTTPS 证书。")
                     .font(.footnote).foregroundColor(.secondary)
-            }
-            Section("章节缓存") {
+            } header: { Text("连接") }
+            Section {
                 Picker("容量上限", selection: $settings.chapterCacheMB) {
                     ForEach([16, 32, 64, 128, 256, 512, 1024, 2048, 4096], id: \.self) {
                         Text($0 >= 1024 ? "\($0 / 1024) GB" : "\($0) MB").tag($0)
@@ -144,7 +144,7 @@ struct NetworkSettingsView: View {
                 Stepper(settings.prefetchChapters == 0 ? "关闭章节预加载" : "预加载 \(settings.prefetchChapters) 章", value: $settings.prefetchChapters, in: 0...20)
                 Text("超出上限时清理最久未读取的章节；容量调整在保存时生效。")
                     .font(.footnote).foregroundColor(.secondary)
-            }
+            } header: { Text("章节缓存") }
             Section {
                 Button("恢复本页默认值") {
                     let recordLog = settings.recordLog

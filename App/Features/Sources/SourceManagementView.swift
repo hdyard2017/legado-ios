@@ -240,7 +240,7 @@ private struct SourceTextImportView: View {
                 }
                 .pickerStyle(.segmented)
 
-                Section(mode == 0 ? "书源 URL" : "书源 JSON") {
+                Section {
                     if mode == 0 {
                         TextField("https://example.com/sources.json", text: $value)
                             .readingInputConfiguration(autocapitalization: .never)
@@ -249,7 +249,7 @@ private struct SourceTextImportView: View {
                         SyntaxCodeEditor(text: $value, language: .json)
                             .frame(minHeight: 220)
                     }
-                }
+                } header: { Text(mode == 0 ? "书源 URL" : "书源 JSON") }
                 Section {
                     Text("导入前可预览并选择书源。地址相同的书源将被替换。")
                         .font(.footnote).foregroundColor(.secondary)
@@ -325,7 +325,7 @@ private struct SourceGroupManagerView: View {
     var body: some View {
         ReadingNavigationStack {
             List {
-                Section("新建分组") {
+                Section {
                     HStack {
                         TextField("例如：文学", text: $newGroup)
                         Button("添加") {
@@ -338,8 +338,8 @@ private struct SourceGroupManagerView: View {
                     }
                     Text("新分组会分配给当前未分组书源，与 Legado 的分组管理行为一致。")
                         .font(.caption).foregroundColor(.secondary)
-                }
-                Section("已有分组") {
+                } header: { Text("新建分组") }
+                Section {
                     ForEach(library.groups, id: \.self) { group in
                         HStack {
                             Label(group, systemImage: "folder.fill")
@@ -358,7 +358,7 @@ private struct SourceGroupManagerView: View {
                             } label: { Image(systemName: "ellipsis.circle") }
                         }
                     }
-                }
+                } header: { Text("已有分组") }
             }
             .navigationTitle("书源分组")
             .navigationBarTitleDisplayMode(.inline)
@@ -388,7 +388,7 @@ private struct SourceBatchGroupView: View {
     var body: some View {
         ReadingNavigationStack {
             List {
-                Section("已选择 \(sourceIDs.count) 个书源") {
+                Section {
                     HStack {
                         TextField("输入新分组", text: $customGroup)
                         Button("加入") {
@@ -398,22 +398,22 @@ private struct SourceBatchGroupView: View {
                         }
                         .disabled(BookSource.parseGroups(customGroup).isEmpty)
                     }
-                }
-                Section("加入现有分组") {
+                } header: { Text("已选择 \(sourceIDs.count) 个书源") }
+                Section {
                     ForEach(library.groups, id: \.self) { group in
                         Button { Task { await library.addGroup(group, to: sourceIDs) } } label: {
                             Label(group, systemImage: "folder.badge.plus")
                         }
                     }
-                }
-                Section("从分组移除") {
+                } header: { Text("加入现有分组") }
+                Section {
                     ForEach(library.groups, id: \.self) { group in
                         Button {
                             Task { await library.removeGroup(group, from: sourceIDs) }
                         } label: { Label(group, systemImage: "folder.badge.minus") }
                         .readingRole(.destructive)
                     }
-                }
+                } header: { Text("从分组移除") }
             }
             .navigationTitle("批量归组")
             .navigationBarTitleDisplayMode(.inline)
@@ -431,20 +431,20 @@ private struct SourceDetailView: View {
 
     var body: some View {
         List {
-            Section("基本信息") {
+            Section {
                 ReadingLabeledContent("名称", value: current.bookSourceName)
                 ReadingLabeledContent("地址", value: current.bookSourceUrl)
                 ReadingLabeledContent("分组", value: current.bookSourceGroup ?? "未分组")
                 ReadingLabeledContent("类型", value: String(current.bookSourceType))
-            }
-            Section("能力") {
+            } header: { Text("基本信息") }
+            Section {
                 CapabilityRow(title: "搜索", available: current.searchUrl?.isEmpty == false)
                 CapabilityRow(title: "发现", available: current.exploreUrl?.isEmpty == false)
                 CapabilityRow(title: "详情", available: current.ruleBookInfo != nil)
                 CapabilityRow(title: "目录", available: current.ruleToc != nil)
                 CapabilityRow(title: "正文", available: current.ruleContent != nil)
-            }
-            Section("状态") {
+            } header: { Text("能力") }
+            Section {
                 Toggle("启用书源", isOn: Binding(
                     get: { library.sources.first(where: { $0.id == current.id })?.enabled ?? current.enabled },
                     set: { value in Task { await library.setEnabled(value, for: current.id) } }
@@ -453,8 +453,8 @@ private struct SourceDetailView: View {
                     get: { library.sources.first(where: { $0.id == current.id })?.enabledExplore ?? current.enabledExplore },
                     set: { value in Task { await library.setExploreEnabled(value, for: current.id) } }
                 ))
-            }
-            Section("兼容检查") {
+            } header: { Text("状态") }
+            Section {
                 NavigationLink {
                     SearchView(fixedSource: current)
                 } label: {
@@ -467,9 +467,9 @@ private struct SourceDetailView: View {
                 }
                 Text("使用你输入的关键词，逐步验证搜索、详情、目录和正文规则。")
                     .font(.footnote).foregroundColor(.secondary)
-            }
+            } header: { Text("兼容检查") }
             if current.loginUrl?.isEmpty == false {
-                Section("账户") {
+                Section {
                     NavigationLink {
                         SourceLoginView(source: current)
                     } label: {
@@ -477,7 +477,7 @@ private struct SourceDetailView: View {
                     }
                     Text("登录 Cookie 与阅读请求共享；若书源提供检测脚本，会在页面载入后自动验证。")
                         .font(.footnote).foregroundColor(.secondary)
-                }
+                } header: { Text("账户") }
             }
             if let comment = current.bookSourceComment, !comment.isEmpty {
                 Section("说明") { Text(comment) }
@@ -547,7 +547,7 @@ struct SourceImportReviewView: View {
                 }
 
                 if !pending.items.isEmpty {
-                    Section("导入设置") {
+                    Section {
                         HStack {
                             TextField("自定义分组", text: $customGroup)
                             Toggle("追加", isOn: $addCustomGroup).labelsHidden()
@@ -556,10 +556,10 @@ struct SourceImportReviewView: View {
                         Toggle("保留原分组", isOn: $keepOriginalGroup)
                         Toggle("保留原启用状态", isOn: $keepOriginalEnabled)
                         Toggle("显示书源备注", isOn: $showComments)
-                    }
+                    } header: { Text("导入设置") }
                 }
 
-                Section("有效书源（\(pending.validCount)）") {
+                Section {
                     ForEach(pending.items) { item in
                         Button {
                             if !selectedIDs.insert(item.id).inserted { selectedIDs.remove(item.id) }
@@ -583,10 +583,10 @@ struct SourceImportReviewView: View {
                             }
                         }
                     }
-                }
+                } header: { Text("有效书源（\(pending.validCount)）") }
 
                 if !pending.invalidItems.isEmpty {
-                    Section("失效书源（\(pending.invalidCount)）") {
+                    Section {
                         ForEach(pending.invalidItems) { item in
                             HStack(alignment: .top, spacing: 10) {
                                 Image(systemName: "xmark.circle.fill")
@@ -606,7 +606,7 @@ struct SourceImportReviewView: View {
                                 }
                             }
                         }
-                    }
+                    } header: { Text("失效书源（\(pending.invalidCount)）") }
                 }
             }
             .navigationTitle("书源导入预检")

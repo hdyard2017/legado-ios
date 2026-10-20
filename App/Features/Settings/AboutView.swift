@@ -50,24 +50,24 @@ struct AboutView: View {
             } footer: {
                 Text("IPA 可从项目 GitHub Releases 获取，并自行签名安装。项目暂不上架 App Store，也不提供 TestFlight。")
             }
-            Section("开源许可") {
+            Section {
                 NavigationLink("开源许可") { OpenSourceLicensesView() }
-            }
-            Section("免责协议") {
+            } header: { Text("开源许可") }
+            Section {
                 Text("小浣熊阅读不提供、内置或分发网络书源，也不提供在线书库。书源由用户自行从网络公开分享获取，或自行编写后导入；在线书籍及订阅内容由对应的第三方网站提供。")
                 Text("书籍正文、封面、简介等内容的版权归原作者或合法权利人所有。书源可被导入、内容可被访问，不代表已获得版权授权；请仅在获得授权或法律允许的范围内使用，并支持正版阅读。")
                 Text("第三方书源及其内容不受本应用控制，可能因网站调整、网络环境等原因失效。本应用不保证第三方内容的准确性、完整性、安全性或书源的持续可用性，请自行核实来源。")
                 Text("用户应对自行导入的书源及使用行为负责，遵守适用法律法规和来源网站的使用规则，不得利用本应用侵犯他人权益、传播违法内容或未经授权复制、分发作品。")
                 Text("如发现涉嫌侵权内容，请停止访问、删除相关书源及本地缓存，并向内容来源网站反馈。本协议不免除任何一方依法应承担的责任。")
-            }
+            } header: { Text("免责协议") }
             .font(.footnote)
             .lineSpacing(4)
             .readingTextSelection()
-            Section("数据与隐私") {
+            Section {
                 Text("书架、阅读进度、书源和诊断日志保存在本机。导入书源、阅读在线内容和刷新订阅时，会连接相应来源的网站。")
                 Text("应用不会自动上传诊断日志；可在日志页面手动导出。")
                 Text("应用不提供内置网络书源或在线书库。请使用你有权访问的内容与书源。")
-            }.font(.footnote)
+            } header: { Text("数据与隐私") }
         }
         .navigationTitle("关于")
         .navigationBarTitleDisplayMode(.inline)

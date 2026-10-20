@@ -267,7 +267,7 @@ struct SourceBatchTestView: View {
                 }
             }
 
-            Section("书源") {
+            Section {
                 ForEach(visibleSources) { source in
                     SourceBatchTestRow(
                         source: source,
@@ -276,7 +276,7 @@ struct SourceBatchTestView: View {
                         onToggle: { model.toggleSelection(source.id) }
                     )
                 }
-            }
+            } header: { Text("书源") }
         }
         .navigationTitle("书源测试")
         .navigationBarTitleDisplayMode(.inline)

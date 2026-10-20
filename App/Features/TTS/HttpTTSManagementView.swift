@@ -188,14 +188,14 @@ private struct HttpTTSEditorView: View {
 
     var body: some View {
         Form {
-            Section("基本") {
+            Section {
                 TextField("名称", text: $engine.name)
                 TextEditor(text: $engine.url).frame(minHeight: 110)
                 TextField("Content-Type 正则", text: optional(\.contentType))
                 TextField("并发率", text: optional(\.concurrentRate))
                 Toggle("启用 Cookie", isOn: optionalBool(\.enabledCookieJar))
-            }
-            Section("请求与脚本") {
+            } header: { Text("基本") }
+            Section {
                 fieldLabel("Header")
                 TextEditor(text: optional(\.header)).frame(minHeight: 80)
                 fieldLabel("JS 库")
@@ -211,15 +211,15 @@ private struct HttpTTSEditorView: View {
                 }
                 fieldLabel("登录检查 JS")
                 TextEditor(text: optional(\.loginCheckJs)).frame(minHeight: 100)
-            }
-            Section("测试") {
+            } header: { Text("请求与脚本") }
+            Section {
                 TextField("测试文本", text: $testText)
                 Button(speech.isSpeaking ? "停止测试" : "播放测试", systemImage: speech.isSpeaking ? "stop.fill" : "play.fill") {
                     speech.configure(followsSystemRate: false, speechRate: 5, readByPage: true, streamsHTTPAudio: true)
                     speech.toggleHTTP(engine: engine, text: testText)
                 }
                 if let error = speech.errorMessage { Text(error).foregroundColor(.red).font(.footnote) }
-            }
+            } header: { Text("测试") }
         }
         .navigationTitle(engine.name.isEmpty ? "新建在线朗读引擎" : engine.name)
         .navigationBarTitleDisplayMode(.inline)

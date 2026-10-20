@@ -191,10 +191,10 @@ private struct TxtTocRuleEditView: View {
                     get: { value.replacement }, set: { value.replacement = $0 }
                 ), axis: .vertical).font(.body.monospaced())
                 Toggle("启用", isOn: $value.enable)
-                Section("测试文本") {
+                Section {
                     TextEditor(text: $sample).frame(minHeight: 130)
                     Text(testResult).font(.caption.monospaced()).foregroundColor(.secondary).readingTextSelection()
-                }
+                } header: { Text("测试文本") }
             }
             .navigationTitle("TXT目录规则")
             .navigationBarTitleDisplayMode(.inline)
