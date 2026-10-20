@@ -188,7 +188,7 @@ struct SourceManagementView: View {
                 }
                 .font(.subheadline.weight(.semibold))
                 .padding(.horizontal, 18).padding(.vertical, 12)
-                .background(.ultraThinMaterial)
+                .readingMaterialBackground(.ultraThin)
             }
         }
         .sheet(isPresented: $showsNewSource) { SourceEditorView().environmentObject(library) }

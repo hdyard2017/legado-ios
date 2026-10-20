@@ -302,7 +302,7 @@ struct SourceBatchTestView: View {
                 }
                 .font(.subheadline.weight(.semibold))
                 .padding(.horizontal, 18).padding(.vertical, 12)
-                .background(.ultraThinMaterial)
+                .readingMaterialBackground(.ultraThin)
             }
         }
         .readingAlert(item: $cleanupAction) { action in

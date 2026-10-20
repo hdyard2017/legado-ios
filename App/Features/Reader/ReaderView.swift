@@ -1427,7 +1427,7 @@ struct ReaderView: View {
                             }
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .padding(6)
-                            .background(RoundedRectangle(cornerRadius: 10).fill(.thinMaterial))
+                            .readingMaterialBackground(.thin)
                         }
                     }
                 }

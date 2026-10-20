@@ -1442,3 +1442,100 @@ extension ReadingNumberField {
         ))
     }
 }
+
+// MARK: - Material 材质（iOS 14）
+
+/// 模糊材质的跨版本表示。
+///
+/// iOS 15 起 `Material` 遵循 `ShapeStyle`，可以直接传给 `fill()`；
+/// iOS 14 上 Material 只是 `UIColor`，必须走 `Color(uiColor:)`。
+/// 这里统一收口，低版本自动转换为对应的 `UIColor` 系统材质。
+enum ReadingMaterial {
+    case ultraThin
+    case thin
+    case regular
+    case thick
+    case ultraThick
+
+    /// iOS 14 可用的等价颜色。
+    var legacyColor: Color {
+        switch self {
+        case .ultraThin: return Color(UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(white: 0.18, alpha: 0.62)
+                : UIColor(white: 1, alpha: 0.62)
+        })
+        case .thin: return Color(UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(white: 0.16, alpha: 0.72)
+                : UIColor(white: 1, alpha: 0.72)
+        })
+        case .regular: return Color(UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(white: 0.14, alpha: 0.82)
+                : UIColor(white: 1, alpha: 0.82)
+        })
+        case .thick: return Color(UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(white: 0.12, alpha: 0.9)
+                : UIColor(white: 1, alpha: 0.9)
+        })
+        case .ultraThick: return Color(UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(white: 0.1, alpha: 0.96)
+                : UIColor(white: 1, alpha: 0.96)
+        })
+        }
+    }
+}
+
+extension Shape {
+    /// 用材质填充形状，iOS 14 上退化为等效的半透明系统色。
+    func readingFill(_ material: ReadingMaterial) -> some View {
+        modifier(ReadingMaterialFillModifier(shape: self, material: material))
+    }
+}
+
+private struct ReadingMaterialFillModifier<S: Shape>: ViewModifier {
+    var shape: S
+    var material: ReadingMaterial
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if #available(iOS 15.0, *) {
+            switch material {
+            case .ultraThin: content.background(shape.fill(.ultraThinMaterial))
+            case .thin: content.background(shape.fill(.thinMaterial))
+            case .regular: content.background(shape.fill(.regularMaterial))
+            case .thick: content.background(shape.fill(.thickMaterial))
+            case .ultraThick: content.background(shape.fill(.ultraThickMaterial))
+            }
+        } else {
+            content.background(shape.fill(material.legacyColor))
+        }
+    }
+}
+
+extension View {
+    /// 用材质填充背景，iOS 14 上退化为等效的半透明系统色。
+    func readingMaterialBackground(_ material: ReadingMaterial) -> some View {
+        modifier(ReadingMaterialBackgroundModifier(material: material))
+    }
+}
+
+private struct ReadingMaterialBackgroundModifier: ViewModifier {
+    var material: ReadingMaterial
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if #available(iOS 15.0, *) {
+            switch material {
+            case .ultraThin: content.background(.ultraThinMaterial)
+            case .thin: content.background(.thinMaterial)
+            case .regular: content.background(.regularMaterial)
+            case .thick: content.background(.thickMaterial)
+            case .ultraThick: content.background(.ultraThickMaterial)
+            }
+        } else {
+            content.background(material.legacyColor)
+        }
+    }
+}
