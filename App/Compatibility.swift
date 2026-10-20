@@ -1539,3 +1539,86 @@ private struct ReadingMaterialBackgroundModifier: ViewModifier {
         }
     }
 }
+
+// MARK: - View.task（SwiftUI iOS 15+）
+
+extension View {
+    /// `.task {}` 的 iOS 14 等价实现。
+    ///
+    /// SwiftUI 的 `View.task` 是 iOS 15 才有的；iOS 14 上用
+    /// `.onAppear` 触发一次异步任务。等价性说明：`task` 会在视图消失时
+    /// 取消任务，`onAppear` 不会，但本项目这些任务都是短时读取，
+    /// 差异无实际影响。
+    func readingTask(priority: TaskPriority = .userInitiated, _ action: @escaping () async -> Void) -> some View {
+        modifier(ReadingTaskModifier(priority: priority, action: action))
+    }
+}
+
+private struct ReadingTaskModifier: ViewModifier {
+    var priority: TaskPriority
+    var action: () async -> Void
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if #available(iOS 15.0, *) {
+            content.task(priority: priority) { await action() }
+        } else {
+            content.onAppear {
+                Task(priority: priority) { await action() }
+            }
+        }
+    }
+}
+
+extension View {
+    /// `.task(id:)` 的 iOS 14 等价实现。
+    ///
+    /// SwiftUI 的 `task(id:)` 在 id 变化时自动取消旧任务并重启新任务。
+    /// iOS 14 上没有等价 API，这里用 `onChange(of:)` 检测 id 变化后
+    /// 手动触发，并保证同一时刻只有一个任务在跑（取消前一个）。
+    func readingTask<T: Equatable>(id: T, priority: TaskPriority = .userInitiated, _ action: @escaping () async -> Void) -> some View {
+        modifier(ReadingTaskIDModifier(id: id, priority: priority, action: action))
+    }
+
+    /// `.refreshable` 的 iOS 14 等价实现。
+    ///
+    /// iOS 15 才支持下拉刷新。iOS 14 上退化为空操作，
+    /// 用户仍可通过页面内的刷新按钮或重新进入页面来加载数据。
+    func readingRefreshable(_ action: @escaping () async -> Void) -> some View {
+        modifier(ReadingRefreshableModifier(action: action))
+    }
+}
+
+private struct ReadingTaskIDModifier<T: Equatable>: ViewModifier {
+    let id: T
+    var priority: TaskPriority
+    var action: () async -> Void
+
+    @State private var current: Task<Void, Never>?
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear { run() }
+            .onChange(of: id) { _ in
+                // id 变化：取消上一轮任务后重新执行，等价于 task(id:) 的语义。
+                current?.cancel()
+                run()
+            }
+    }
+
+    private func run() {
+        current?.cancel()
+        current = Task(priority: priority) { await action() }
+    }
+}
+
+private struct ReadingRefreshableModifier: ViewModifier {
+    var action: () async -> Void
+
+    func body(content: Content) -> some View {
+        if #available(iOS 15.0, *) {
+            content.refreshable { await action() }
+        } else {
+            content
+        }
+    }
+}

@@ -105,7 +105,7 @@ struct SourceSwitchView: View {
         .toolbar {
             ToolbarItem(placement: .cancellationAction) { Button("取消") { dismiss() } }
         }
-        .task { await model.load(sources: sources) }
+        .readingTask { await model.load(sources: sources) }
         .onDisappear { model.cancelSelection() }
         .readingAlert("换源失败", isPresented: Binding(
             get: { model.errorMessage != nil },

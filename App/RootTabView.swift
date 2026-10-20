@@ -62,7 +62,7 @@ struct RootTabView: View {
                         content: DemoContent.readerText
                     )
                 }
-                .task {
+                .readingTask {
                     guard !didOpenDemoReader else { return }
                     didOpenDemoReader = true
                     showsDemoReader = ProcessInfo.processInfo.arguments.contains("-uiDemoReader")
@@ -760,7 +760,7 @@ struct BookshelfReadView: View {
                 ProgressView("正在打开…")
             }
         }
-        .task { await model.load(book: book, source: source) }
+        .readingTask { await model.load(book: book, source: source) }
     }
 }
 
@@ -881,7 +881,7 @@ struct SearchView: View {
             didStartInitialSearch = true
             startSearch()
         }
-        .task {
+        .readingTask {
             await model.loadSearchKeywords()
             if initialKeyword.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 searchIsPresented = true
@@ -1842,7 +1842,7 @@ private struct BookmarkReaderDestination: View {
         }
         .navigationTitle(bookmark.chapterName.isEmpty ? book.name : bookmark.chapterName)
         .navigationBarTitleDisplayMode(.inline)
-        .task { await load() }
+        .readingTask { await load() }
     }
 
     private func load() async {

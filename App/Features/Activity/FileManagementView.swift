@@ -155,10 +155,10 @@ struct FileManagementView: View {
         }
         .disabled(model.isWorking)
         .overlay(if: model.isWorking) { ProgressView("正在处理文件…").padding().readingMaterialBackground(.regular) }
-        .task { await model.reload(library) }
+        .readingTask { await model.reload(library) }
         .onChange(of: library.books) { _ in Task { await model.reload(library) } }
         .onChange(of: query) { _ in selection.removeAll() }
-        .refreshable { await model.reload(library) }
+        .readingRefreshable { await model.reload(library) }
     }
 
     private var importAndRenameView: some View {

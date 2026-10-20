@@ -52,7 +52,7 @@ struct QRCodeImportView: View {
             .navigationTitle("二维码导入")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("取消") { dismiss() } } }
-            .task {
+            .readingTask {
                 switch AVCaptureDevice.authorizationStatus(for: .video) {
                 case .authorized: cameraAuthorized = true
                 case .notDetermined: cameraAuthorized = await AVCaptureDevice.requestAccess(for: .video)

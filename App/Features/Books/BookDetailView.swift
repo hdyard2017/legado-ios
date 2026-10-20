@@ -88,7 +88,7 @@ struct BookDetailView: View {
                 }
             }
         }
-        .task {
+        .readingTask {
             model.restoreSourceAfterReading(from: library.books, sources: sourceLibrary.sources)
             let oldURL = model.book.bookUrl
             let shouldPersistUpdate = library.contains(model.book)

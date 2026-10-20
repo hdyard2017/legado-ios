@@ -295,7 +295,7 @@ struct ReaderView: View {
                 fontError = error.localizedDescription
             }
         }
-        .task(id: model.chapterLoadGeneration) {
+        .readingTask(id:  model.chapterLoadGeneration) {
             isWaitingForNextChapter = false
             isWaitingForPreviousChapter = false
             let needsInitialPosition = !model.hasLoadedCurrentChapter
@@ -327,7 +327,7 @@ struct ReaderView: View {
                 startConfiguredSpeech()
             }
         }
-        .task(id: "\(model.chapterLoadGeneration):\(pageAnimation == 3):\(model.hasLoadedCurrentChapter):\(model.scrollRevision)") {
+        .readingTask(id:  "\(model.chapterLoadGeneration):\(pageAnimation == 3):\(model.hasLoadedCurrentChapter):\(model.scrollRevision)") {
             guard pageAnimation == 3 else { return }
             await model.prepareContinuousReading(rules: model.usesReplaceRules ? replaceRules.rules : [])
         }

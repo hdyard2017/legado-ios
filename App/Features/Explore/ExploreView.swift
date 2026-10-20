@@ -252,8 +252,8 @@ private struct ExploreSourceView: View {
         .background(ReadingTheme.canvas)
         .navigationTitle(model.source.bookSourceName)
         .navigationBarTitleDisplayMode(.inline)
-        .task { await model.load() }
-        .refreshable { await model.reload() }
+        .readingTask { await model.load() }
+        .readingRefreshable { await model.reload() }
     }
 
     private var kindPicker: some View {

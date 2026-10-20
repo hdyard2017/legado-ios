@@ -134,7 +134,7 @@ struct HttpTTSManagementView: View {
                 }
             }
         }
-        .task { await model.load() }
+        .readingTask { await model.load() }
         .sheet(item: $editing) { engine in
             ReadingNavigationStack {
                 HttpTTSEditorView(engine: engine) { value in
@@ -324,7 +324,7 @@ private struct HttpTTSLoginView: View {
                 Button(isRunning ? "执行中…" : "登录") { saveAndLogin() }.disabled(isRunning)
             }
         }
-        .task { loadRows() }
+        .readingTask { loadRows() }
         .onDisappear { pendingFieldAction?.cancel() }
     }
 

@@ -40,7 +40,7 @@ struct LegadoApp: App {
                 .environmentObject(readingActivity)
                 .environmentObject(rssLibrary)
                 .environmentObject(ruleSubscriptions)
-                .task {
+                .readingTask {
                     await sourceLibrary.load()
                     if let index = ProcessInfo.processInfo.arguments.firstIndex(of: "-uiAutomationImportURL"),
                        ProcessInfo.processInfo.arguments.indices.contains(index + 1),

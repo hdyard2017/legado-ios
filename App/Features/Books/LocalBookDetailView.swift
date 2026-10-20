@@ -96,7 +96,7 @@ struct LocalBookDetailView: View {
                 } label: { Image(systemName: "ellipsis.circle") }
             }
         }
-        .task { await model.load(book: book) }
+        .readingTask { await model.load(book: book) }
         .sheet(isPresented: $showsTableOfContents) {
             LocalBookTableOfContentsView(book: book, chapters: model.chapters)
         }

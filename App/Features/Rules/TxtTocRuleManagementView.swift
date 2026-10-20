@@ -133,7 +133,7 @@ struct TxtTocRuleManagementView: View {
                 } label: { Image(systemName: "ellipsis.circle") }
             }
         }
-        .task { await model.load() }
+        .readingTask { await model.load() }
         .sheet(item: $editing) { value in
             TxtTocRuleEditView(value: value) { await model.save($0) }
         }

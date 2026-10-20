@@ -25,7 +25,7 @@ struct RSSAddBookView: View {
             }
         }
         .navigationTitle("添加到书架")
-        .task(id: bookURL) { await load() }
+        .readingTask(id:  bookURL) { await load() }
     }
 
     private func load() async {

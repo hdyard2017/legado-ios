@@ -52,8 +52,8 @@ struct DiagnosticLogView: View {
         .navigationTitle("日志与诊断")
         .navigationBarTitleDisplayMode(.inline)
         .searchable(text: $query, prompt: "搜索内容或分类")
-        .task { reload() }
-        .refreshable { reload() }
+        .readingTask { reload() }
+        .readingRefreshable { reload() }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu("日志操作", systemImage: "ellipsis") {
