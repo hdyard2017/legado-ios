@@ -350,11 +350,11 @@ private struct BookTableOfContentsView: View {
                     Text(book.durChapterTitle ?? "尚未阅读").lineLimit(1)
                     Spacer()
                     Text("\(min(book.durChapterIndex + 1, chapters.count))/\(chapters.count)")
-                        .monospacedDigit().foregroundColor(.secondary)
+                        .readingMonospacedDigit().foregroundColor(.secondary)
                 }
                 .font(.caption)
                 .padding(.horizontal, 16).padding(.vertical, 10)
-                .background(.bar)
+                .readingMaterialBackground(.barEquivalent)
             }
         }
     }

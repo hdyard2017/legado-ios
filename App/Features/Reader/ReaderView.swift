@@ -194,10 +194,9 @@ struct ReaderView: View {
         .statusBarHidden(hideStatusBar)
         .readingHomeIndicatorHidden(hideHomeIndicator)
         .overlay(
-            if showsReaderMenu {
-                readerTopChrome
-                    .transition(.move(edge: .top).combined(with: .opacity))
-            }
+            showsReaderMenu
+                ? AnyView(readerTopChrome.transition(.move(edge: .top).combined(with: .opacity)))
+                : AnyView(Color.clear)
         , alignment: .top)
         .animation(.easeOut(duration: 0.22), value: showsReaderMenu)
         .onAppear {
@@ -249,10 +248,9 @@ struct ReaderView: View {
             speech.onRemoteStop = nil
         }
         .overlay(
-            if showsReaderMenu {
-                readerBottomChrome
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
+            showsReaderMenu
+                ? AnyView(readerBottomChrome.transition(.move(edge: .bottom).combined(with: .opacity)))
+                : AnyView(Color.clear)
         , alignment: .bottom)
         .sheet(isPresented: $showsTableOfContents) { tableOfContents }
         .sheet(isPresented: $showsBookmarks) { bookmarksSheet }
@@ -467,18 +465,41 @@ struct ReaderView: View {
             .frame(maxWidth: readingColumnMaxWidth)
             .frame(maxWidth: .infinity)
             .overlay(
-                if pageAnimation == 3, let error = model.currentChapterError, !showsReaderMenu {
-                    VStack(spacing: 10) {
-                        Text("本章加载失败").font(.subheadline.weight(.semibold))
-                        Text(error).font(.caption).lineLimit(2).multilineTextAlignment(.center)
-                        readerRecoveryActions
-                    }
-                    .padding(16)
-                    .frame(maxWidth: .infinity)
-                    .foregroundColor(foregroundColor)
-                    .background(backgroundColor)
+                ReaderChapterErrorOverlay(
+                    error: pageAnimation == 3 && !showsReaderMenu ? model.currentChapterError : nil,
+                    foreground: foregroundColor,
+                    background: backgroundColor,
+                    actions: readerRecoveryActions
+                )
+            )
+        }
+    }
+
+    /// 本章加载失败时的浮层提示。
+    ///
+    /// 抽成独立组件是因为 iOS 14 的 `overlay(_:alignment:)` 第一个参数
+    /// 需要具体视图，无法直接写 `if let` 条件表达式；
+    /// 组件内部用 `@ViewBuilder` 即可自然处理可选值。
+    private struct ReaderChapterErrorOverlay<Actions: View>: View {
+        let error: String?
+        let foreground: Color
+        let background: Color
+        let actions: Actions
+
+        var body: some View {
+            if let error {
+                VStack(spacing: 10) {
+                    Text("本章加载失败").font(.subheadline.weight(.semibold))
+                    Text(error).font(.caption).lineLimit(2).multilineTextAlignment(.center)
+                    actions
                 }
-            , alignment: .bottom)
+                .padding(16)
+                .frame(maxWidth: .infinity)
+                .foregroundColor(foreground)
+                .background(background)
+            } else {
+                Color.clear
+            }
         }
     }
 
@@ -1067,7 +1088,7 @@ struct ReaderView: View {
                     HStack {
                         Text("自动翻页速度")
                         Spacer()
-                        Text("\(autoReadSpeed)s").monospacedDigit().foregroundColor(.secondary)
+                        Text("\(autoReadSpeed)s").readingMonospacedDigit().foregroundColor(.secondary)
                     }
                     Slider(
                         value: Binding(
@@ -1364,7 +1385,7 @@ struct ReaderView: View {
             HStack {
                 Text(title)
                 Spacer()
-                Text(format(value.wrappedValue)).monospacedDigit().foregroundColor(.secondary)
+                Text(format(value.wrappedValue)).readingMonospacedDigit().foregroundColor(.secondary)
             }
             Slider(value: value, in: range, step: step)
         }
@@ -1848,7 +1869,7 @@ struct ReaderView: View {
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        .swipeActions {
+                        .readingSwipeActions {
                             Button("删除") { Task { await activity.removeBookmark(bookmark) } }
                             .readingRole(.destructive)
                         }

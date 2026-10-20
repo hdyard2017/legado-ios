@@ -266,9 +266,9 @@ private struct ExploreSourceView: View {
                         .frame(minHeight: 44)
                         .foregroundColor(model.selectedKind?.id == kind.id ? Color.primary : .secondary)
                         .overlay(
-                            if model.selectedKind?.id == kind.id {
-                                Rectangle().fill(Color.primary).frame(height: 2)
-                            }
+                            model.selectedKind?.id == kind.id
+                                ? AnyView(Rectangle().fill(Color.primary).frame(height: 2))
+                                : AnyView(Color.clear)
                         , alignment: .bottom)
                         .accessibilityAddTraits(model.selectedKind?.id == kind.id ? .isSelected : [])
                 }

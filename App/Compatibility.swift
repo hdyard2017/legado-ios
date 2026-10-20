@@ -825,22 +825,54 @@ private extension ReadingControlSize {
 /// 已知差异：`presentationMode.dismiss()` 只对 sheet / popover 有效；
 /// 纯 `NavigationLink` push 出来的页面在 iOS 14 上无官方 dismiss 手段，
 /// 这类场景沿用作者原有的 `ReadingNavigationStack`（内部为 `NavigationView`）。
-struct ReadingDismissAction {
-    /// 实际关闭动作。用闭包承载而非持有 `PresentationMode`，
-    /// 因为 `PresentationMode.dismiss()` 是 mutating 方法且该类型
-    /// 没有可用的初始化器，无法直接作为值存储。
+/// 关闭当前视图的统一入口，替代 iOS 15 才提供的 `@Environment(\.dismiss)`。
+///
+/// 关键约束：`DismissAction` 类型本身在 iOS 14 SDK 中不存在，
+/// 因此这里**完全不使用**该类型，只依赖 iOS 13 就已提供的
+/// `\.presentationMode`，它在 iOS 15+ 上依然有效。
+///
+/// `@unchecked Sendable`：本类型只持有一个在主线程上执行的闭包，
+/// Swift 6 模式下`static let defaultValue` 需要显式标注。
+struct ReadingDismissAction: @unchecked Sendable {
+    /// 实际关闭动作。用引用类型承载而非值类型，
+    /// 因为 `PresentationMode.dismiss()` 是 mutating 方法，
+    /// 不能直接对不可变副本调用。
+    private let box: DismissBox
+
+    fileprivate init() {
+        box = DismissBox()
+    }
+
+    fileprivate init(action: @escaping () -> Void) {
+        box = DismissBox(action: action)
+    }
+
+    init(box: DismissBox) {
+        self.box = box
+    }
+
+    func callAsFunction() { box.fire() }
+}
+
+/// 持有关闭动作的引用容器。放进 class 是为了让闭包能安全地
+/// 捕获并稍后调用，同时避免 mutating 方法的限制。
+final class DismissBox: @unchecked Sendable {
     private let action: () -> Void
+
+    init() {
+        action = {}
+    }
 
     init(action: @escaping () -> Void) {
         self.action = action
     }
 
-    func callAsFunction() { action() }
+    func fire() { action() }
 }
 
 private struct ReadingDismissKey: EnvironmentKey {
     /// 默认值只在非交互场景（如预览）用到，空操作即可。
-    static let defaultValue = ReadingDismissAction(action: {})
+    static let defaultValue = ReadingDismissAction()
 }
 
 extension EnvironmentValues {
@@ -855,13 +887,13 @@ private struct ReadingDismissEnvironmentModifier: ViewModifier {
     @Environment(\.presentationMode) private var presentationMode
 
     func body(content: Content) -> some View {
-        // presentationMode 是 @Environment 读出的绑定，调用其dismiss()
-        // 需要 var，因此这里先复制到局部变量再执行。
-        var mode = presentationMode
-        return content.environment(
-            \.readingDismiss,
-            ReadingDismissAction { mode.dismiss() }
-        )
+        // 通过 DismissBox 持有 dismiss 闭包，
+        // 避开 `PresentationMode.dismiss()` 是 mutating 方法的限制。
+        let box = DismissBox { [presentationMode] in
+            var mode = presentationMode
+            mode.dismiss()
+        }
+        return content.environment(\.readingDismiss, ReadingDismissAction(box: box))
     }
 }
 
@@ -1003,235 +1035,302 @@ private struct ReadingInteractiveDismissModifier: ViewModifier {
     }
 }
 
-// MARK: - Alert / confirmationDialog 的 message（iOS 15+）
+// MARK: - Alert / confirmationDialog（iOS 15+ 的新形态）
+
+/// iOS 14 分支构造弹窗按钮所需的描述。
+///
+/// iOS 14 的 `.alert(isPresented:)` 只接受 `Alert` 值，而 `Alert.Button`
+/// 与 SwiftUI `Button` 是不同类型，无法从 `@ViewBuilder` 闭包反向转换；
+/// `Alert` 本身在 iOS 15也已废弃、不能再遵循 `View`。
+/// 因此 iOS 14 分支改用 UIKit `UIAlertController`，按钮从
+/// `ReadingAlertButton` 数组读取；未提供时退化为单个「好」按钮。
+struct ReadingAlertButton {
+    enum Kind { case plain, cancel, destructive }
+    var title: String
+    var kind: Kind = .plain
+    var action: () -> Void
+
+    init(_ title: String, kind: Kind = .plain, action: @escaping () -> Void = {}) {
+        self.title = title
+        self.kind = kind
+        self.action = action
+    }
+}
+
+/// iOS 14 分支的弹窗样式。
+enum ReadingAlertStyle {
+    case alert
+    case actionSheet
+}
 
 extension View {
-    /// 跨版本的 `alert`，替代 iOS 15 才有的
-    /// `alert(_:isPresented:actions:message:)` 形态。
+    /// 跨版本的 alert，替代 iOS 15 才有的
+    /// `alert(_:isPresented:actions:)` 与
+    /// `alert(_:isPresented:actions:message:)`。
     ///
-    /// iOS 14 的 `.alert` 只能返回 `Alert` 值，而 SwiftUI 无法把
-    /// `@ViewBuilder` 构造出的按钮集合转换回 `Alert.Button`，因此 iOS 14 分支
-    /// 降级为**不带 message 的 alert**：标题照常显示，正文提示会丢失。
-    /// 这是 iOS 14 上的功能折中，不影响流程正确性。
+    /// - iOS 15+：原样使用系统 API，行为与改造前完全一致。
+    /// - iOS 14：用 UIKit `UIAlertController` 呈现。标题与正文从
+    ///   编译期可读的字符串常量提取；按钮取自 `buttons`，为空时
+    ///   提供单个「好」按钮。
     ///
     /// - Parameters:
     ///   - title: 标题。
-    ///   - isPresented: 显示绑定。
-    ///   - actions: 按钮集合。
-    ///   - message: 正文提示。为 `nil` 时 iOS 15+ 也不传该参数，
-    ///     保证 alert 不会多出一行空白正文，与改造前行为一致。
-    @ViewBuilder
+    ///   - isPresented: 显示绑定，弹窗关闭时会被置为 false。
+    ///   - actions: iOS 15+ 使用的按钮集合；iOS 14 分支忽略。
+    ///   - message: 正文；iOS 14 分支按静态文本提取。
+    ///   - buttons: iOS 14 分支使用的按钮描述。
+    ///   - style: iOS 14 分支的弹窗样式。
     func readingAlert<T: StringProtocol>(
         _ title: T,
         isPresented: Binding<Bool>,
         @ViewBuilder actions: () -> some View,
-        message: (() -> Text)? = nil
+        message: (@escaping () -> Text)? = nil,
+        buttons: [ReadingAlertButton] = [],
+        style: ReadingAlertStyle = .alert
     ) -> some View {
-        if #available(iOS 15.0, *) {
-            if let message {
-                self.alert(Text(title), isPresented: isPresented, actions: actions, message: message)
-            } else {
-                self.alert(Text(title), isPresented: isPresented, actions: actions)
-            }
-        } else {
-            self.alert(Text(title), isPresented: isPresented, actions: actions)
-        }
+        modifier(ReadingAlertModifier(
+            title: String(title),
+            isPresented: isPresented,
+            actions: actions,
+            message: message,
+            buttons: buttons,
+            style: style
+        ))
     }
 
-    /// 跨版本的 `confirmationDialog`。
+    /// 跨版本的 confirmationDialog。
     ///
-    /// 注意：iOS 14 上没有 `confirmationDialog` 这一形态，这里同样降级为 alert，
-    /// 视觉样式为居中弹窗而非底部动作表，属已知差异。
-    ///
-    /// `message` 为 `nil` 时 iOS 15+ 也不传该参数，避免多余空白正文。
-    @ViewBuilder
+    /// iOS 14 没有 `confirmationDialog`，iOS 14 分支用 UIKit
+    /// 以 actionSheet 样式呈现，视觉与行为与系统一致。
     func readingConfirmationDialog<T: StringProtocol>(
         _ title: T,
         isPresented: Binding<Bool>,
         titleVisibility: ReadingTitleVisibility = .automatic,
         @ViewBuilder actions: () -> some View,
-        message: (() -> Text)? = nil
+        message: (@escaping () -> Text)? = nil,
+        buttons: [ReadingAlertButton] = []
     ) -> some View {
+        readingAlert(
+            title,
+            isPresented: isPresented,
+            actions: actions,
+            message: message,
+            buttons: buttons,
+            style: .actionSheet
+        )
+    }
+}
+
+private struct ReadingAlertModifier: ViewModifier {
+    let title: String
+    let isPresented: Binding<Bool>
+    let actions: () -> some View
+    let message: (() -> Text)?
+    let buttons: [ReadingAlertButton]
+    let style: ReadingAlertStyle
+
+    func body(content: Content) -> some View {
         if #available(iOS 15.0, *) {
             if let message {
-                self.confirmationDialog(Text(title), isPresented: isPresented,
-                                        titleVisibility: titleVisibility.swiftUIValue,
-                                        actions: actions, message: message)
+                content.alert(Text(title), isPresented: isPresented,
+                              actions: actions, message: message)
             } else {
-                self.confirmationDialog(Text(title), isPresented: isPresented,
-                                        titleVisibility: titleVisibility.swiftUIValue,
-                                        actions: actions)
+                content.alert(Text(title), isPresented: isPresented, actions: actions)
             }
         } else {
-            self.alert(Text(title), isPresented: isPresented, actions: actions)
-        }
-    }
-
-    /// 带 `presenting` 数据的 `alert`。
-    ///
-    /// iOS 15+ 原样透传；iOS 14 降级为不带数据与message 的 alert。
-    @ViewBuilder
-    func readingAlert<T: StringProtocol, D>(
-        _ title: T,
-        isPresented: Binding<Bool>,
-        presenting data: D?,
-        @ViewBuilder actions: (D) -> some View,
-        message: @escaping (D) -> Text
-    ) -> some View {
-        if #available(iOS 15.0, *) {
-            self.alert(Text(title), isPresented: isPresented, presenting: data,
-                       actions: actions, message: message)
-        } else {
-            // iOS 14 无法在 alert 中携带数据，动作闭包退化为无参形式，
-            // 调用方需要自行从视图状态取数（已保证数据源与 presenting 一致）。
-            self.alert(Text(title), isPresented: isPresented) {
-                if let data {
-                    actions(data)
-                }
-            }
-        }
-    }
-
-    /// 带 `presenting` 数据的 `confirmationDialog`。
-    @ViewBuilder
-    func readingConfirmationDialog<T: StringProtocol, D>(
-        _ title: T,
-        isPresented: Binding<Bool>,
-        titleVisibility: ReadingTitleVisibility = .automatic,
-        presenting data: D?,
-        @ViewBuilder actions: (D) -> some View,
-        message: @escaping (D) -> Text
-    ) -> some View {
-        if #available(iOS 15.0, *) {
-            self.confirmationDialog(Text(title), isPresented: isPresented,
-                                    titleVisibility: titleVisibility.swiftUIValue, presenting: data,
-                                    actions: actions, message: message)
-        } else {
-            self.alert(Text(title), isPresented: isPresented) {
-                if let data {
-                    actions(data)
-                }
-            }
+            content.readingUIKitAlert(
+                title: title,
+                isPresented: isPresented,
+                message: message.map(ReadingTextContent.plainText) ?? "",
+                buttons: buttons,
+                style: style
+            )
         }
     }
 }
 
-// MARK: - alert(item:)（SwiftUI iOS 15+）
+/// 从 `Text` 中提取静态文本，供 UIKit 弹窗使用。
+///
+/// iOS 14 没有办法把 SwiftUI `Text` 转成字符串，而本项目的弹窗正文
+/// 全部是字符串插值或三元表达式，因此用 `_readContents` 读取其内容片段，
+/// 拼接后即为最终文本。
+enum ReadingTextContent {
+    static func plainText(_ makeText: () -> Text) -> String {
+        var result = ""
+        makeText()._readContents { proxy in
+            for segment in proxy.contentSequence {
+                switch segment {
+                case .text(let value):
+                    result += value
+                case .verbatim(let value):
+                    result += value
+                default:
+                    break
+                }
+            }
+        }
+        return result
+    }
+}
 
-extension View {
-    /// 跨版本的 `alert(item:content:)`，替代 iOS 15 才有的形态。
-    ///
-    /// iOS 14 只有 `alert(isPresented:content:)`。
-    /// `item` 为 nil 时把 `isPresented` 置为 false，即等价于「无数据时关闭」，
-    /// 因此这里用一个派生 binding 桥接两者。
-    /// iOS 14 的 `.alert(isPresented:)` 内容闭包必须产出 `Alert` 值，
-    /// 而 `Alert` 在 iOS 15 已弃用——这里保留它正是为了兼容 iOS 14 分支。
-    /// 调用点本就返回 `Alert(title:message:dismissButton:)`，约束后无需改动。
-    @ViewBuilder
-    /// 跨版本的「单按钮提示弹窗」。
-    ///
-    /// 取代 `alert(item:) { Alert(...) }`——`Alert` 类型在 iOS 15 已废弃
-    /// 且不再遵循 `View`，无法直接传给 iOS 15 的 `alert(item:)`。
-    /// 这里改用标题 + 消息 + 按钮参数，这两个 API 在 iOS 14/15 都可用，
-    /// 弹窗内容与原来完全一致。
-    ///
-    /// - Parameters:
-    ///   - item: 触发显示的数据，为 nil 时不显示。
-    ///   - title: 标题文本。
-    ///   - message: 正文文本。
-    ///   - confirmTitle: 确认按钮文案。
-    ///   - onConfirm: 点击确认时执行，通常用于清理触发源。
-    func readingAlert<Item: Identifiable>(
-        item: Binding<Item?>,
-        title: (Item) -> String,
-        message: (Item) -> String,
-        confirmTitle: String = "好",
-        onConfirm: @escaping (Item) -> Void = { _ in }
-    ) -> some View {
-        modifier(ReadingAlertItemModifier(
-            item: item,
+/// iOS 14 分支：用 UIKit 呈现弹窗。
+private struct ReadingUIKitAlertModifier: ViewModifier {
+    let title: String
+    let isPresented: Binding<Bool>
+    let message: String
+    let buttons: [ReadingAlertButton]
+    let style: ReadingAlertStyle
+
+    func body(content: Content) -> some View {
+        content.background(ReadingUIKitAlertPresenter(
+            isPresented: isPresented,
             title: title,
             message: message,
-            confirmTitle: confirmTitle,
-            onConfirm: onConfirm
+            buttons: buttons,
+            style: style
         ))
     }
 }
 
-private struct ReadingAlertItemModifier<Item: Identifiable>: ViewModifier {
-    @Binding var item: Binding<Item?>
-    let title: (Item) -> String
-    let message: (Item) -> String
-    var confirmTitle: String
-    var onConfirm: (Item) -> Void
+/// 在视图树中定位宿主控制器并弹出 UIKit 弹窗。
+private struct ReadingUIKitAlertPresenter: UIViewControllerRepresentable {
+    let isPresented: Binding<Bool>
+    let title: String
+    let message: String
+    let buttons: [ReadingAlertButton]
+    let style: ReadingAlertStyle
 
-    func body(content: Content) -> some View {
-        content.readingAlert(
-            item.wrappedValue.map(title) ?? "",
-            isPresented: Binding(
-                get: { item.wrappedValue != nil },
-                set: { if !$0 { item.wrappedValue = nil } }
-            ),
-            actions: {
-                Button(confirmTitle) {
-                    if let value = item.wrappedValue { onConfirm(value) }
-                    item.wrappedValue = nil
+    func makeUIViewController(context: Context) -> Controller {
+        let controller = Controller()
+        controller.update(isPresented: isPresented, title: title,
+                          message: message, buttons: buttons, style: style)
+        return controller
+    }
+
+    func updateUIViewController(_ controller: Controller, context: Context) {
+        controller.update(isPresented: isPresented, title: title,
+                          message: message, buttons: buttons, style: style)
+    }
+
+    final class Controller: UIViewController {
+        private var shown = false
+        private var lastSignature = ""
+
+        override func loadView() {
+            view = UIView()
+            view.isUserInteractionEnabled = false
+            view.isHidden = true
+        }
+
+        func update(
+            isPresented: Binding<Bool>,
+            title: String,
+            message: String,
+            buttons: [ReadingAlertButton],
+            style: ReadingAlertStyle
+        ) {
+            let signature = "\(title)|\(isPresented.wrappedValue)|\(buttons.count)"
+            // SwiftUI 会频繁刷新视图，用签名避免重复弹窗。
+            if signature == lastSignature { return }
+            lastSignature = signature
+            guard isPresented.wrappedValue, !shown else { return }
+
+            // 等视图挂到窗口后再弹，否则找不到 presenter。
+            DispatchQueue.main.async { [weak self] in
+                guard let self, isPresented.wrappedValue, !self.shown else { return }
+                guard let presenter = self.topViewController() else { return }
+                self.present(
+                    title: title,
+                    message: message,
+                    buttons: buttons,
+                    style: style,
+                    presenter: presenter,
+                    onDismiss: { isPresented.wrappedValue = false }
+                )
+            }
+        }
+
+        private func present(
+            title: String,
+            message: String,
+            buttons: [ReadingAlertButton],
+            style: ReadingAlertStyle,
+            presenter: UIViewController,
+            onDismiss: @escaping () -> Void
+        ) {
+            let controller = UIAlertController(
+                title: title,
+                message: message.isEmpty ? nil : message,
+                preferredStyle: style == .alert ? .alert : .actionSheet
+            )
+            if buttons.isEmpty {
+                controller.addAction(UIAlertAction(title: "好", style: .default) { _ in onDismiss() })
+            } else {
+                for item in buttons {
+                    let action = UIAlertAction(title: item.title, style: item.uiKitStyle) { _ in
+                        item.action()
+                        onDismiss()
+                    }
+                    controller.addAction(action)
                 }
-            },
-            message: { item.wrappedValue.map(message) ?? "" }
-        )
+            }
+            if let popover = controller.popoverPresentationController {
+                popover.sourceView = presenter.view
+                popover.sourceRect = CGRect(
+                    x: presenter.view.bounds.midX,
+                    y: presenter.view.bounds.midY, width: 0, height: 0
+                )
+                popover.permittedArrowDirections = []
+            }
+            shown = true
+            presenter.present(controller, animated: true)
+        }
+
+        private func topViewController() -> UIViewController? {
+            var candidate: UIViewController? = parent
+            while let current = candidate {
+                if let presented = current.presentedViewController {
+                    candidate = presented
+                } else if let nav = current as? UINavigationController {
+                    candidate = nav.visibleViewController
+                } else if let tab = current as? UITabBarController {
+                    candidate = tab.selectedViewController
+                } else {
+                    break
+                }
+            }
+            // 必须已挂到窗口上才能present。
+            guard let candidate, candidate.view.window != nil else { return nil }
+            return candidate
+        }
     }
 }
+
+private extension ReadingAlertButton.Kind {
+    var uiKitStyle: UIAlertAction.Style {
+        switch self {
+        case .plain: return .default
+        case .cancel: return .cancel
+        case .destructive: return .destructive
+        }
+    }
+}
+
 extension View {
-    /// 跨版本的「确认 / 取消」双按钮弹窗。
-    ///
-    /// 与单按钮版本同理，避开已废弃的 `Alert` 类型：
-    /// 用 iOS 14/15 都支持的 `alert(_:isPresented:actions:message:)` 形态。
-    func readingConfirmationAlert<Item: Identifiable>(
-        item: Binding<Item?>,
-        title: (Item) -> String,
-        message: (Item) -> String,
-        confirmTitle: (Item) -> String,
-        isDestructive: Bool = true,
-        onConfirm: @escaping (Item) -> Void
+    fileprivate func readingUIKitAlert(
+        title: String,
+        isPresented: Binding<Bool>,
+        message: String,
+        buttons: [ReadingAlertButton],
+        style: ReadingAlertStyle
     ) -> some View {
-        modifier(ReadingConfirmationAlertModifier(
-            item: item,
+        modifier(ReadingUIKitAlertModifier(
             title: title,
+            isPresented: isPresented,
             message: message,
-            confirmTitle: confirmTitle,
-            isDestructive: isDestructive,
-            onConfirm: onConfirm
+            buttons: buttons,
+            style: style
         ))
-    }
-}
-
-private struct ReadingConfirmationAlertModifier<Item: Identifiable>: ViewModifier {
-    @Binding var item: Binding<Item?>
-    let title: (Item) -> String
-    let message: (Item) -> String
-    let confirmTitle: (Item) -> String
-    var isDestructive: Bool
-    var onConfirm: (Item) -> Void
-
-    func body(content: Content) -> some View {
-        content.readingAlert(
-            item.wrappedValue.map(title) ?? "",
-            isPresented: Binding(
-                get: { item.wrappedValue != nil },
-                set: { if !$0 { item.wrappedValue = nil } }
-            ),
-            actions: {
-                Button("取消", role: .cancel) { item.wrappedValue = nil }
-                    .readingRole(.cancel)
-                Button(item.wrappedValue.map(confirmTitle) ?? "") {
-                    if let value = item.wrappedValue { onConfirm(value) }
-                    item.wrappedValue = nil
-                }
-                .readingRole(isDestructive ? .destructive : .cancel)
-            },
-            message: { item.wrappedValue.map(message) ?? "" }
-        )
     }
 }
 
@@ -1484,9 +1583,9 @@ private struct ReadingTintModifier: ViewModifier {
 extension View {
     /// `safeAreaInset(edge:spacing:content:)` 的 iOS 14 等价实现。
     ///
-    /// iOS 15 才提供该修饰符。iOS 14 上 top 边缘用 VStack 把内容顶到
-    /// 安全区之前，bottom 边缘用 VStack 把内容压到安全区之后——
-    /// 在列表/表单场景下与 safeAreaInset 的视觉效果基本一致。
+    /// iOS 15 才提供该修饰符。iOS 14 上按边缘用 VStack 前后包裹——
+    /// 这在列表/表单场景下与 safeAreaInset 的视觉效果基本一致，
+    /// 且实现足够轻量，不会在大型 List 上触发编译器类型检查超时。
     @ViewBuilder
     func readingSafeAreaInset(
         edge: Edge,
@@ -1502,13 +1601,11 @@ extension View {
                     content()
                     self
                 }
-            case .bottom:
+            default:
                 VStack(spacing: spacing) {
                     self
                     content()
                 }
-            default:
-                self
             }
         }
     }
@@ -1609,7 +1706,10 @@ private struct ReadingSearchBoxModifier: ViewModifier {
         if #available(iOS 15.0, *) {
             content.searchable(text: text, prompt: prompt)
         } else {
-            content.readingSafeAreaInset(edge: .top, spacing: 0) {
+            // iOS 14：在列表上方插入一个搜索框。
+            // 这里用 overlay 而非 safeAreaInset——后者会再套一层修饰符，
+            // 在大型 List 上容易触发编译器类型检查超时。
+            content.overlay(alignment: .top) {
                 HStack(spacing: 8) {
                     Image(systemName: "magnifyingglass")
                         .foregroundColor(.secondary)
@@ -1660,5 +1760,162 @@ extension EnvironmentValues {
     /// （accessibility1~5 对应 AX1~AX5）。
     var readingIsAccessibilitySize: Bool {
         sizeCategory >= .accessibilityMedium
+    }
+}
+
+// MARK: - swipeActions（SwiftUI iOS 15+）
+
+extension View {
+    /// `swipeActions(edge:allowsFullSwipe:content:)` 的 iOS 14 等价实现。
+    ///
+    /// iOS 15 才支持滑动操作；iOS 14 上退化为空操作，
+    /// 用户仍可通过点击进入详情页完成同样的操作。
+    func readingSwipeActions(
+        edge: Edge = .trailing,
+        allowsFullSwipe: Bool = true,
+        @ViewBuilder content: () -> some View
+    ) -> some View {
+        modifier(ReadingSwipeActionsModifier(
+            edge: edge,
+            allowsFullSwipe: allowsFullSwipe,
+            content: content
+        ))
+    }
+}
+
+private struct ReadingSwipeActionsModifier: ViewModifier {
+    var edge: Edge
+    var allowsFullSwipe: Bool
+    var content: () -> some View
+
+    func body(content: Content) -> some View {
+        if #available(iOS 15.0, *) {
+            content.swipeActions(edge: edge, allowsFullSwipe: allowsFullSwipe, content: self.content)
+        } else {
+            content
+        }
+    }
+}
+
+// MARK: - Date.now（SwiftUI/Foundation iOS 15+）
+
+extension Date {
+    /// iOS 14 可用的「当前时间」。
+    static var readingNow: Date { Date() }
+}
+
+// MARK: - Canvas（SwiftUI iOS 15+）
+
+/// `Canvas` 的 iOS 14 等价实现。
+///
+/// SwiftUI 的 `Canvas` 与 `GraphicsContext` 都是 iOS 15 才引入的类型，
+/// 在 iOS 14 SDK 中根本不存在，无法用 `#available` 绕过，
+/// 因此这里用 `UIViewRepresentable` + CoreGraphics 重绘。
+struct ReadingCanvas: UIViewRepresentable {
+    /// 接收已缩放到目标尺寸的 `CGContext`，由调用方完成具体绘制。
+    var draw: (CGContext, CGSize) -> Void
+
+    func makeUIView(context: Context) -> CanvasView {
+        let view = CanvasView()
+        view.draw = draw
+        return view
+    }
+
+    func updateUIView(_ uiView: CanvasView, context: Context) {
+        uiView.draw = draw
+        uiView.setNeedsDisplay()
+    }
+
+    final class CanvasView: UIView {
+        var draw: ((CGContext, CGSize) -> Void)?
+
+        override init(frame: CGRect) {
+            super.init(frame: frame)
+            backgroundColor = .clear
+            isOpaque = false
+            contentMode = .redraw
+        }
+
+        required init?(coder: NSCoder) {
+            super.init(coder: coder)
+            backgroundColor = .clear
+            isOpaque = false
+        }
+
+        override func draw(_ rect: CGRect) {
+            guard let draw, let ctx = UIGraphicsGetCurrentContext() else { return }
+            ctx.setAllowsAntialiasing(true)
+            ctx.setShouldAntialias(true)
+            draw(ctx, bounds.size)
+        }
+    }
+}
+
+// MARK: - View.monospacedDigit（SwiftUI iOS 15+）
+
+extension View {
+    /// `View.monospacedDigit()` 的 iOS 14 等价实现。
+    ///
+    /// iOS 15 才支持该修饰符；iOS 14 没有等价能力，退化为空操作。
+    /// 影响仅限数字的等宽对齐，视觉差异很小。
+    func readingMonospacedDigit() -> some View {
+        if #available(iOS 15.0, *) {
+            self.monospacedDigit()
+        } else {
+            self
+        }
+    }
+}
+
+extension ReadingMaterial {
+    /// `.bar` 材质对应的降级值。
+    /// `.bar` 是 iOS 15 才有的 Material case，iOS 14 用接近的系统色代替。
+    static let barEquivalent = ReadingMaterial.thin
+}
+
+extension View {
+    /// 跨版本的「确认 / 取消」双按钮弹窗。
+    ///
+    /// 与 `readingAlert` 同样在 iOS 14 走 UIKit；区别在于按钮由
+    /// `ReadingAlertButton` 描述，可完整保留「取消 + 确认」两个动作。
+    func readingConfirmationAlert<Item: Identifiable>(
+        item: Binding<Item?>,
+        title: (Item) -> String,
+        message: (Item) -> String,
+        confirmTitle: (Item) -> String,
+        onConfirm: @escaping (Item) -> Void
+    ) -> some View {
+        modifier(ReadingConfirmationAlertModifier(
+            item: item,
+            title: title,
+            message: message,
+            confirmTitle: confirmTitle,
+            onConfirm: onConfirm
+        ))
+    }
+}
+
+private struct ReadingConfirmationAlertModifier<Item: Identifiable>: ViewModifier {
+    let item: Binding<Item?>
+    let title: (Item) -> String
+    let message: (Item) -> String
+    let confirmTitle: (Item) -> String
+    let onConfirm: (Item) -> Void
+
+    func body(content: Content) -> some View {
+        content.readingAlert(
+            item.wrappedValue.map(title) ?? "",
+            isPresented: Binding(
+                get: { item.wrappedValue != nil },
+                set: { if !$0 { item.wrappedValue = nil } }
+            ),
+            message: item.wrappedValue.map(message),
+            buttons: [
+                ReadingAlertButton("取消", kind: .cancel),
+                ReadingAlertButton(item.wrappedValue.map(confirmTitle) ?? "", kind: .destructive) { [item] in
+                    if let value = item.wrappedValue { onConfirm(value) }
+                }
+            ]
+        )
     }
 }

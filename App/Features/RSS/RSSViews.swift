@@ -95,10 +95,10 @@ struct RSSHomeView: View {
                         if let group = source.sourceGroup, !group.isEmpty { Text(group).font(.caption2).foregroundColor(ReadingTheme.accent) }
                     }.padding(.vertical, 3)
                 }
-                .swipeActions(edge: .leading) {
+                .readingSwipeActions(edge: .leading) {
                     Button(source.enabled ? "停用" : "启用") { Task { await library.setEnabled(!source.enabled, source: source) } }.readingTint(.orange)
                 }
-                .swipeActions {
+                .readingSwipeActions {
                     Button("删除") { Task { await library.remove(source) } }
                     .readingRole(.destructive)
                 }
@@ -118,7 +118,7 @@ struct RSSHomeView: View {
                     if let source = library.sources.first(where: { $0.sourceUrl == star.origin }) {
                         NavigationLink { RSSArticleDetailView(article: star.article, source: source) } label: { RSSArticleRow(article: star.article) }
                     } else { RSSArticleRow(article: star.article) }
-                }.swipeActions(edge: .leading) { Button("编辑", systemImage: "pencil") { editingStar = star }.readingTint(.blue) }
+                }.readingSwipeActions(edge: .leading) { Button("编辑", systemImage: "pencil") { editingStar = star }.readingTint(.blue) }
             }.onDelete { offsets in
                 let values = offsets.map { filteredStars[$0] }
                 Task { for value in values { await library.removeStar(value) } }

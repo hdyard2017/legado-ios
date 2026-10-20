@@ -110,7 +110,7 @@ struct RuleSubscriptionView: View {
                         if value.autoUpdate { Image(systemName: value.silentUpdate ? "arrow.triangle.2.circlepath.circle.fill" : "arrow.triangle.2.circlepath.circle").foregroundColor(.secondary) }
                         if model.pendingIDs.contains(value.id) { Text("有更新").font(.caption2).foregroundColor(.orange) }
                     }
-                }.swipeActions(edge: .leading) { Button("编辑", systemImage: "pencil") { editing = value }.readingTint(.blue) }
+                }.readingSwipeActions(edge: .leading) { Button("编辑", systemImage: "pencil") { editing = value }.readingTint(.blue) }
             }.onDelete { offsets in
                 let ids = Set(offsets.compactMap { visibleValues.indices.contains($0) ? visibleValues[$0].id : nil })
                 let sourceOffsets = IndexSet(model.values.indices.filter { ids.contains(model.values[$0].id) })

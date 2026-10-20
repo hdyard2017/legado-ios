@@ -31,7 +31,7 @@ struct ReadingStatisticsView: View {
                 Text("今日阅读")
                     .font(.subheadline)
                 Spacer()
-                Text(Date.now.readingFormattedMonthDay())
+                Text(Date.readingNow.readingFormattedMonthDay())
                     .font(.caption)
             }
             .foregroundColor(ReadingTheme.onAccent.opacity(0.7))

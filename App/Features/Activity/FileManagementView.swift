@@ -150,7 +150,7 @@ struct FileManagementView: View {
                     .readingRole(.destructive)
                         .disabled(selection.isEmpty)
                 }
-                .padding().background(.bar)
+                .padding().readingMaterialBackground(.barEquivalent)
             }
         }
         .disabled(model.isWorking)
@@ -263,7 +263,7 @@ struct FileManagementView: View {
                     Button("删除文件", systemImage: "trash") { pendingDeletion = [file.url] }
                     .readingRole(.destructive)
                 }
-                .swipeActions {
+                .readingSwipeActions {
                     Button("删除") { pendingDeletion = [file.url] }
                     .readingRole(.destructive)
                     Button("导出", systemImage: "square.and.arrow.up") { export(file) }.readingTint(.blue)

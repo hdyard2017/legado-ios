@@ -49,7 +49,7 @@ struct ReadingHistoryView: View {
                                     Text(date(record.lastRead)).font(.caption).foregroundColor(.secondary)
                                 }
                             }
-                            .swipeActions {
+                            .readingSwipeActions {
                                 Button("删除") { pendingDelete = record }
                                 .readingRole(.destructive)
                             }

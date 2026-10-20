@@ -546,7 +546,7 @@ private struct BookGroupManagerView: View {
                             }
                             .readingButtonStyle(.borderless)
                         }
-                        .swipeActions {
+                        .readingSwipeActions {
                             Button("删除") {
                                 Task { await library.deleteGroup(group) }
                             }
