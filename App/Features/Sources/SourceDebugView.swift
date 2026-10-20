@@ -54,13 +54,13 @@ struct SourceDebugView: View {
         ReadingCard {
             HStack(spacing: 13) {
                 Image(systemName: "stethoscope")
-                    .font(.title2).foregroundStyle(ReadingTheme.coral)
+                    .font(.title2).foregroundColor(ReadingTheme.coral)
                     .frame(width: 46, height: 46)
-                    .background(ReadingTheme.coral.opacity(0.11), in: RoundedRectangle(cornerRadius: 14))
+                    .background(RoundedRectangle(cornerRadius: 14).fill(ReadingTheme.coral.opacity(0.11)))
                 VStack(alignment: .leading, spacing: 3) {
                     Text(source.bookSourceName).font(.headline)
                     Text("依次验证搜索 → 详情 → 目录 → 第一章正文")
-                        .font(.caption).foregroundStyle(.secondary)
+                        .font(.caption).foregroundColor(.secondary)
                 }
                 Spacer(minLength: 0)
             }
@@ -71,7 +71,7 @@ struct SourceDebugView: View {
     private var runCard: some View {
         ReadingCard {
             VStack(alignment: .leading, spacing: 12) {
-                Text("样本关键词").font(.caption.bold()).foregroundStyle(.secondary)
+                Text("样本关键词").font(.caption.bold()).foregroundColor(.secondary)
                 TextField("输入该书源能搜到的书名", text: $model.keyword)
                     .textFieldStyle(.roundedBorder)
                     .readingInputConfiguration(autocapitalization: .never)
@@ -95,7 +95,7 @@ struct SourceDebugView: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("端到端检查进行中").font(.subheadline.bold())
                     Text("请求只发送给这个书源，最多读取 5 页目录与正文。")
-                        .font(.caption).foregroundStyle(.secondary)
+                        .font(.caption).foregroundColor(.secondary)
                 }
                 Spacer()
             }
@@ -109,11 +109,11 @@ struct SourceDebugView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(report.passed ? "完整链路通过" : "发现兼容问题").font(.headline)
                     Text(report.passed ? "该样本已成功读取到正文" : "展开失败阶段查看规则诊断")
-                        .font(.caption).foregroundStyle(.secondary)
+                        .font(.caption).foregroundColor(.secondary)
                 }
                 Spacer()
                 Image(systemName: report.passed ? "checkmark.seal.fill" : "exclamationmark.triangle.fill")
-                    .font(.title2).foregroundStyle(report.passed ? .green : .orange)
+                    .font(.title2).foregroundColor(report.passed ? .green : .orange)
             }
         }
         VStack(spacing: 10) {
@@ -124,7 +124,7 @@ struct SourceDebugView: View {
                 VStack(alignment: .leading, spacing: 9) {
                     Label(report.sampleChapterTitle ?? "正文样本", systemImage: "text.quote")
                         .font(.headline)
-                    Text(preview).font(.footnote).foregroundStyle(.secondary).lineSpacing(3)
+                    Text(preview).font(.footnote).foregroundColor(.secondary).lineSpacing(3)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
@@ -261,7 +261,7 @@ struct SourceBatchTestView: View {
                         Text("已完成 \(model.completedCount)/\(model.totalCount)")
                         Spacer()
                         Text("失败 \(model.failedCount) · 已选 \(model.selectedFailedIDs.count)")
-                            .foregroundStyle(model.failedCount == 0 ? Color.secondary : Color.red)
+                            .foregroundColor(model.failedCount == 0 ? Color.secondary : Color.red)
                     }
                     .font(.subheadline.monospacedDigit())
                 }
@@ -292,7 +292,7 @@ struct SourceBatchTestView: View {
                 }
             }
         }
-        .safeAreaInset(edge: .bottom) {
+        .readingSafeAreaInset(edge: .bottom) {
             if !model.isTesting, !model.selectedFailedIDs.isEmpty {
                 HStack {
                     Button("停用所选", systemImage: "pause.circle") { cleanupAction = .disable }
@@ -331,11 +331,11 @@ private struct SourceBatchTestRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
-                .foregroundStyle(color)
+                .foregroundColor(color)
                 .frame(width: 28)
             VStack(alignment: .leading, spacing: 3) {
                 Text(source.bookSourceName).font(.headline)
-                Text(detail).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                Text(detail).font(.caption).foregroundColor(.secondary).lineLimit(2)
             }
             Spacer()
             if case .failed = status {
@@ -383,7 +383,7 @@ private struct DebugStepCard: View {
         DisclosureGroup {
             if step.diagnostics.isEmpty {
                 Text("该阶段没有规则诊断。")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.top, 8)
             } else {
@@ -391,7 +391,7 @@ private struct DebugStepCard: View {
                     ForEach(step.diagnostics) { diagnostic in
                         VStack(alignment: .leading, spacing: 2) {
                             Text(diagnostic.message).font(.caption)
-                            Text(diagnostic.code).font(.caption2.monospaced()).foregroundStyle(.tertiary)
+                            Text(diagnostic.code).font(.caption2.monospaced()).foregroundColor(.secondary)
                         }
                     }
                 }
@@ -401,23 +401,23 @@ private struct DebugStepCard: View {
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: icon)
-                    .foregroundStyle(color)
+                    .foregroundColor(color)
                     .frame(width: 34, height: 34)
-                    .background(color.opacity(0.1), in: Circle())
+                    .background(Circle().fill(color.opacity(0.1)))
                 VStack(alignment: .leading, spacing: 3) {
                     Text(step.stage.title).font(.subheadline.bold())
-                    Text(step.summary).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                    Text(step.summary).font(.caption).foregroundColor(.secondary).lineLimit(2)
                 }
                 Spacer()
                 if step.elapsedMilliseconds > 0 {
                     Text("\(step.elapsedMilliseconds) ms")
-                        .font(.caption2.monospacedDigit()).foregroundStyle(.tertiary)
+                        .font(.caption2.monospacedDigit()).foregroundColor(.secondary)
                 }
             }
         }
         .padding(14)
-        .background(.background, in: RoundedRectangle(cornerRadius: 17, style: .continuous))
-        .overlay { RoundedRectangle(cornerRadius: 17, style: .continuous).stroke(.primary.opacity(0.06)) }
+        .background(RoundedRectangle(cornerRadius: 17, style: .continuous).fill(.background))
+        .overlay(RoundedRectangle(cornerRadius: 17, style: .continuous).stroke(.primary.opacity(0.06)))
     }
 
     private var color: Color {

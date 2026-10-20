@@ -134,19 +134,19 @@ struct ExploreView: View {
                         VStack(alignment: .leading, spacing: 6) {
                             Text("从喜欢的书源开始").font(.headline)
                             Text("浏览分类与榜单，发现更多故事")
-                                .font(.caption).foregroundStyle(.secondary)
+                                .font(.caption).foregroundColor(.secondary)
                         }
                         Spacer(minLength: 0)
                     }
                     .padding(22)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(ReadingTheme.groupedCanvas, in: RoundedRectangle(cornerRadius: 20))
+                    .background(RoundedRectangle(cornerRadius: 20).fill(ReadingTheme.groupedCanvas))
 
                     HStack(alignment: .firstTextBaseline) {
                         Text("分类与榜单").font(.title3.bold())
                             .accessibilityAddTraits(.isHeader)
                         Spacer()
-                        Text("\(sources.count)个书源").font(.caption).foregroundStyle(.secondary)
+                        Text("\(sources.count)个书源").font(.caption).foregroundColor(.secondary)
                     }
                     if sources.isEmpty {
                         ReadingUnavailableView {
@@ -165,7 +165,7 @@ struct ExploreView: View {
                                         ExploreSourceRow(source: source)
                                         Spacer(minLength: 0)
                                         Image(systemName: "chevron.right")
-                                            .font(.caption).foregroundStyle(.tertiary)
+                                            .font(.caption).foregroundColor(.secondary)
                                     }
                                     .padding(.vertical, 8)
                                     .contentShape(Rectangle())
@@ -185,14 +185,14 @@ struct ExploreView: View {
                                 .frame(width: 40, height: 44)
                             VStack(alignment: .leading, spacing: 5) {
                                 Text("管理书源").font(.subheadline.weight(.semibold))
-                                Text("添加与整理阅读来源").font(.caption).foregroundStyle(.secondary)
+                                Text("添加与整理阅读来源").font(.caption).foregroundColor(.secondary)
                             }
                             Spacer(minLength: 0)
                             Image(systemName: "arrow.up.right").font(.subheadline)
                         }
-                        .foregroundStyle(ReadingTheme.ink)
+                        .foregroundColor(ReadingTheme.ink)
                         .padding(18)
-                        .background(ReadingTheme.groupedCanvas, in: RoundedRectangle(cornerRadius: 18))
+                        .background(RoundedRectangle(cornerRadius: 18).fill(ReadingTheme.groupedCanvas))
                     }
                     .buttonStyle(.plain)
                 }
@@ -212,18 +212,18 @@ private struct ExploreSourceRow: View {
         HStack(spacing: 12) {
             Image(systemName: source.bookSourceType == 1 ? "headphones" : "books.vertical")
                 .font(.system(size: 20))
-                .foregroundStyle(ReadingTheme.accent)
+                .foregroundColor(ReadingTheme.accent)
                 .frame(width: 44, height: 48)
-                .background(ReadingTheme.groupedCanvas, in: RoundedRectangle(cornerRadius: 12))
+                .background(RoundedRectangle(cornerRadius: 12).fill(ReadingTheme.groupedCanvas))
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 Text(source.bookSourceName)
                     .font(.body.weight(.medium))
-                    .foregroundStyle(.primary)
+                    .foregroundColor(.primary)
                     .lineLimit(2)
                 Text(source.groups.isEmpty ? (URL(string: source.bookSourceUrl)?.host ?? source.bookSourceUrl) : source.groups.joined(separator: " · "))
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundColor(.secondary)
                     .lineLimit(1)
             }
         }
@@ -264,7 +264,7 @@ private struct ExploreSourceView: View {
                         .font(.subheadline.weight(.medium))
                         .padding(.horizontal, 12)
                         .frame(minHeight: 44)
-                        .foregroundStyle(model.selectedKind?.id == kind.id ? Color.primary : .secondary)
+                        .foregroundColor(model.selectedKind?.id == kind.id ? Color.primary : .secondary)
                         .overlay(alignment: .bottom) {
                             if model.selectedKind?.id == kind.id {
                                 Rectangle().fill(Color.primary).frame(height: 2)
@@ -320,29 +320,29 @@ private struct ExploreBookRow: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(book.name)
                     .font(.body.weight(.medium))
-                    .foregroundStyle(ReadingTheme.ink)
+                    .foregroundColor(ReadingTheme.ink)
                     .lineLimit(2)
                 Text(book.author.isEmpty ? "未知作者" : book.author)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundColor(.secondary)
                     .lineLimit(1)
                 if let kind = book.kind, !kind.isEmpty {
                     Text(kind)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundColor(.secondary)
                         .lineLimit(1)
                 }
                 if let intro = book.intro, !intro.isEmpty {
                     Text(intro)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundColor(.secondary)
                         .lineLimit(2)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             Image(systemName: "chevron.right")
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(.tertiary)
+                .foregroundColor(.secondary)
                 .padding(.top, 4)
         }
         .padding(.vertical, 12)

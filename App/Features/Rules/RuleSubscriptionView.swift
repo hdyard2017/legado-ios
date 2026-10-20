@@ -104,11 +104,11 @@ struct RuleSubscriptionView: View {
             ForEach(visibleValues) { value in
                 Button { open(value) } label: {
                     HStack(spacing: 12) {
-                        Text(typeName(value.type)).font(.caption.bold()).foregroundStyle(ReadingTheme.accent).frame(width: 48)
-                        VStack(alignment: .leading, spacing: 4) { Text(value.name.isEmpty ? value.url : value.name).foregroundStyle(.primary); Text(value.url).font(.caption).foregroundStyle(.secondary).lineLimit(1) }
+                        Text(typeName(value.type)).font(.caption.bold()).foregroundColor(ReadingTheme.accent).frame(width: 48)
+                        VStack(alignment: .leading, spacing: 4) { Text(value.name.isEmpty ? value.url : value.name).foregroundColor(.primary); Text(value.url).font(.caption).foregroundColor(.secondary).lineLimit(1) }
                         Spacer()
-                        if value.autoUpdate { Image(systemName: value.silentUpdate ? "arrow.triangle.2.circlepath.circle.fill" : "arrow.triangle.2.circlepath.circle").foregroundStyle(.secondary) }
-                        if model.pendingIDs.contains(value.id) { Text("有更新").font(.caption2).foregroundStyle(.orange) }
+                        if value.autoUpdate { Image(systemName: value.silentUpdate ? "arrow.triangle.2.circlepath.circle.fill" : "arrow.triangle.2.circlepath.circle").foregroundColor(.secondary) }
+                        if model.pendingIDs.contains(value.id) { Text("有更新").font(.caption2).foregroundColor(.orange) }
                     }
                 }.swipeActions(edge: .leading) { Button("编辑", systemImage: "pencil") { editing = value }.tint(.blue) }
             }.onDelete { offsets in

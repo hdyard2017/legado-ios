@@ -81,7 +81,7 @@ struct SourceManagementView: View {
                                     HStack(spacing: 10) {
                                         Image(systemName: selectedSourceIDs.contains(source.id) ? "checkmark.circle.fill" : "circle")
                                             .font(.title3)
-                                            .foregroundStyle(selectedSourceIDs.contains(source.id) ? ReadingTheme.accent : .secondary)
+                                            .foregroundColor(selectedSourceIDs.contains(source.id) ? ReadingTheme.accent : .secondary)
                                         SourceRow(source: source, showsToggle: false) { _ in }
                                     }
                                 }
@@ -122,9 +122,7 @@ struct SourceManagementView: View {
                 .listStyle(.insetGrouped)
                 .readingScrollContentBackgroundHidden()
                 .background(ReadingTheme.groupedCanvas)
-                .overlay {
-                    if library.isWorking { ProgressView() }
-                }
+                .overlay(if library.isWorking { ProgressView() })
             }
         }
         .navigationTitle("书源")
@@ -168,7 +166,7 @@ struct SourceManagementView: View {
                 }
             }
         }
-        .safeAreaInset(edge: .bottom) {
+        .readingSafeAreaInset(edge: .bottom) {
             if isSelecting {
                 HStack(spacing: 18) {
                     Button(selectedSourceIDs.count == filteredSources.count ? "取消全选" : "全选") {
@@ -253,7 +251,7 @@ private struct SourceTextImportView: View {
                 }
                 Section {
                     Text("导入前可预览并选择书源。地址相同的书源将被替换。")
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundColor(.secondary)
                 }
             }
             .navigationTitle("导入书源")
@@ -288,15 +286,15 @@ private struct SourceRow: View {
             Image(systemName: source.enabled ? "network" : "network.slash")
                 .font(.system(size: 20))
                 .frame(width: 28)
-                .foregroundStyle(.secondary)
+                .foregroundColor(.secondary)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 Text(source.bookSourceName)
                     .font(.body)
-                    .foregroundStyle(source.enabled ? Color.primary : .secondary)
+                    .foregroundColor(source.enabled ? Color.primary : .secondary)
                 Text(source.groups.isEmpty ? (URL(string: source.bookSourceUrl)?.host ?? source.bookSourceUrl) : source.groups.joined(separator: " · "))
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundColor(.secondary)
                     .lineLimit(1)
             }
             Spacer()
@@ -338,7 +336,7 @@ private struct SourceGroupManagerView: View {
                         .disabled(BookSource.parseGroups(newGroup).isEmpty)
                     }
                     Text("新分组会分配给当前未分组书源，与 Legado 的分组管理行为一致。")
-                        .font(.caption).foregroundStyle(.secondary)
+                        .font(.caption).foregroundColor(.secondary)
                 }
                 Section("已有分组") {
                     ForEach(library.groups, id: \.self) { group in
@@ -346,7 +344,7 @@ private struct SourceGroupManagerView: View {
                             Label(group, systemImage: "folder.fill")
                             Spacer()
                             Text("\(library.sources.filter { $0.hasGroup(group) }.count)")
-                                .foregroundStyle(.secondary)
+                                .foregroundColor(.secondary)
                             Menu {
                                 Button("重命名", systemImage: "pencil") {
                                     renaming = group
@@ -464,7 +462,7 @@ private struct SourceDetailView: View {
                     Label("运行端到端调试", systemImage: "stethoscope")
                 }
                 Text("使用你输入的关键词，逐步验证搜索、详情、目录和正文规则。")
-                    .font(.footnote).foregroundStyle(.secondary)
+                    .font(.footnote).foregroundColor(.secondary)
             }
             if current.loginUrl?.isEmpty == false {
                 Section("账户") {
@@ -474,7 +472,7 @@ private struct SourceDetailView: View {
                         Label("登录此书源", systemImage: "person.badge.key.fill")
                     }
                     Text("登录 Cookie 与阅读请求共享；若书源提供检测脚本，会在页面载入后自动验证。")
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundColor(.secondary)
                 }
             }
             if let comment = current.bookSourceComment, !comment.isEmpty {
@@ -541,7 +539,7 @@ struct SourceImportReviewView: View {
 
                     Label("仅有效书源可被选择和导入", systemImage: "checkmark.shield.fill")
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundColor(.secondary)
                 }
 
                 if !pending.items.isEmpty {
@@ -564,18 +562,18 @@ struct SourceImportReviewView: View {
                         } label: {
                             HStack(alignment: .top, spacing: 10) {
                                 Image(systemName: selectedIDs.contains(item.id) ? "checkmark.square.fill" : "square")
-                                    .foregroundStyle(selectedIDs.contains(item.id) ? ReadingTheme.accent : .secondary)
+                                    .foregroundColor(selectedIDs.contains(item.id) ? ReadingTheme.accent : .secondary)
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text(item.source.bookSourceName).foregroundStyle(.primary)
+                                    Text(item.source.bookSourceName).foregroundColor(.primary)
                                     HStack {
                                         Text(item.state)
                                             .font(.caption.bold())
-                                            .foregroundStyle(item.state == "新增" ? .green : item.state == "更新" ? .orange : .secondary)
+                                            .foregroundColor(item.state == "新增" ? .green : item.state == "更新" ? .orange : .secondary)
                                         Text(item.source.bookSourceUrl)
-                                            .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                                            .font(.caption).foregroundColor(.secondary).lineLimit(1)
                                     }
                                     if showComments, let comment = item.source.bookSourceComment, !comment.isEmpty {
-                                        Text(comment).font(.caption).foregroundStyle(.secondary)
+                                        Text(comment).font(.caption).foregroundColor(.secondary)
                                     }
                                 }
                             }
@@ -588,19 +586,19 @@ struct SourceImportReviewView: View {
                         ForEach(pending.invalidItems) { item in
                             HStack(alignment: .top, spacing: 10) {
                                 Image(systemName: "xmark.circle.fill")
-                                    .foregroundStyle(.red)
+                                    .foregroundColor(.red)
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(item.source.bookSourceName.isEmpty ? "未命名书源" : item.source.bookSourceName)
-                                        .foregroundStyle(.primary)
+                                        .foregroundColor(.primary)
                                     if !item.source.bookSourceUrl.isEmpty {
                                         Text(item.source.bookSourceUrl)
                                             .font(.caption)
-                                            .foregroundStyle(.secondary)
+                                            .foregroundColor(.secondary)
                                             .lineLimit(1)
                                     }
                                     Text(item.issues.map(\.message).joined(separator: "；"))
                                         .font(.caption)
-                                        .foregroundStyle(.red)
+                                        .foregroundColor(.red)
                                 }
                             }
                         }
@@ -670,14 +668,14 @@ struct SourceImportReviewView: View {
         VStack(spacing: 5) {
             Label(title, systemImage: systemImage)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(color)
+                .foregroundColor(color)
             Text("\(count)")
                 .font(.title2.bold())
-                .foregroundStyle(.primary)
+                .foregroundColor(.primary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 10)
-        .background(color.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
+        .background(RoundedRectangle(cornerRadius: 12).fill(color.opacity(0.1)))
     }
 }
 
@@ -688,7 +686,7 @@ private struct CapabilityRow: View {
     var body: some View {
         ReadingLabeledContent(title) {
             Image(systemName: available ? "checkmark.circle.fill" : "minus.circle")
-                .foregroundStyle(available ? .green : .secondary)
+                .foregroundColor(available ? .green : .secondary)
                 .accessibilityLabel(available ? "已配置" : "未配置")
         }
     }

@@ -186,7 +186,7 @@ private struct BookshelfView: View {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("继续阅读")
                                     .font(.subheadline.weight(.medium))
-                                    .foregroundStyle(.secondary)
+                                    .foregroundColor(.secondary)
                                 NavigationLink {
                                     BookshelfBookDestination(book: book, source: sources.sources.first { $0.bookSourceUrl == book.origin })
                                 } label: {
@@ -274,20 +274,20 @@ private struct BookshelfView: View {
                     .font(.title3.bold())
                     .accessibilityAddTraits(.isHeader)
                 Text("\(displayedBooks.count)本")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).foregroundColor(.secondary)
             }
             Spacer()
             HStack(spacing: 0) {
                 Button { bookshelfLayout = "grid3" } label: {
                     Image(systemName: "square.grid.2x2.fill")
-                        .foregroundStyle(bookshelfLayout.hasPrefix("grid") ? ReadingTheme.accent : .secondary)
+                        .foregroundColor(bookshelfLayout.hasPrefix("grid") ? ReadingTheme.accent : .secondary)
                         .frame(width: 44, height: 44)
                 }
                 .accessibilityLabel("网格布局")
                 .accessibilityAddTraits(bookshelfLayout.hasPrefix("grid") ? .isSelected : [])
                 Button { bookshelfLayout = "list" } label: {
                     Image(systemName: "list.bullet")
-                        .foregroundStyle(bookshelfLayout.hasPrefix("grid") ? .secondary : ReadingTheme.accent)
+                        .foregroundColor(bookshelfLayout.hasPrefix("grid") ? .secondary : ReadingTheme.accent)
                         .frame(width: 44, height: 44)
                 }
                 .accessibilityLabel("列表布局")
@@ -335,7 +335,7 @@ private struct BookshelfView: View {
                 ForEach(library.visibleGroups) { group in
                     Button(group.groupName) { selectedGroupID = group.id }
                         .font(.subheadline.weight(selectedGroupID == group.id ? .semibold : .regular))
-                        .foregroundStyle(selectedGroupID == group.id ? Color.primary : .secondary)
+                        .foregroundColor(selectedGroupID == group.id ? Color.primary : .secondary)
                         .frame(minHeight: 44)
                         .overlay(alignment: .bottom) {
                             if selectedGroupID == group.id {
@@ -427,7 +427,7 @@ private struct BookshelfGridItem: View {
                     Circle()
                         .fill(ReadingTheme.coral)
                         .frame(width: 7, height: 7)
-                        .overlay { Circle().stroke(ReadingTheme.canvas, lineWidth: 2) }
+                        .overlay(Circle().stroke(ReadingTheme.canvas, lineWidth: 2))
                         .offset(x: 3, y: -3)
                         .accessibilityLabel("更新 \(book.lastCheckCount) 章")
                 }
@@ -437,12 +437,12 @@ private struct BookshelfGridItem: View {
                 .lineLimit(2)
                 .padding(.top, 10)
             Text(book.author.isEmpty ? "未知作者" : book.author)
-                .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                .font(.caption2).foregroundColor(.secondary).lineLimit(1)
                 .padding(.top, 3)
             ReadingProgressLine(value: BookReadingPresentation.progress(book))
                 .padding(.top, 12)
             Text(BookReadingPresentation.progressLabel(book))
-                .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                .font(.caption2).foregroundColor(.secondary).lineLimit(1)
                 .padding(.top, 7)
         }
     }
@@ -470,13 +470,13 @@ private struct ContinueReadingCard: View {
             VStack(alignment: .leading, spacing: 0) {
                 Text(book.name)
                     .font(.title3.bold())
-                    .foregroundStyle(ReadingTheme.ink)
+                    .foregroundColor(ReadingTheme.ink)
                     .lineLimit(2)
                 Text(book.author.isEmpty ? "未知作者" : book.author)
-                    .font(.subheadline).foregroundStyle(.secondary)
+                    .font(.subheadline).foregroundColor(.secondary)
                     .padding(.top, 7)
                 Text(BookReadingPresentation.position(book))
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).foregroundColor(.secondary)
                     .lineLimit(2)
                     .padding(.top, 20)
                 if book.totalChapterNum > 0 {
@@ -484,7 +484,7 @@ private struct ContinueReadingCard: View {
                         ReadingProgressLine(value: BookReadingPresentation.progress(book))
                         Text("\(Int((BookReadingPresentation.progress(book) * 100).rounded()))%")
                             .font(.caption2.monospacedDigit())
-                            .foregroundStyle(.secondary)
+                            .foregroundColor(.secondary)
                     }
                     .padding(.top, 12)
                 }
@@ -493,10 +493,10 @@ private struct ContinueReadingCard: View {
                     Image(systemName: "arrow.right")
                 }
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(ReadingTheme.onAccent)
+                .foregroundColor(ReadingTheme.onAccent)
                 .padding(.horizontal, 18)
                 .frame(minHeight: 40)
-                .background(ReadingTheme.accent, in: Capsule())
+                .background(Capsule().fill(ReadingTheme.accent))
                 .padding(.top, 20)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -505,7 +505,7 @@ private struct ContinueReadingCard: View {
             }
         }
         .padding(20)
-        .background(ReadingTheme.groupedCanvas, in: RoundedRectangle(cornerRadius: 20))
+        .background(RoundedRectangle(cornerRadius: 20).fill(ReadingTheme.groupedCanvas))
     }
 }
 
@@ -528,7 +528,7 @@ private struct BookGroupManagerView: View {
                     HStack {
                         Text("全部")
                         Spacer()
-                        Text("系统分组").font(.caption).foregroundStyle(.secondary)
+                        Text("系统分组").font(.caption).foregroundColor(.secondary)
                     }
                 }
                 Section("自定义分组") {
@@ -559,11 +559,7 @@ private struct BookGroupManagerView: View {
                     }
                 }
             }
-            .overlay {
-                if customGroups.isEmpty {
-                    ReadingUnavailableView("没有自定义分组", systemImage: "rectangle.3.group", description: Text("点右上角加号新建分组。"))
-                }
-            }
+            .overlay(if customGroups.isEmpty { ReadingUnavailableView("没有自定义分组", systemImage: "rectangle.3.group", description: Text("点右上角加号新建分组。")) })
             .navigationTitle("书架分组")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("关闭") { dismiss() } }
@@ -615,17 +611,13 @@ private struct BookGroupSelectView: View {
                     if !selected.insert(group.id).inserted { selected.remove(group.id) }
                 } label: {
                     HStack {
-                        Text(group.groupName).foregroundStyle(.primary)
+                        Text(group.groupName).foregroundColor(.primary)
                         Spacer()
-                        if selected.contains(group.id) { Image(systemName: "checkmark").foregroundStyle(ReadingTheme.accent) }
+                        if selected.contains(group.id) { Image(systemName: "checkmark").foregroundColor(ReadingTheme.accent) }
                     }
                 }
             }
-            .overlay {
-                if customGroups.isEmpty {
-                    ReadingUnavailableView("没有自定义分组", systemImage: "rectangle.3.group")
-                }
-            }
+            .overlay(if customGroups.isEmpty { ReadingUnavailableView("没有自定义分组", systemImage: "rectangle.3.group") })
             .navigationTitle("移至分组")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("取消") { dismiss() } }
@@ -665,15 +657,15 @@ private struct LocalBookImportReviewView: View {
                 } label: {
                     HStack {
                         Image(systemName: selectedPaths.contains(url.path) ? "checkmark.square.fill" : "square")
-                            .foregroundStyle(selectedPaths.contains(url.path) ? ReadingTheme.accent : .secondary)
+                            .foregroundColor(selectedPaths.contains(url.path) ? ReadingTheme.accent : .secondary)
                         VStack(alignment: .leading) {
-                            Text(url.deletingPathExtension().lastPathComponent).foregroundStyle(.primary)
-                            Text(url.lastPathComponent).font(.caption).foregroundStyle(.secondary)
+                            Text(url.deletingPathExtension().lastPathComponent).foregroundColor(.primary)
+                            Text(url.lastPathComponent).font(.caption).foregroundColor(.secondary)
                         }
                     }
                 }
             }
-            .overlay { if isImporting { ProgressView("正在导入…") } }
+            .overlay(if: isImporting { ProgressView("正在导入…") })
             .navigationTitle("导入本地书")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -716,12 +708,12 @@ private struct EmptyBookshelfHero: View {
         VStack(spacing: 24) {
             Image(systemName: "books.vertical")
                 .font(.system(size: 40, weight: .ultraLight))
-                .foregroundStyle(ReadingTheme.accent)
+                .foregroundColor(ReadingTheme.accent)
                 .accessibilityHidden(true)
             VStack(spacing: 10) {
                 Text("书架还是空的").font(.title3.weight(.semibold))
                 Text("导入本地书，或添加书源后搜索书籍。")
-                    .font(.subheadline).foregroundStyle(.secondary)
+                    .font(.subheadline).foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
             }
             VStack(spacing: 12) {
@@ -796,23 +788,23 @@ private struct BookshelfRow: View {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text(book.name)
                         .font(.body.weight(.medium))
-                        .foregroundStyle(.primary)
+                        .foregroundColor(.primary)
                         .lineLimit(2)
                     Spacer(minLength: 0)
                     if book.lastCheckCount > 0 {
                         Text("+\(book.lastCheckCount)")
                             .font(.caption.monospacedDigit())
-                            .foregroundStyle(ReadingTheme.accent)
+                            .foregroundColor(ReadingTheme.accent)
                             .fixedSize()
                             .accessibilityLabel("更新 \(book.lastCheckCount) 章")
                     }
                 }
                 Text(book.author.isEmpty ? "未知作者" : book.author)
-                    .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    .font(.caption).foregroundColor(.secondary).lineLimit(1)
                 if !compact {
                     Text(readingPosition)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundColor(.secondary)
                         .lineLimit(1)
                 }
             }
@@ -939,14 +931,14 @@ struct SearchView: View {
             HStack(alignment: .top, spacing: 12) {
                 Image(systemName: "magnifyingglass")
                     .font(.body)
-                    .foregroundStyle(ReadingTheme.accent)
+                    .foregroundColor(ReadingTheme.accent)
                 VStack(alignment: .leading, spacing: 6) {
                     Text("搜索书名或作者")
                         .font(.headline.weight(.medium))
-                        .foregroundStyle(.primary)
+                        .foregroundColor(.primary)
                     Text("\(searchableSourceCount) 个书源 · \(scopeDisplay)")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundColor(.secondary)
                 }
                 Spacer(minLength: 0)
             }
@@ -963,7 +955,7 @@ struct SearchView: View {
                         ProgressView().readingControlSize(.regular)
                         VStack(alignment: .leading, spacing: 3) {
                             Text("正在搜索“\(model.submittedKeyword)”").font(.headline)
-                            Text(searchProgressText).font(.caption).foregroundStyle(.secondary)
+                            Text(searchProgressText).font(.caption).foregroundColor(.secondary)
                         }
                         Spacer()
                         Button("停止", role: .destructive) { model.cancel() }
@@ -972,7 +964,7 @@ struct SearchView: View {
                     ProgressView(value: searchProgress)
                         .tint(ReadingTheme.accent)
                     Text("结果会在书源返回后立即显示，无需等待全部完成。")
-                        .font(.caption).foregroundStyle(.secondary)
+                        .font(.caption).foregroundColor(.secondary)
                 }
             }
             ForEach(0..<2, id: \.self) { _ in SearchLoadingRow() }
@@ -988,7 +980,7 @@ struct SearchView: View {
                         Text(model.isShowingCachedResults
                              ? (model.state == .searching ? "已显示缓存结果，正在更新书源" : "已显示缓存结果")
                              : "找到 \(model.books.count) 本，已自动合并重复来源")
-                            .font(.caption).foregroundStyle(.secondary)
+                            .font(.caption).foregroundColor(.secondary)
                     }
                     Spacer()
                     if model.isPaused {
@@ -1024,13 +1016,13 @@ struct SearchView: View {
             if model.isLoadingMore {
                 HStack(spacing: 10) {
                     ProgressView().readingControlSize(.small)
-                    Text("正在查找更多结果…").font(.subheadline).foregroundStyle(.secondary)
+                    Text("正在查找更多结果…").font(.subheadline).foregroundColor(.secondary)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
             } else if !model.hasMore, model.state == .finished {
                 Text("已经到底了")
-                    .font(.caption).foregroundStyle(.tertiary)
+                    .font(.caption).foregroundColor(.secondary)
                     .frame(maxWidth: .infinity).padding(.vertical, 8)
             }
         }
@@ -1098,10 +1090,10 @@ struct SearchView: View {
             VStack(alignment: .leading, spacing: 10) {
                 ForEach(model.diagnostics.prefix(20)) { diagnostic in
                     HStack(alignment: .top) {
-                        Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                        Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.orange)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(diagnostic.message).font(.subheadline)
-                            Text(diagnostic.code).font(.caption.monospaced()).foregroundStyle(.secondary)
+                            Text(diagnostic.code).font(.caption.monospaced()).foregroundColor(.secondary)
                         }
                     }
                 }
@@ -1109,7 +1101,7 @@ struct SearchView: View {
             .padding(.top, 10)
         }
         .padding(16)
-        .background(.background, in: RoundedRectangle(cornerRadius: 18))
+        .background(RoundedRectangle(cornerRadius: 18).fill(.background))
     }
 
     private var searchHistoryView: some View {
@@ -1126,8 +1118,8 @@ struct SearchView: View {
                     HStack(spacing: 10) {
                         Button { keyword = item.word; startSearch() } label: {
                             HStack(spacing: 10) {
-                                Image(systemName: "clock.arrow.circlepath").foregroundStyle(.secondary)
-                                Text(item.word).foregroundStyle(.primary).lineLimit(1)
+                                Image(systemName: "clock.arrow.circlepath").foregroundColor(.secondary)
+                                Text(item.word).foregroundColor(.primary).lineLimit(1)
                                 Spacer()
                             }
                             .contentShape(Rectangle())
@@ -1136,7 +1128,7 @@ struct SearchView: View {
                         Button {
                             Task { await model.deleteSearchKeyword(item.word) }
                         } label: {
-                            Image(systemName: "xmark").font(.caption.bold()).foregroundStyle(.tertiary)
+                            Image(systemName: "xmark").font(.caption.bold()).foregroundColor(.secondary)
                                 .frame(width: 28, height: 28)
                         }
                         .buttonStyle(.plain)
@@ -1197,12 +1189,12 @@ private struct SearchStateCard<Actions: View>: View {
             VStack(spacing: 14) {
                 Image(systemName: systemImage)
                     .font(.system(size: 32))
-                    .foregroundStyle(ReadingTheme.accent)
+                    .foregroundColor(ReadingTheme.accent)
                     .frame(width: 64, height: 64)
-                    .background(ReadingTheme.accentSoft.opacity(0.5), in: Circle())
+                    .background(Circle().fill(ReadingTheme.accentSoft.opacity(0.5)))
                 VStack(spacing: 5) {
                     Text(title).font(.headline).multilineTextAlignment(.center)
-                    Text(detail).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                    Text(detail).font(.subheadline).foregroundColor(.secondary).multilineTextAlignment(.center)
                 }
                 HStack(spacing: 10) { actions }
             }
@@ -1225,12 +1217,12 @@ private struct SearchBookRow: View {
                 height: 74
             )
             VStack(alignment: .leading, spacing: 6) {
-                Text(book.name).font(.body.weight(.medium)).foregroundStyle(.primary).lineLimit(2)
+                Text(book.name).font(.body.weight(.medium)).foregroundColor(.primary).lineLimit(2)
                 Text(book.author.isEmpty ? "未知作者" : book.author)
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).foregroundColor(.secondary)
                 if let latest = book.latestChapterTitle, !latest.isEmpty {
                     Text(latest)
-                        .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                        .font(.caption).foregroundColor(.secondary).lineLimit(1)
                 }
                 HStack(spacing: 6) {
                     Text(book.origins.count > 1 ? "\(book.origins.count) 个来源" : book.originName)
@@ -1241,10 +1233,10 @@ private struct SearchBookRow: View {
                     }
                 }
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundColor(.secondary)
             }
             Spacer(minLength: 0)
-            Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
+            Image(systemName: "chevron.right").font(.caption.bold()).foregroundColor(.secondary)
         }
         .padding(.vertical, 12)
         .overlay(alignment: .bottom) {
@@ -1286,11 +1278,7 @@ private struct SettingsView: View {
                         .scaledToFill()
                         .frame(width: geometry.size.width, height: geometry.safeAreaInsets.top + 156)
                         .clipped()
-                        .overlay {
-                            if colorScheme == .dark {
-                                Color.black.opacity(0.62)
-                            }
-                        }
+                        .overlay(if colorScheme == .dark { Color.black.opacity(0.62) })
                         .overlay(alignment: .bottom) {
                             LinearGradient(
                                 colors: [ProfileTheme.canvas.opacity(0), ProfileTheme.canvas],
@@ -1313,11 +1301,11 @@ private struct SettingsView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("我的")
                 .font(.largeTitle.bold())
-                .foregroundStyle(ProfileTheme.ink)
+                .foregroundColor(ProfileTheme.ink)
                 .accessibilityAddTraits(.isHeader)
             Text("按照你的方式阅读")
                 .font(.subheadline)
-                .foregroundStyle(ProfileTheme.secondary)
+                .foregroundColor(ProfileTheme.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 28)
@@ -1339,19 +1327,19 @@ private struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(AppIdentity.name)
                         .font(.headline)
-                        .foregroundStyle(ProfileTheme.ink)
+                        .foregroundColor(ProfileTheme.ink)
                         .fixedSize(horizontal: false, vertical: true)
                     Text("快速搜书，自由阅读")
                         .font(.footnote)
-                        .foregroundStyle(ProfileTheme.secondary)
+                        .foregroundColor(ProfileTheme.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.right")
                     .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(ProfileTheme.ink.opacity(0.75))
+                    .foregroundColor(ProfileTheme.ink.opacity(0.75))
                     .frame(width: 26, height: 26)
-                    .background(ProfileTheme.detail.opacity(0.10), in: Circle())
+                    .background(Circle().fill(ProfileTheme.detail.opacity(0.10)))
                     .accessibilityHidden(true)
             }
             .padding(14)
@@ -1363,10 +1351,7 @@ private struct SettingsView: View {
                         startPoint: .topLeading, endPoint: .bottomTrailing
                     ))
             )
-            .overlay {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .strokeBorder(ProfileTheme.surface.opacity(0.9), lineWidth: 0.75)
-            }
+            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous) .strokeBorder(ProfileTheme.surface.opacity(0.9), lineWidth: 0.75))
             .shadow(color: .black.opacity(0.035), radius: 18, x: 0, y: 8)
         }
         .buttonStyle(.plain)
@@ -1439,10 +1424,10 @@ private struct SettingsView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
                 .font(.body)
-                .foregroundStyle(ProfileTheme.secondary)
+                .foregroundColor(ProfileTheme.secondary)
                 .accessibilityAddTraits(.isHeader)
             VStack(spacing: 0, content: content)
-                .background(ProfileTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(ProfileTheme.surface))
                 .shadow(color: .black.opacity(0.025), radius: 20, x: 0, y: 8)
         }
     }
@@ -1474,26 +1459,22 @@ private struct SettingsView: View {
                 .accessibilityHidden(true)
             Text(title)
                 .font(.body)
-                .foregroundStyle(ProfileTheme.ink)
+                .foregroundColor(ProfileTheme.ink)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
             if let value {
                 Text(value)
                     .font(.footnote)
-                    .foregroundStyle(ProfileTheme.secondary)
+                    .foregroundColor(ProfileTheme.secondary)
                     .multilineTextAlignment(.trailing)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.horizontal, showsValuePill ? 10 : 0)
                     .padding(.vertical, showsValuePill ? 4 : 0)
-                    .overlay {
-                        if showsValuePill {
-                            Capsule().strokeBorder(ProfileTheme.separator, lineWidth: 0.5)
-                        }
-                    }
+                    .overlay(if showsValuePill { Capsule().strokeBorder(ProfileTheme.separator, lineWidth: 0.5) })
             }
             Image(systemName: isExternal ? "arrow.up.right" : "chevron.right")
                 .font(.caption.weight(.medium))
-                .foregroundStyle(ProfileTheme.secondary.opacity(0.65))
+                .foregroundColor(ProfileTheme.secondary.opacity(0.65))
                 .accessibilityHidden(true)
         }
         .padding(.horizontal, 18)
@@ -1524,7 +1505,7 @@ private enum ProfileTheme {
     static let separator = adaptive(0xEAEAEA, dark: 0x373638)
 
     private static func adaptive(_ light: UInt32, dark: UInt32) -> Color {
-        Color(uiColor: UIColor { traits in
+        Color(UIColor { traits in
             let hex = traits.userInterfaceStyle == .dark ? dark : light
             return UIColor(
                 red: CGFloat((hex >> 16) & 0xff) / 255,
@@ -1543,70 +1524,94 @@ private struct ProfileSettingIcon: View {
         Group {
             if systemName == "textformat.size" {
                 HStack(alignment: .firstTextBaseline, spacing: 0) {
-                    Text("A").font(.system(size: 24, weight: .light)).foregroundStyle(ProfileTheme.ink)
-                    Text("A").font(.system(size: 13, weight: .medium)).foregroundStyle(ProfileTheme.detail)
+                    Text("A").font(.system(size: 24, weight: .light)).foregroundColor(ProfileTheme.ink)
+                    Text("A").font(.system(size: 13, weight: .medium)).foregroundColor(ProfileTheme.detail)
                 }
             } else if ["circle.lefthalf.filled", "waveform", "bookmark", "clock", "globe"].contains(systemName) {
-                Canvas { context, size in
+                ReadingCanvas { context, size in
                     context.scaleBy(x: size.width / 24, y: size.height / 24)
-                    draw(in: &context)
+                    draw(context: context)
                 }
                 .frame(width: 22, height: 22)
             } else {
                 Image(systemName: systemName)
                     .font(.system(size: 20, weight: .regular))
                     .symbolRenderingMode(.palette)
-                    .foregroundStyle(ProfileTheme.ink, ProfileTheme.detail)
+                    .foregroundColor(ProfileTheme.ink, ProfileTheme.detail)
             }
         }
     }
 
-    private func draw(in context: inout GraphicsContext) {
-        let stroke = StrokeStyle(lineWidth: 1.65, lineCap: .round, lineJoin: .round)
-        let circle = Path(ellipseIn: CGRect(x: 2.5, y: 2.5, width: 19, height: 19))
+    /// 个人中心图标绘制。
+    ///
+    /// 原实现使用 SwiftUI 的 `GraphicsContext`（iOS 15+），
+    /// 这里改用 CoreGraphics，可在 iOS 14 上编译并保持相同视觉效果。
+    private func draw(context ctx: CGContext) {
+        ctx.setLineCap(.round)
+        ctx.setLineJoin(.round)
+
+        func strokePath(_ path: UIBezierPath, _ color: Color, width: CGFloat) {
+            color.setStroke()
+            path.lineWidth = width
+            path.stroke()
+        }
+
+        let circleRect = CGRect(x: 2.5, y: 2.5, width: 19, height: 19)
         switch systemName {
         case "circle.lefthalf.filled":
-            var half = Path()
-            half.addArc(center: CGPoint(x: 12, y: 12), radius: 9.5, startAngle: .degrees(90), endAngle: .degrees(270), clockwise: false)
-            half.closeSubpath()
-            context.fill(half, with: .color(ProfileTheme.ink))
-            context.stroke(circle, with: .color(ProfileTheme.ink), style: stroke)
-            var edge = Path()
-            edge.addArc(center: CGPoint(x: 12, y: 12), radius: 10.2, startAngle: .degrees(105), endAngle: .degrees(255), clockwise: false)
-            context.stroke(edge, with: .color(ProfileTheme.detail), style: StrokeStyle(lineWidth: 1, lineCap: .round))
+            let half = UIBezierPath()
+            half.addArc(withCenter: CGPoint(x: 12, y: 12), radius: 9.5,
+                        startAngle: .pi / 2, endAngle: .pi * 1.5, clockwise: true)
+            half.close()
+            ProfileTheme.ink.setFill()
+            half.fill()
+            strokePath(UIBezierPath(ovalIn: circleRect), ProfileTheme.ink, width: 1.65)
+
+            let edge = UIBezierPath()
+            edge.addArc(withCenter: CGPoint(x: 12, y: 12), radius: 10.2,
+                        startAngle: .pi * 7 / 12, endAngle: .pi * 17 / 12, clockwise: true)
+            strokePath(edge, ProfileTheme.detail, width: 1)
+
         case "waveform":
             for (index, height) in [4.0, 12.0, 21.0, 14.0, 5.0].enumerated() {
-                let bar = CGRect(x: 2 + Double(index) * 4.4, y: (24 - height) / 2, width: 2.4, height: height)
-                context.fill(Path(roundedRect: bar, cornerRadius: 1.2), with: .color(index > 2 ? ProfileTheme.detail : ProfileTheme.ink))
+                let bar = CGRect(x: 2 + Double(index) * 4.4, y: (24 - height) / 2,
+                                 width: 2.4, height: height)
+                (index > 2 ? ProfileTheme.detail : ProfileTheme.ink).setFill()
+                UIBezierPath(roundedRect: bar, cornerRadius: 1.2).fill()
             }
+
         case "bookmark":
-            var bookmark = Path()
+            let bookmark = UIBezierPath()
             bookmark.move(to: CGPoint(x: 5, y: 21))
             bookmark.addLine(to: CGPoint(x: 5, y: 4))
-            bookmark.addQuadCurve(to: CGPoint(x: 7, y: 2), control: CGPoint(x: 5, y: 2))
+            bookmark.addQuadCurve(to: CGPoint(x: 7, y: 2), controlPoint: CGPoint(x: 5, y: 2))
             bookmark.addLine(to: CGPoint(x: 17, y: 2))
-            bookmark.addQuadCurve(to: CGPoint(x: 19, y: 4), control: CGPoint(x: 19, y: 2))
+            bookmark.addQuadCurve(to: CGPoint(x: 19, y: 4), controlPoint: CGPoint(x: 19, y: 2))
             bookmark.addLine(to: CGPoint(x: 19, y: 21))
             bookmark.addLine(to: CGPoint(x: 12, y: 16))
-            bookmark.closeSubpath()
-            context.stroke(bookmark, with: .color(ProfileTheme.detail), style: stroke)
+            bookmark.close()
+            strokePath(bookmark, ProfileTheme.detail, width: 1.65)
+
         case "clock":
-            context.stroke(circle, with: .color(ProfileTheme.ink), style: stroke)
-            var hands = Path()
+            strokePath(UIBezierPath(ovalIn: circleRect), ProfileTheme.ink, width: 1.65)
+            let hands = UIBezierPath()
             hands.move(to: CGPoint(x: 12, y: 6))
             hands.addLine(to: CGPoint(x: 12, y: 12))
             hands.addLine(to: CGPoint(x: 16, y: 15))
-            context.stroke(hands, with: .color(ProfileTheme.detail), style: stroke)
+            strokePath(hands, ProfileTheme.detail, width: 1.65)
+
         case "globe":
-            let meridian = Path(ellipseIn: CGRect(x: 7.5, y: 2.5, width: 9, height: 19))
-            context.stroke(meridian, with: .color(ProfileTheme.detail), style: stroke)
-            var parallels = Path()
+            strokePath(UIBezierPath(ovalIn: CGRect(x: 7.5, y: 2.5, width: 9, height: 19)),
+                       ProfileTheme.detail, width: 1.65)
+            let parallels = UIBezierPath()
             for y in [7.0, 17.0] {
-                parallels.move(to: CGPoint(x: 4, y: y))
-                parallels.addQuadCurve(to: CGPoint(x: 20, y: y), control: CGPoint(x: 12, y: 12))
+                parallels.move(to: CGPoint(x: 4, y: CGFloat(y)))
+                parallels.addQuadCurve(to: CGPoint(x: 20, y: CGFloat(y)),
+                                       controlPoint: CGPoint(x: 12, y: 12))
             }
-            context.stroke(parallels, with: .color(ProfileTheme.detail), style: stroke)
-            context.stroke(circle, with: .color(ProfileTheme.ink), style: stroke)
+            strokePath(parallels, ProfileTheme.detail, width: 1.65)
+            strokePath(UIBezierPath(ovalIn: circleRect), ProfileTheme.ink, width: 1.65)
+
         default: break
         }
     }
@@ -1703,9 +1708,9 @@ private struct AllBookmarksView: View {
     private func bookmarkRow(_ bookmark: Bookmark) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(bookmark.chapterName.isEmpty ? "第 \(bookmark.chapterIndex + 1) 章" : bookmark.chapterName)
-                .font(.headline).foregroundStyle(ReadingTheme.coral)
+                .font(.headline).foregroundColor(ReadingTheme.coral)
             if !bookmark.bookText.isEmpty {
-                Text(bookmark.bookText).font(.footnote).foregroundStyle(.secondary).lineLimit(3)
+                Text(bookmark.bookText).font(.footnote).foregroundColor(.secondary).lineLimit(3)
             }
             if !bookmark.content.isEmpty {
                 Label(bookmark.content, systemImage: "note.text").font(.caption).lineLimit(2)
@@ -1934,7 +1939,7 @@ private struct SearchScopeSheet: View {
                             if !workingGroups.insert(group).inserted { workingGroups.remove(group) }
                         } label: {
                             HStack {
-                                Text(group).foregroundStyle(.primary)
+                                Text(group).foregroundColor(.primary)
                                 Spacer()
                                 if workingGroups.contains(group) { Image(systemName: "checkmark") }
                             }
@@ -1949,8 +1954,8 @@ private struct SearchScopeSheet: View {
                         } label: {
                             HStack {
                                 VStack(alignment: .leading) {
-                                    Text(source.bookSourceName).foregroundStyle(.primary)
-                                    Text(source.bookSourceUrl).font(.caption).foregroundStyle(.secondary)
+                                    Text(source.bookSourceName).foregroundColor(.primary)
+                                    Text(source.bookSourceUrl).font(.caption).foregroundColor(.secondary)
                                 }
                                 Spacer()
                                 if workingSourceID == source.id { Image(systemName: "checkmark") }
@@ -2067,15 +2072,13 @@ private struct ReadingPreferencesView: View {
                     } label: {
                         HStack {
                             RoundedRectangle(cornerRadius: 5)
-                                .fill(Color(uiColor: preset.background))
+                                .fill(Color(preset.background))
                                 .frame(width: 38, height: 28)
-                                .overlay {
-                                    RoundedRectangle(cornerRadius: 5).stroke(Color.secondary.opacity(0.5))
-                                }
-                            Text(preset.name).foregroundStyle(.primary)
+                                .overlay(RoundedRectangle(cornerRadius: 5).stroke(Color.secondary.opacity(0.5)))
+                            Text(preset.name).foregroundColor(.primary)
                             Spacer()
                             if ReaderStylePreset.resolve(theme).id == preset.id {
-                                Image(systemName: "checkmark").foregroundStyle(ReadingTheme.accent)
+                                Image(systemName: "checkmark").foregroundColor(ReadingTheme.accent)
                             }
                         }
                     }
@@ -2086,9 +2089,9 @@ private struct ReadingPreferencesView: View {
                     .tracking(letterSpacing * fontSize)
                     .font(.system(size: fontSize, design: .serif))
                     .lineSpacing(lineSpacing)
-                    .foregroundStyle(Color(uiColor: ReaderStylePreset.resolve(theme).foreground))
+                    .foregroundColor(Color(ReaderStylePreset.resolve(theme).foreground))
                     .padding(.vertical, 12)
-                    .listRowBackground(Color(uiColor: ReaderStylePreset.resolve(theme).background))
+                    .listRowBackground(Color(ReaderStylePreset.resolve(theme).background))
             }
         }
         .navigationTitle("阅读设置")

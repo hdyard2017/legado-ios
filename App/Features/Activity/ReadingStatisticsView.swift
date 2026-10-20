@@ -34,20 +34,20 @@ struct ReadingStatisticsView: View {
                 Text(Date.now.readingFormattedMonthDay())
                     .font(.caption)
             }
-            .foregroundStyle(ReadingTheme.onAccent.opacity(0.7))
+            .foregroundColor(ReadingTheme.onAccent.opacity(0.7))
             Text(duration(statistics.todayReadTime, compact: false))
                 .font(.system(size: durationFontSize, weight: .medium))
-                .foregroundStyle(ReadingTheme.onAccent)
+                .foregroundColor(ReadingTheme.onAccent)
                 .readingNumericTransition()
                 .minimumScaleFactor(0.7)
                 .lineLimit(1)
             Text(statistics.todayReadTime == 0 ? "今天还没有阅读记录" : "已记录今天的阅读时长")
                 .font(.caption)
-                .foregroundStyle(ReadingTheme.onAccent.opacity(0.65))
+                .foregroundColor(ReadingTheme.onAccent.opacity(0.65))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(24)
-        .background(ReadingTheme.accent, in: RoundedRectangle(cornerRadius: 20))
+        .background(RoundedRectangle(cornerRadius: 20).fill(ReadingTheme.accent))
     }
 
     private var overviewGrid: some View {
@@ -73,7 +73,7 @@ struct ReadingStatisticsView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundColor(.secondary)
             Text(value)
                 .font(.title3.weight(.semibold))
                 .readingNumericTransition()
@@ -92,7 +92,7 @@ struct ReadingStatisticsView: View {
                     Spacer()
                     Text("每日阅读时长")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundColor(.secondary)
                 }
 
                 HStack(alignment: .bottom, spacing: 10) {
@@ -100,7 +100,7 @@ struct ReadingStatisticsView: View {
                         VStack(spacing: 7) {
                             Text(barLabel(day.readTime))
                                 .font(.caption2.monospacedDigit())
-                                .foregroundStyle(.secondary)
+                                .foregroundColor(.secondary)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.7)
                             RoundedRectangle(cornerRadius: 3)
@@ -108,7 +108,7 @@ struct ReadingStatisticsView: View {
                                 .frame(width: 22, height: barHeight(day.readTime))
                             Text(weekday(day.date))
                                 .font(.caption2)
-                                .foregroundStyle(Calendar.current.isDateInToday(day.date) ? ReadingTheme.accent : .secondary)
+                                .foregroundColor(Calendar.current.isDateInToday(day.date) ? ReadingTheme.accent : .secondary)
                         }
                         .frame(maxWidth: .infinity)
                         .accessibilityElement(children: .ignore)
@@ -131,7 +131,7 @@ struct ReadingStatisticsView: View {
                     Spacer()
                     Image(systemName: "arrow.up.right").font(.subheadline)
                 }
-                .foregroundStyle(ReadingTheme.accent)
+                .foregroundColor(ReadingTheme.accent)
                 .frame(minHeight: 24)
                 .contentShape(Rectangle())
             }

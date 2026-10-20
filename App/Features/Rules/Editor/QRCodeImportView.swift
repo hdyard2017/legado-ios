@@ -22,7 +22,7 @@ struct QRCodeImportView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 18))
                         .overlay(alignment: .bottom) {
                             Text("将书源或净化规则二维码放入取景框").font(.footnote)
-                                .padding(10).background(.ultraThinMaterial, in: Capsule()).padding()
+                                .padding(10).background(Capsule().fill(.ultraThinMaterial)).padding()
                         }
                 } else {
                     ReadingUnavailableView("相机扫描暂不可用", systemImage: "qrcode.viewfinder",
@@ -41,7 +41,7 @@ struct QRCodeImportView: View {
                         .frame(maxWidth: .infinity)
                 }.buttonStyle(.borderedProminent).disabled(isReading)
                 Text("支持 HTTP(S) 链接、Legado 导入深链和 JSON 内容。识别后进入导入流程。")
-                    .font(.footnote).foregroundStyle(.secondary)
+                    .font(.footnote).foregroundColor(.secondary)
                 if values.count > 1 {
                     List(values, id: \.self) { value in
                         Button { accept(value) } label: { Text(value).font(.caption).lineLimit(3) }

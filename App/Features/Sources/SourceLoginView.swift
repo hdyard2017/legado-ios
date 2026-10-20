@@ -10,13 +10,13 @@ struct SourceLoginView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 10) {
-                Image(systemName: "lock.shield.fill").foregroundStyle(ReadingTheme.accent)
-                Text(status).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                Image(systemName: "lock.shield.fill").foregroundColor(ReadingTheme.accent)
+                Text(status).font(.caption).foregroundColor(.secondary).lineLimit(2)
                 Spacer()
                 if isChecking { ProgressView().readingControlSize(.small) }
             }
             .padding(.horizontal, 14).padding(.vertical, 10)
-            .background(Color(uiColor: .secondarySystemBackground))
+            .background(Color(.secondarySystemBackground))
 
             if let request = loginRequest {
                 SourceLoginWebView(

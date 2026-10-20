@@ -139,7 +139,7 @@ struct FileManagementView: View {
                 }
             }
         }
-        .safeAreaInset(edge: .bottom) {
+        .readingSafeAreaInset(edge: .bottom) {
             if selecting {
                 HStack {
                     Button(selection.count == displayedFiles.count ? "取消全选" : "全选") {
@@ -153,7 +153,7 @@ struct FileManagementView: View {
             }
         }
         .disabled(model.isWorking)
-        .overlay { if model.isWorking { ProgressView("正在处理文件…").padding().background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12)) } }
+        .overlay(if: model.isWorking) { ProgressView("正在处理文件…").padding().background(RoundedRectangle(cornerRadius: 12).fill(.regularMaterial)) }
         .task { await model.reload(library) }
         .onChange(of: library.books) { _ in Task { await model.reload(library) } }
         .onChange(of: query) { _ in selection.removeAll() }
@@ -281,7 +281,7 @@ struct FileManagementView: View {
     private var cachedBooksSection: some View {
         Section {
             Text("将书架中已缓存的网络正文导出为 TXT，按目录顺序排列。导出过程不下载新章节。")
-                .font(.footnote).foregroundStyle(.secondary)
+                .font(.footnote).foregroundColor(.secondary)
             if networkBooks.isEmpty {
                 ReadingUnavailableView("没有可导出的书籍", systemImage: "books.vertical", description: Text("将网络书加入书架并缓存章节后，可在这里导出。"))
             }
@@ -291,8 +291,8 @@ struct FileManagementView: View {
                 } label: {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(book.name).foregroundStyle(.primary)
-                            Text(book.author.isEmpty ? "导出缓存正文" : book.author).font(.caption).foregroundStyle(.secondary)
+                            Text(book.name).foregroundColor(.primary)
+                            Text(book.author.isEmpty ? "导出缓存正文" : book.author).font(.caption).foregroundColor(.secondary)
                         }
                         Spacer()
                         Image(systemName: "square.and.arrow.up")
@@ -304,16 +304,16 @@ struct FileManagementView: View {
 
     private func fileLabel(_ file: LocalFileEntry) -> some View {
         HStack(spacing: 12) {
-            Image(systemName: "doc.text").foregroundStyle(.tint)
+            Image(systemName: "doc.text").foregroundColor(.tint)
             VStack(alignment: .leading, spacing: 4) {
-                Text(filename(for: file.url)).foregroundStyle(.primary).lineLimit(2)
+                Text(filename(for: file.url)).foregroundColor(.primary).lineLimit(2)
                 HStack(spacing: 8) {
                     Text(ByteCountFormatter.string(fromByteCount: file.bytes, countStyle: .file))
                     if let modified = file.modified { Text(modified, style: .date) }
-                }.font(.caption).foregroundStyle(.secondary)
+                }.font(.caption).foregroundColor(.secondary)
                 if let book = book(for: file.url) {
-                    Text("书架：\(book.name)").font(.caption).foregroundStyle(.secondary).lineLimit(1)
-                } else { Text("点按加入书架").font(.caption).foregroundStyle(.secondary) }
+                    Text("书架：\(book.name)").font(.caption).foregroundColor(.secondary).lineLimit(1)
+                } else { Text("点按加入书架").font(.caption).foregroundColor(.secondary) }
             }
         }
     }

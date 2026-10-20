@@ -40,12 +40,12 @@ struct RSSSourceDebugView: View {
                 Section(report.passed ? "调试通过" : "发现兼容问题") {
                     ForEach(report.steps) { step in
                         DisclosureGroup {
-                            if step.diagnostics.isEmpty { Text("无规则诊断").foregroundStyle(.secondary) }
+                            if step.diagnostics.isEmpty { Text("无规则诊断").foregroundColor(.secondary) }
                             ForEach(step.diagnostics) { item in
-                                VStack(alignment: .leading) { Text(item.message); Text(item.code).font(.caption.monospaced()).foregroundStyle(.secondary) }
+                                VStack(alignment: .leading) { Text(item.message); Text(item.code).font(.caption.monospaced()).foregroundColor(.secondary) }
                             }
                         } label: {
-                            Label { VStack(alignment: .leading) { Text(step.stage.title); Text(step.summary).font(.caption).foregroundStyle(.secondary).lineLimit(2) } } icon: { Image(systemName: icon(step.status)).foregroundStyle(color(step.status)) }
+                            Label { VStack(alignment: .leading) { Text(step.stage.title); Text(step.summary).font(.caption).foregroundColor(.secondary).lineLimit(2) } } icon: { Image(systemName: icon(step.status)).foregroundColor(color(step.status)) }
                         }
                     }
                 }

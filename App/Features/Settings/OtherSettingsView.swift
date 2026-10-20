@@ -55,7 +55,7 @@ struct OtherSettingsView: View {
         .navigationTitle("其他设置")
         .navigationBarTitleDisplayMode(.inline)
         .disabled(isWorking)
-        .overlay { if isWorking { ProgressView("正在处理…").padding().background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12)) } }
+        .overlay(if: isWorking) { ProgressView("正在处理…").padding().background(RoundedRectangle(cornerRadius: 12).fill(.regularMaterial)) }
         .onAppear { settings = ApplicationSettingsStore.shared.settings }
         .readingConfirmationDialog(maintenance?.rawValue ?? "", isPresented: Binding(
             get: { maintenance != nil }, set: { if !$0 { maintenance = nil } }
@@ -132,7 +132,7 @@ struct NetworkSettingsView: View {
                 Stepper("搜索并发数：\(settings.concurrentSources)", value: $settings.concurrentSources, in: 1...64)
                 Toggle("兼容无效证书的书源", isOn: $settings.ignoreCertificateErrors)
                 Text("证书兼容开启时允许自签名或过期证书；关闭后由系统验证 HTTPS 证书。")
-                    .font(.footnote).foregroundStyle(.secondary)
+                    .font(.footnote).foregroundColor(.secondary)
             }
             Section("章节缓存") {
                 Picker("容量上限", selection: $settings.chapterCacheMB) {
@@ -142,7 +142,7 @@ struct NetworkSettingsView: View {
                 }
                 Stepper(settings.prefetchChapters == 0 ? "关闭章节预加载" : "预加载 \(settings.prefetchChapters) 章", value: $settings.prefetchChapters, in: 0...20)
                 Text("超出上限时清理最久未读取的章节；容量调整在保存时生效。")
-                    .font(.footnote).foregroundStyle(.secondary)
+                    .font(.footnote).foregroundColor(.secondary)
             }
             Section {
                 Button("恢复本页默认值") {

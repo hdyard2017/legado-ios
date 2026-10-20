@@ -37,16 +37,16 @@ struct ReadingHistoryView: View {
                             } label: {
                                 HStack(spacing: 13) {
                                     Image(systemName: "book.pages.fill")
-                                        .foregroundStyle(ReadingTheme.accent)
+                                        .foregroundColor(ReadingTheme.accent)
                                         .frame(width: 38, height: 38)
-                                        .background(ReadingTheme.accentSoft.opacity(0.55), in: RoundedRectangle(cornerRadius: 11))
+                                        .background(RoundedRectangle(cornerRadius: 11).fill(ReadingTheme.accentSoft.opacity(0.55)))
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(record.bookName).font(.headline)
                                         Text(duration(record.readTime))
-                                            .font(.caption).foregroundStyle(.secondary)
+                                            .font(.caption).foregroundColor(.secondary)
                                     }
                                     Spacer()
-                                    Text(date(record.lastRead)).font(.caption).foregroundStyle(.tertiary)
+                                    Text(date(record.lastRead)).font(.caption).foregroundColor(.secondary)
                                 }
                             }
                             .swipeActions {

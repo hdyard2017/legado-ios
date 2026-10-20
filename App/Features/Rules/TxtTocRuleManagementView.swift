@@ -101,10 +101,10 @@ struct TxtTocRuleManagementView: View {
                 Button { editing = rule } label: {
                     HStack(spacing: 12) {
                         Image(systemName: rule.enable ? "checkmark.circle.fill" : "circle")
-                            .foregroundStyle(rule.enable ? ReadingTheme.accent : .secondary)
+                            .foregroundColor(rule.enable ? ReadingTheme.accent : .secondary)
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(rule.name).foregroundStyle(.primary)
-                            Text(rule.rule).font(.caption.monospaced()).foregroundStyle(.secondary).lineLimit(2)
+                            Text(rule.name).foregroundColor(.primary)
+                            Text(rule.rule).font(.caption.monospaced()).foregroundColor(.secondary).lineLimit(2)
                         }
                     }
                 }
@@ -193,7 +193,7 @@ private struct TxtTocRuleEditView: View {
                 Toggle("启用", isOn: $value.enable)
                 Section("测试文本") {
                     TextEditor(text: $sample).frame(minHeight: 130)
-                    Text(testResult).font(.caption.monospaced()).foregroundStyle(.secondary).readingTextSelection()
+                    Text(testResult).font(.caption.monospaced()).foregroundColor(.secondary).readingTextSelection()
                 }
             }
             .navigationTitle("TXT目录规则")

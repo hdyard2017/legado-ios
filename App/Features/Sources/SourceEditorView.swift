@@ -94,21 +94,21 @@ struct SourceEditorView: View {
                         VStack(alignment: .leading, spacing: 5) {
                             Text(field.title)
                             Text(document.value(at: field.path)?.stringValue.isEmpty == false ? document.value(at: field.path)!.stringValue : field.path)
-                                .font(.caption.monospaced()).foregroundStyle(.secondary).lineLimit(2)
+                                .font(.caption.monospaced()).foregroundColor(.secondary).lineLimit(2)
                         }
                     }
                 }
             }
             Section {
                 Text("点击字段可全屏编辑规则。支持 @css:、XPath、$. JSONPath、@js:、{{key}}、{{page}} 和 ## 替换语法。未识别的扩展字段保留在 JSON 中。")
-                    .font(.footnote).foregroundStyle(.secondary)
+                    .font(.footnote).foregroundColor(.secondary)
             }
         }
         if !validation.isEmpty {
             Section("静态检查") {
                 ForEach(validation) { issue in
                     Label("\(issue.field)：\(issue.message)", systemImage: issue.severity == .error ? "xmark.circle" : "exclamationmark.triangle")
-                        .font(.footnote).foregroundStyle(issue.severity == .error ? .red : .orange)
+                        .font(.footnote).foregroundColor(issue.severity == .error ? .red : .orange)
                 }
             }
         }

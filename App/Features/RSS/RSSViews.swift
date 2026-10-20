@@ -56,7 +56,7 @@ struct RSSHomeView: View {
             if case .failure(let error) = result { library.errorMessage = error.localizedDescription }
         })
         let status = AnyView(exporting
-            .overlay { if library.isWorking { ProgressView().readingControlSize(.large) } }
+            .overlay(if: library.isWorking) { ProgressView().readingControlSize(.large) }
             .readingAlert("RSS操作失败", isPresented: Binding(get: { library.errorMessage != nil }, set: { if !$0 { library.errorMessage = nil } })) {
             Button("好") { library.errorMessage = nil }
         } message: { Text(library.errorMessage ?? "") })
@@ -83,9 +83,9 @@ struct RSSHomeView: View {
             ForEach(filteredSources) { source in
                 NavigationLink { RSSSourceDestinationView(source: source) } label: {
                     VStack(alignment: .leading, spacing: 4) {
-                        HStack { Text(source.sourceName).font(.headline); Spacer(); if !source.enabled { Text("停用").font(.caption).foregroundStyle(.secondary) } }
-                        Text(source.sourceUrl).font(.caption).foregroundStyle(.secondary).lineLimit(1)
-                        if let group = source.sourceGroup, !group.isEmpty { Text(group).font(.caption2).foregroundStyle(ReadingTheme.accent) }
+                        HStack { Text(source.sourceName).font(.headline); Spacer(); if !source.enabled { Text("停用").font(.caption).foregroundColor(.secondary) } }
+                        Text(source.sourceUrl).font(.caption).foregroundColor(.secondary).lineLimit(1)
+                        if let group = source.sourceGroup, !group.isEmpty { Text(group).font(.caption2).foregroundColor(ReadingTheme.accent) }
                     }.padding(.vertical, 3)
                 }
                 .swipeActions(edge: .leading) {
@@ -115,15 +115,17 @@ struct RSSHomeView: View {
                 let values = offsets.map { filteredStars[$0] }
                 Task { for value in values { await library.removeStar(value) } }
             }
-        }.overlay { if filteredStars.isEmpty { ReadingUnavailableView("没有收藏", systemImage: "star") } }.listStyle(.plain)
+        }.overlay(if: filteredStars.isEmpty) { ReadingUnavailableView("没有收藏", systemImage: "star") }.listStyle(.plain)
     }
+
     private var recordList: some View {
         List(filteredRecords) { record in
             if let source = library.sources.first(where: { $0.sourceUrl == record.origin }) {
                 NavigationLink { RSSArticleDetailView(article: record.article, source: source) } label: { RSSArticleRow(article: record.article) }
             } else { RSSArticleRow(article: record.article) }
-        }.overlay { if filteredRecords.isEmpty { ReadingUnavailableView("没有阅读记录", systemImage: "clock") } }.listStyle(.plain)
+        }.overlay(if: filteredRecords.isEmpty) { ReadingUnavailableView("没有阅读记录", systemImage: "clock") }.listStyle(.plain)
     }
+
     private var filteredSources: [RssSource] { library.sources.filter { searchText.isEmpty || $0.sourceName.localizedCaseInsensitiveContains(searchText) || $0.sourceUrl.localizedCaseInsensitiveContains(searchText) || ($0.sourceGroup ?? "").localizedCaseInsensitiveContains(searchText) } }
     private var filteredStars: [RssStar] { library.stars.filter { searchText.isEmpty || $0.title.localizedCaseInsensitiveContains(searchText) } }
     private var filteredRecords: [RssReadRecord] { library.records.filter { searchText.isEmpty || ($0.title ?? "").localizedCaseInsensitiveContains(searchText) } }
@@ -148,7 +150,7 @@ private struct RSSArticleListView: View {
             }
             articleCollection
         }
-        .overlay { if library.articles.isEmpty, !library.isWorking { ReadingUnavailableView("没有文章", systemImage: "newspaper") } }
+        .overlay(if: library.articles.isEmpty && !library.isWorking) { ReadingUnavailableView("没有文章", systemImage: "newspaper") }
         .navigationTitle(source.sourceName)
         .searchable(text: $searchKey, prompt: "源内搜索")
         .refreshable { await refresh() }
@@ -252,9 +254,9 @@ private struct RSSArticleRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 5) {
-                Text(article.title).font(.headline).foregroundStyle(article.read ? .secondary : .primary)
-                if let description = article.description, !description.isEmpty { Text(description).font(.caption).foregroundStyle(.secondary).lineLimit(2) }
-                if let date = article.pubDate, !date.isEmpty { Text(date).font(.caption2).foregroundStyle(.tertiary) }
+                Text(article.title).font(.headline).foregroundColor(article.read ? .secondary : .primary)
+                if let description = article.description, !description.isEmpty { Text(description).font(.caption).foregroundColor(.secondary).lineLimit(2) }
+                if let date = article.pubDate, !date.isEmpty { Text(date).font(.caption2).foregroundColor(.secondary) }
             }
             Spacer()
             if article.type == 1 { Image(systemName: "photo") }
@@ -272,24 +274,24 @@ private struct RSSArticleCard: View {
             articleImage
             Text(article.title)
                 .font(style == 1 || style == 3 ? .subheadline.bold() : .caption)
-                .foregroundStyle(article.read ? .secondary : .primary)
+                .foregroundColor(article.read ? .secondary : .primary)
                 .lineLimit(style == 3 ? 9 : 2)
                 .padding(.horizontal, style == 1 ? 12 : 6).padding(.top, 10)
             if let date = article.pubDate, !date.isEmpty {
-                Text(date).font(.caption2).foregroundStyle(.secondary).lineLimit(style == 3 ? 39 : 1)
+                Text(date).font(.caption2).foregroundColor(.secondary).lineLimit(style == 3 ? 39 : 1)
                     .padding(.horizontal, style == 1 ? 12 : 6).padding(.top, 8).padding(.bottom, 10)
             } else { Spacer().frame(height: 10) }
         }
         .background(style == 3 ? Color(.secondarySystemBackground) : .clear)
         .clipShape(RoundedRectangle(cornerRadius: style == 3 ? 12 : 0, style: .continuous))
-        .overlay { if style == 3 { RoundedRectangle(cornerRadius: 12).stroke(.primary.opacity(0.08)) } }
+        .overlay(if: style == 3) { RoundedRectangle(cornerRadius: 12).stroke(.primary.opacity(0.08)) }
     }
 
     @ViewBuilder private var articleImage: some View {
         let height = imageHeight
         if let raw = article.image, let url = URL(string: raw) {
             ReadingRemoteImage(url: url) { phase in
-                if case .success(let image) = phase { image.resizable().scaledToFill() }
+                if case .success(let image) = phase { Image(uiImage: image).resizable().scaledToFill() }
                 else if case .failure = phase { placeholder }
                 else { ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity) }
             } placeholder: {
@@ -299,7 +301,7 @@ private struct RSSArticleCard: View {
     }
 
     private var placeholder: some View {
-        ZStack { Color(.tertiarySystemFill); Image(systemName: article.type == 2 ? "play.rectangle" : "photo").foregroundStyle(.secondary) }
+        ZStack { Color(.tertiarySystemFill); Image(systemName: article.type == 2 ? "play.rectangle" : "photo").foregroundColor(.secondary) }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
@@ -434,9 +436,9 @@ private struct RSSDownloadView: View {
             if loading { ProgressView("正在下载…") }
             else if let errorMessage { ReadingUnavailableView("下载失败", systemImage: "exclamationmark.arrow.triangle.2.circlepath", description: Text(errorMessage)) }
             else {
-                Image(systemName: "doc.badge.arrow.up").font(.system(size: 48)).foregroundStyle(ReadingTheme.accent)
+                Image(systemName: "doc.badge.arrow.up").font(.system(size: 48)).foregroundColor(ReadingTheme.accent)
                 Text(fileName).font(.headline)
-                Text(ByteCountFormatter.string(fromByteCount: Int64(data.count), countStyle: .file)).foregroundStyle(.secondary)
+                Text(ByteCountFormatter.string(fromByteCount: Int64(data.count), countStyle: .file)).foregroundColor(.secondary)
                 Button("选择保存位置", systemImage: "folder") { showsExporter = true }.buttonStyle(.borderedProminent)
             }
         }.padding().navigationTitle("文件下载").toolbar { ToolbarItem(placement: .cancellationAction) { Button("关闭") { dismiss() } } }

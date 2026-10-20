@@ -105,18 +105,14 @@ struct HttpTTSManagementView: View {
                     editing = engine
                 } label: {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(engine.name).foregroundStyle(.primary)
-                        Text(engine.url).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                        Text(engine.name).foregroundColor(.primary)
+                        Text(engine.url).font(.caption).foregroundColor(.secondary).lineLimit(2)
                     }
                 }
             }
             .onDelete { offsets in Task { await model.delete(at: offsets) } }
         }
-        .overlay {
-            if model.engines.isEmpty {
-                ReadingUnavailableView("没有在线朗读引擎", systemImage: "waveform", description: Text("可恢复内置引擎或导入 HTTP TTS JSON。"))
-            }
-        }
+        .overlay(if model.engines.isEmpty { ReadingUnavailableView("没有在线朗读引擎", systemImage: "waveform", description: Text("可恢复内置引擎或导入 HTTP TTS JSON。")) })
         .navigationTitle("在线朗读引擎")
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
@@ -221,7 +217,7 @@ private struct HttpTTSEditorView: View {
                     speech.configure(followsSystemRate: false, speechRate: 5, readByPage: true, streamsHTTPAudio: true)
                     speech.toggleHTTP(engine: engine, text: testText)
                 }
-                if let error = speech.errorMessage { Text(error).foregroundStyle(.red).font(.footnote) }
+                if let error = speech.errorMessage { Text(error).foregroundColor(.red).font(.footnote) }
             }
         }
         .navigationTitle(engine.name.isEmpty ? "新建在线朗读引擎" : engine.name)
@@ -317,7 +313,7 @@ private struct HttpTTSLoginView: View {
                         .onChange(of: values[row.name]) { _ in scheduleFieldAction(row.action) }
                 }
             }
-            if let errorMessage { Text(errorMessage).foregroundStyle(.red).font(.footnote) }
+            if let errorMessage { Text(errorMessage).foregroundColor(.red).font(.footnote) }
         }
         .navigationTitle("登录 · \(engine.name)")
         .navigationBarTitleDisplayMode(.inline)

@@ -29,7 +29,7 @@ struct ReadingUnavailableView<Label: View, Description: View, Actions: View>: Vi
                 label.labelStyle(ReadingUnavailableLabelStyle())
                 description
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundColor(.secondary)
                 actions.padding(.top, 4)
             }
             .multilineTextAlignment(.center)
@@ -69,7 +69,7 @@ private struct ReadingUnavailableLabelStyle: LabelStyle {
         VStack(spacing: 12) {
             configuration.icon
                 .font(.system(size: 48))
-                .foregroundStyle(.secondary)
+                .foregroundColor(.secondary)
                 .accessibilityHidden(true)
             configuration.title.font(.title2.bold())
         }
@@ -102,14 +102,14 @@ private struct ReadingSearchModifier: ViewModifier {
             content.searchable(text: $text, isPresented: $isPresented, prompt: prompt)
         } else {
             content
-                .safeAreaInset(edge: .top, spacing: 0) {
+                .readingSafeAreaInset(edge: .top, spacing: 0) {
                     HStack(spacing: 8) {
                         HStack(spacing: 8) {
                             Image(systemName: "magnifyingglass")
-                                .foregroundStyle(.secondary)
+                                .foregroundColor(.secondary)
                                 .accessibilityHidden(true)
                             TextField(prompt, text: $text)
-                                .focused($isFocused)
+                                .readingFocusBinding($isFocused)
                                 .readingInputConfiguration(autocapitalization: .never)
                                 .readingInputConfiguration(disableAutocorrection: true)
                                 .readingSubmitLabel(.search)
@@ -118,13 +118,13 @@ private struct ReadingSearchModifier: ViewModifier {
                                     text = ""
                                 } label: {
                                     Image(systemName: "xmark.circle.fill")
-                                        .foregroundStyle(.secondary)
+                                        .foregroundColor(.secondary)
                                 }
                                 .accessibilityLabel("清除搜索")
                             }
                         }
                         .padding(10)
-                        .background(ReadingTheme.groupedCanvas, in: RoundedRectangle(cornerRadius: 10))
+                        .background(RoundedRectangle(cornerRadius: 10).fill(ReadingTheme.groupedCanvas))
                         if isFocused {
                             Button("取消") {
                                 text = ""
@@ -156,7 +156,7 @@ enum ReadingTheme {
     static let onAccent = adaptive(0xFFFFFF, dark: 0x171717)
 
     private static func adaptive(_ light: UInt32, dark: UInt32) -> Color {
-        Color(uiColor: UIColor { traits in
+        Color(UIColor { traits in
             let hex = traits.userInterfaceStyle == .dark ? dark : light
             return UIColor(
                 red: CGFloat((hex >> 16) & 0xff) / 255,
@@ -178,14 +178,14 @@ struct ReadingPageHeader<Actions: View>: View {
             HStack(alignment: .center, spacing: 16) {
                 Text(title)
                     .font(.largeTitle.bold())
-                    .foregroundStyle(ReadingTheme.ink)
+                    .foregroundColor(ReadingTheme.ink)
                     .accessibilityAddTraits(.isHeader)
                 Spacer(minLength: 0)
                 HStack(spacing: 10) { actions }
             }
             Text(subtitle)
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 24)
@@ -200,9 +200,9 @@ struct ReadingToolbarIcon: View {
     var body: some View {
         Image(systemName: systemName)
             .font(.system(size: 19, weight: .regular))
-            .foregroundStyle(ReadingTheme.accent)
+            .foregroundColor(ReadingTheme.accent)
             .frame(width: 44, height: 44)
-            .background(ReadingTheme.groupedCanvas, in: Circle())
+            .background(Circle().fill(ReadingTheme.groupedCanvas))
             .accessibilityHidden(true)
     }
 }
@@ -275,7 +275,7 @@ struct BookCoverArtwork: View {
     var body: some View {
         ReadingRemoteImage(url: remoteURL.flatMap(URL.init(string:))) { phase in
             if case .success(let image) = phase {
-                image.resizable().scaledToFill()
+                Image(uiImage: image).resizable().scaledToFill()
             } else {
                 placeholder
             }
@@ -287,17 +287,14 @@ struct BookCoverArtwork: View {
         .overlay(alignment: .leading) {
             Rectangle().fill(.black.opacity(0.15)).frame(width: max(2, width * 0.035))
         }
-        .overlay {
-            RoundedRectangle(cornerRadius: 4, style: .continuous)
-                .strokeBorder(.black.opacity(0.08), lineWidth: 0.5)
-        }
+        .overlay(RoundedRectangle(cornerRadius: 4, style: .continuous) .strokeBorder(.black.opacity(0.08), lineWidth: 0.5))
         .accessibilityHidden(true)
     }
 
     private var placeholder: some View {
         ZStack(alignment: .topLeading) {
             coverColor
-            Canvas { context, size in
+            ReadingCanvas { context, size in
                 drawArtwork(context: context, size: size)
             }
             VStack(alignment: .leading, spacing: width * 0.10) {
@@ -309,50 +306,68 @@ struct BookCoverArtwork: View {
                 if !author.isEmpty, width >= 50 {
                     Text(author)
                         .font(.system(size: max(7, width * 0.09)))
-                        .foregroundStyle(.white.opacity(0.7))
+                        .foregroundColor(.white.opacity(0.7))
                         .lineLimit(1)
                 }
             }
-            .foregroundStyle(.white.opacity(0.94))
+            .foregroundColor(.white.opacity(0.94))
             .padding(width * 0.15)
             .padding(.top, coverStyle == 1 ? height * 0.33 : 0)
         }
     }
 
-    private func drawArtwork(context: GraphicsContext, size: CGSize) {
+    /// 书封装饰绘制。
+    ///
+    /// 原实现使用 SwiftUI 的 `GraphicsContext`（iOS 15+），
+    /// 这里改用 CoreGraphics，可在 iOS 14 上编译并保持相同视觉效果。
+    private func drawArtwork(context ctx: CGContext, size: CGSize) {
+        func fillEllipse(_ rect: CGRect, _ color: UIColor) {
+            ctx.setFillColor(color.cgColor)
+            ctx.fillEllipse(in: rect)
+        }
+
         if coverStyle == 0 {
-            let moon = CGRect(x: size.width * 0.68, y: size.height * 0.18, width: size.width * 0.17, height: size.width * 0.17)
-            context.fill(Path(ellipseIn: moon), with: .color(Color(red: 0.89, green: 0.87, blue: 0.81)))
+            let side = size.width * 0.17
+            let moon = CGRect(x: size.width * 0.68, y: size.height * 0.18,
+                              width: side, height: side)
+            fillEllipse(moon, UIColor(red: 0.89, green: 0.87, blue: 0.81, alpha: 1))
         } else if coverStyle == 1 {
-            let normalizedPoints: [CGPoint] = [
+            let normalized: [CGPoint] = [
                 .init(x: 0.12, y: 0.19), .init(x: 0.39, y: 0.11), .init(x: 0.62, y: 0.22),
                 .init(x: 0.88, y: 0.13), .init(x: 0.76, y: 0.42), .init(x: 0.33, y: 0.48)
             ]
-            let points = normalizedPoints.map { point in
-                CGPoint(x: point.x * size.width, y: point.y * size.height)
+            let points = normalized.map {
+                CGPoint(x: $0.x * size.width, y: $0.y * size.height)
             }
-            var constellation = Path()
-            constellation.addLines(points)
-            context.stroke(constellation, with: .color(.white.opacity(0.22)), lineWidth: 0.6)
+            ctx.setStrokeColor(UIColor.white.withAlphaComponent(0.22).cgColor)
+            ctx.setLineWidth(0.6)
+            ctx.move(to: points[0])
+            for point in points.dropFirst() { ctx.addLine(to: point) }
+            ctx.strokePath()
             for point in points {
-                context.fill(Path(ellipseIn: CGRect(x: point.x, y: point.y, width: 1.5, height: 1.5)), with: .color(.white.opacity(0.7)))
+                fillEllipse(CGRect(x: point.x, y: point.y, width: 1.5, height: 1.5),
+                            UIColor.white.withAlphaComponent(0.7))
             }
         } else {
-            let arch = CGRect(x: size.width * 0.28, y: size.height * 0.40, width: size.width * 0.58, height: size.height * 0.48)
-            context.fill(Path(roundedRect: arch, cornerRadius: size.width * 0.29), with: .color(.white.opacity(0.25)))
+            let arch = CGRect(x: size.width * 0.28, y: size.height * 0.40,
+                              width: size.width * 0.58, height: size.height * 0.48)
+            let path = UIBezierPath(roundedRect: arch, cornerRadius: size.width * 0.29)
+            UIColor.white.withAlphaComponent(0.25).setFill()
+            path.fill()
         }
+
         for index in 0..<3 {
-            var horizon = Path()
             let baseline = size.height * (0.78 + CGFloat(index) * 0.065)
-            horizon.move(to: CGPoint(x: 0, y: baseline))
-            horizon.addCurve(
+            ctx.setStrokeColor(UIColor.white.withAlphaComponent(0.17).cgColor)
+            ctx.setLineWidth(0.7)
+            ctx.move(to: CGPoint(x: 0, y: baseline))
+            ctx.addCurve(
                 to: CGPoint(x: size.width, y: baseline + 8),
                 control1: CGPoint(x: size.width * 0.3, y: baseline + 18),
                 control2: CGPoint(x: size.width * 0.6, y: baseline - 20)
             )
-            context.stroke(horizon, with: .color(.white.opacity(0.17)), lineWidth: 0.7)
+            ctx.strokePath()
         }
-
     }
 }
 
@@ -362,7 +377,7 @@ struct ReadingCard<Content: View>: View {
     var body: some View {
         content
             .padding(20)
-            .background(ReadingTheme.groupedCanvas, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .background(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(ReadingTheme.groupedCanvas))
     }
 }
 
@@ -377,6 +392,6 @@ struct StatusPill: View {
             Text(text)
         }
         .font(.caption.weight(.medium))
-        .foregroundStyle(color)
+        .foregroundColor(color)
     }
 }

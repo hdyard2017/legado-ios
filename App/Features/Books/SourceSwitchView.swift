@@ -74,7 +74,7 @@ struct SourceSwitchView: View {
             if model.candidates.isEmpty && (model.state == .searching || model.state == .idle) {
                 VStack(spacing: 14) {
                     ProgressView()
-                    Text("正在从其他书源查找同名作品…").foregroundStyle(.secondary)
+                    Text("正在从其他书源查找同名作品…").foregroundColor(.secondary)
                 }
             } else if model.state == .empty {
                 ReadingUnavailableView(
@@ -88,7 +88,7 @@ struct SourceSwitchView: View {
                         HStack(spacing: 10) {
                             ProgressView()
                             Text("仍在查找其他书源，可直接选择已找到的结果")
-                                .font(.caption).foregroundStyle(.secondary)
+                                .font(.caption).foregroundColor(.secondary)
                         }
                     }
                     ForEach(model.candidates) { candidate in candidateRow(candidate) }
@@ -128,24 +128,24 @@ struct SourceSwitchView: View {
         } label: {
             HStack(spacing: 13) {
                 Image(systemName: "network")
-                    .foregroundStyle(ReadingTheme.accent)
+                    .foregroundColor(ReadingTheme.accent)
                     .frame(width: 42, height: 42)
-                    .background(ReadingTheme.accentSoft.opacity(0.55), in: RoundedRectangle(cornerRadius: 13))
+                    .background(RoundedRectangle(cornerRadius: 13).fill(ReadingTheme.accentSoft.opacity(0.55)))
                 VStack(alignment: .leading, spacing: 5) {
-                    Text(candidate.book.originName).font(.headline).foregroundStyle(.primary)
+                    Text(candidate.book.originName).font(.headline).foregroundColor(.primary)
                     Text(candidate.book.author.isEmpty ? "作者信息缺失" : candidate.book.author)
-                        .font(.subheadline).foregroundStyle(.secondary)
+                        .font(.subheadline).foregroundColor(.secondary)
                     if model.switchingID == candidate.id {
-                        Text("正在验证目录和正文…").font(.caption).foregroundStyle(.secondary)
+                        Text("正在验证目录和正文…").font(.caption).foregroundColor(.secondary)
                     } else if let latest = candidate.book.latestChapterTitle, !latest.isEmpty {
-                        Text(latest).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                        Text(latest).font(.caption).foregroundColor(.secondary).lineLimit(1)
                     }
                 }
                 Spacer()
                 if model.switchingID == candidate.id {
                     ProgressView()
                 } else {
-                    Image(systemName: "arrow.right.circle.fill").foregroundStyle(ReadingTheme.coral)
+                    Image(systemName: "arrow.right.circle.fill").foregroundColor(ReadingTheme.coral)
                 }
             }
             .padding(.vertical, 5)

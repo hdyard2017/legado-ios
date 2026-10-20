@@ -27,7 +27,7 @@ struct DiagnosticLogView: View {
                     Text("错误").tag("error")
                 }.pickerStyle(.segmented)
                 Text("\(entries.count) 条日志 · 下拉刷新")
-                    .font(.footnote).foregroundStyle(.secondary)
+                    .font(.footnote).foregroundColor(.secondary)
             } footer: {
                 Text("在“其他设置”开启记录后，会保存网络请求、JS 输出和运行错误。崩溃诊断由 iOS 延迟提供，可搜索“系统诊断”查看。")
             }
@@ -39,10 +39,10 @@ struct DiagnosticLogView: View {
                         HStack {
                             Text(entry.category).font(.caption.weight(.semibold))
                             Text(levelTitle(entry.level)).font(.caption)
-                                .foregroundStyle(entry.level == .error ? .red : .secondary)
+                                .foregroundColor(entry.level == .error ? .red : .secondary)
                             Spacer()
                             Text(entry.date, format: .dateTime.month().day().hour().minute().second())
-                                .font(.caption2).foregroundStyle(.secondary)
+                                .font(.caption2).foregroundColor(.secondary)
                         }
                         Text(entry.message).font(.system(.footnote, design: .monospaced)).readingTextSelection()
                     }.padding(.vertical, 3)

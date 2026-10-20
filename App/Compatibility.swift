@@ -40,7 +40,7 @@ struct ReadingLabeledContent<Content: View>: View {
             HStack {
                 Text(title)
                 Spacer()
-                content.foregroundStyle(.secondary).multilineTextAlignment(.trailing)
+                content.foregroundColor(.secondary).multilineTextAlignment(.trailing)
             }
         }
     }
@@ -68,7 +68,7 @@ struct ReadingTextField: View {
             TextField(title, text: $text, axis: axis)
         } else if axis == .vertical {
             VStack(alignment: .leading, spacing: 6) {
-                Text(title).font(.caption).foregroundStyle(.secondary)
+                Text(title).font(.caption).foregroundColor(.secondary)
                 TextEditor(text: $text).frame(minHeight: 80).accessibilityLabel(title)
             }
         } else {
@@ -234,8 +234,13 @@ extension View {
                 let appearance = UITabBarAppearance()
                 appearance.configureWithOpaqueBackground()
                 appearance.backgroundColor = UIColor(ReadingTheme.canvas)
-                controller.tabBarController?.tabBar.standardAppearance = appearance
-                controller.tabBarController?.tabBar.scrollEdgeAppearance = appearance
+                if let bar = controller.tabBarController?.tabBar {
+                    bar.standardAppearance = appearance
+                    // scrollEdgeAppearance 是 iOS 15+ 才有的属性。
+                    if #available(iOS 15.0, *) {
+                        bar.scrollEdgeAppearance = appearance
+                    }
+                }
             })
         }
     }
@@ -264,6 +269,9 @@ extension View {
             presentationDetents(Set(detents.map { $0 == .medium ? PresentationDetent.medium : .large }))
         } else {
             background(ReadingUIKitConfiguration { controller in
+                // UISheetPresentationController 是 iOS 15+ 类型，
+                // iOS 14 上无法设置 detent，保持系统默认高度。
+                guard #available(iOS 15.0, *) else { return }
                 var current: UIViewController? = controller
                 while let candidate = current {
                     if let sheet = candidate.presentationController as? UISheetPresentationController {
@@ -282,6 +290,8 @@ extension View {
             presentationDragIndicator(.visible)
         } else {
             background(ReadingUIKitConfiguration { controller in
+                // prefersGrabberVisible 属于 iOS 15+ 的 UISheetPresentationController。
+                guard #available(iOS 15.0, *) else { return }
                 var current: UIViewController? = controller
                 while let candidate = current {
                     if let sheet = candidate.presentationController as? UISheetPresentationController {
@@ -351,7 +361,9 @@ private struct ReadingHiddenTabBar: UIViewControllerRepresentable {
 /// 远程图片加载结果的轻量模型，对应 `AsyncImagePhase` 中本项目实际用到的部分。
 enum ReadingRemoteImagePhase {
     case empty
-    case success(Image)
+    /// 携带 `UIImage` 而非 `Image`：`UIImage` 可跨 actor 传递，
+    /// 且避免在无 SwiftUI 上下文的 worker 层构造 `Image`。
+    case success(UIImage)
     case failure
 }
 
@@ -408,7 +420,7 @@ final class ReadingRemoteImageLoader: ObservableObject {
             phase = .empty
             return
         }
-        if let cached = ReadingRemoteImageCache.image(for: url) {
+        if let cached = ReadingRemoteImageCache.shared.image(for: url) {
             phase = .success(cached)
             return
         }
@@ -422,19 +434,27 @@ final class ReadingRemoteImageLoader: ObservableObject {
     }
 }
 
-/// 图片缓存，跨 actor 共享因此标记为 Sendable 包装。
-private enum ReadingRemoteImageCache {
-    private static let cache: NSCache<NSURL, UIImage> = {
+/// 图片缓存。
+///
+/// `NSCache` 本身是线程安全的，但 Swift 6 语言模式下静态存储的
+/// 非 Sendable 类型会直接报错，因此这里用 `@unchecked Sendable`
+/// 的 final class 包装，并在访问前后借助 NSCache 自身的锁保证安全。
+private final class ReadingRemoteImageCache: @unchecked Sendable {
+    static let shared = ReadingRemoteImageCache()
+
+    private let cache: NSCache<NSURL, UIImage>
+
+    private init() {
         let cache = NSCache<NSURL, UIImage>()
         cache.countLimit = 200
-        return cache
-    }()
+        self.cache = cache
+    }
 
-    static func image(for url: URL) -> UIImage? {
+    func image(for url: URL) -> UIImage? {
         cache.object(forKey: url as NSURL)
     }
 
-    static func store(_ image: UIImage, for url: URL) {
+    func store(_ image: UIImage, for url: URL) {
         cache.setObject(image, forKey: url as NSURL)
     }
 }
@@ -463,7 +483,7 @@ private final class ReadingRemoteImageWorker: @unchecked Sendable {
         task = session.dataTask(with: request) { data, _, _ in
             let result: ReadingRemoteImagePhase
             if let data, let image = UIImage(data: data) {
-                ReadingRemoteImageCache.store(image, for: url)
+                ReadingRemoteImageCache.shared.store(image, for: url)
                 result = .success(image)
             } else {
                 result = .failure
@@ -802,25 +822,25 @@ private extension ReadingControlSize {
 /// 因此这里**完全不使用**该类型，只依赖 iOS 13 就已提供的
 /// `\.presentationMode`，它在 iOS 15+ 上依然有效。
 ///
-/// 行为说明：`presentationMode` 对 sheet / popover 有效；
+/// 已知差异：`presentationMode.dismiss()` 只对 sheet / popover 有效；
 /// 纯 `NavigationLink` push 出来的页面在 iOS 14 上无官方 dismiss 手段，
-/// 沿用作者原有的 `ReadingNavigationStack`（内部为 `NavigationView`），
-/// 关闭动作请通过 `ReadingNavigationBack` 触发。
+/// 这类场景沿用作者原有的 `ReadingNavigationStack`（内部为 `NavigationView`）。
 struct ReadingDismissAction {
-    private let presentationMode: PresentationMode
+    /// 实际关闭动作。用闭包承载而非持有 `PresentationMode`，
+    /// 因为 `PresentationMode.dismiss()` 是 mutating 方法且该类型
+    /// 没有可用的初始化器，无法直接作为值存储。
+    private let action: () -> Void
 
-    init(presentationMode: PresentationMode) {
-        self.presentationMode = presentationMode
+    init(action: @escaping () -> Void) {
+        self.action = action
     }
 
-    func callAsFunction() {
-        presentationMode.dismiss()
-    }
+    func callAsFunction() { action() }
 }
 
 private struct ReadingDismissKey: EnvironmentKey {
-    /// 默认值只在非交互场景（如预览）用到，占位即可。
-    static let defaultValue = ReadingDismissAction(presentationMode: PresentationMode())
+    /// 默认值只在非交互场景（如预览）用到，空操作即可。
+    static let defaultValue = ReadingDismissAction(action: {})
 }
 
 extension EnvironmentValues {
@@ -835,8 +855,13 @@ private struct ReadingDismissEnvironmentModifier: ViewModifier {
     @Environment(\.presentationMode) private var presentationMode
 
     func body(content: Content) -> some View {
-        content.environment(\.readingDismiss,
-                           ReadingDismissAction(presentationMode: presentationMode))
+        // presentationMode 是 @Environment 读出的绑定，调用其dismiss()
+        // 需要 var，因此这里先复制到局部变量再执行。
+        var mode = presentationMode
+        return content.environment(
+            \.readingDismiss,
+            ReadingDismissAction { mode.dismiss() }
+        )
     }
 }
 
@@ -844,27 +869,6 @@ extension View {
     /// 注入 `readingDismiss`。需在视图树根部调用一次。
     func readingDismissEnvironment() -> some View {
         modifier(ReadingDismissEnvironmentModifier())
-    }
-}
-
-/// 关闭当前页面。在 iOS 14 上替代 `dismiss()`，供 push 场景使用。
-///
-/// 用 `@Binding` 持有导航状态：调用方需自行把该 binding 接到
-/// `NavigationStack` / `NavigationView` 的 path 上。
-struct ReadingNavigationBack: ViewModifier {
-    @Binding var path: NavigationPath
-
-    func body(content: Content) -> some View {
-        content.toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    if !path.isEmpty { path.removeLast() }
-                } label: {
-                    Image(systemName: "chevron.backward")
-                }
-                .disabled(path.isEmpty)
-            }
-        }
     }
 }
 
@@ -898,7 +902,14 @@ private struct ReadingTextSelectionModifier: ViewModifier {
 
     @ViewBuilder func body(content: Content) -> some View {
         if #available(iOS 15.0, *) {
-            content.textSelection(enabled ? .enabled : .disabled)
+            // 不能写成 textSelection(enabled ? .enabled : .disabled)：
+            // 两个分支返回不同类型（Enabled/DisabledTextSelectability），
+            // 三元表达式无法统一。
+            if enabled {
+                content.textSelection(.enabled)
+            } else {
+                content.textSelection(.disabled)
+            }
         } else {
             content
         }
@@ -923,7 +934,7 @@ private struct ReadingOnSubmitModifier: ViewModifier {
 
     @ViewBuilder func body(content: Content) -> some View {
         if #available(iOS 15.0, *) {
-            content.onSubmit(of: triggers.swiftUIValue, action: action)
+            content.onSubmit(of: triggers.swiftUIValue) { action() }
         } else {
             content.onSubmit(action)
         }
@@ -1007,15 +1018,21 @@ extension View {
     ///   - title: 标题。
     ///   - isPresented: 显示绑定。
     ///   - actions: 按钮集合。
-    ///   - message: 正文提示，仅 iOS 15+ 生效。
+    ///   - message: 正文提示。为 `nil` 时 iOS 15+ 也不传该参数，
+    ///     保证 alert 不会多出一行空白正文，与改造前行为一致。
+    @ViewBuilder
     func readingAlert<T: StringProtocol>(
         _ title: T,
         isPresented: Binding<Bool>,
         @ViewBuilder actions: () -> some View,
-        message: @escaping () -> Text
+        message: (@escaping () -> Text)? = nil
     ) -> some View {
         if #available(iOS 15.0, *) {
-            self.alert(Text(title), isPresented: isPresented, actions: actions, message: message)
+            if let message {
+                self.alert(Text(title), isPresented: isPresented, actions: actions, message: message)
+            } else {
+                self.alert(Text(title), isPresented: isPresented, actions: actions)
+            }
         } else {
             self.alert(Text(title), isPresented: isPresented, actions: actions)
         }
@@ -1025,17 +1042,26 @@ extension View {
     ///
     /// 注意：iOS 14 上没有 `confirmationDialog` 这一形态，这里同样降级为 alert，
     /// 视觉样式为居中弹窗而非底部动作表，属已知差异。
+    ///
+    /// `message` 为 `nil` 时 iOS 15+ 也不传该参数，避免多余空白正文。
+    @ViewBuilder
     func readingConfirmationDialog<T: StringProtocol>(
         _ title: T,
         isPresented: Binding<Bool>,
-        titleVisibility: Visibility = .automatic,
+        titleVisibility: ReadingTitleVisibility = .automatic,
         @ViewBuilder actions: () -> some View,
-        message: @escaping () -> Text
+        message: (@escaping () -> Text)? = nil
     ) -> some View {
         if #available(iOS 15.0, *) {
-            self.confirmationDialog(Text(title), isPresented: isPresented,
-                                    titleVisibility: titleVisibility,
-                                    actions: actions, message: message)
+            if let message {
+                self.confirmationDialog(Text(title), isPresented: isPresented,
+                                        titleVisibility: titleVisibility.swiftUIValue,
+                                        actions: actions, message: message)
+            } else {
+                self.confirmationDialog(Text(title), isPresented: isPresented,
+                                        titleVisibility: titleVisibility.swiftUIValue,
+                                        actions: actions)
+            }
         } else {
             self.alert(Text(title), isPresented: isPresented, actions: actions)
         }
@@ -1044,6 +1070,7 @@ extension View {
     /// 带 `presenting` 数据的 `alert`。
     ///
     /// iOS 15+ 原样透传；iOS 14 降级为不带数据与message 的 alert。
+    @ViewBuilder
     func readingAlert<T: StringProtocol, D>(
         _ title: T,
         isPresented: Binding<Bool>,
@@ -1066,17 +1093,18 @@ extension View {
     }
 
     /// 带 `presenting` 数据的 `confirmationDialog`。
+    @ViewBuilder
     func readingConfirmationDialog<T: StringProtocol, D>(
         _ title: T,
         isPresented: Binding<Bool>,
-        titleVisibility: Visibility = .automatic,
+        titleVisibility: ReadingTitleVisibility = .automatic,
         presenting data: D?,
         @ViewBuilder actions: (D) -> some View,
         message: @escaping (D) -> Text
     ) -> some View {
         if #available(iOS 15.0, *) {
             self.confirmationDialog(Text(title), isPresented: isPresented,
-                                    titleVisibility: titleVisibility, presenting: data,
+                                    titleVisibility: titleVisibility.swiftUIValue, presenting: data,
                                     actions: actions, message: message)
         } else {
             self.alert(Text(title), isPresented: isPresented) {
@@ -1096,9 +1124,13 @@ extension View {
     /// iOS 14 只有 `alert(isPresented:content:)`。
     /// `item` 为 nil 时把 `isPresented` 置为 false，即等价于「无数据时关闭」，
     /// 因此这里用一个派生 binding 桥接两者。
-    func readingAlert<Item: Identifiable, Content: View>(
+    /// iOS 14 的 `.alert(isPresented:)` 内容闭包必须产出 `Alert` 值，
+    /// 而 `Alert` 在 iOS 15 已弃用——这里保留它正是为了兼容 iOS 14 分支。
+    /// 调用点本就返回 `Alert(title:message:dismissButton:)`，约束后无需改动。
+    @ViewBuilder
+    func readingAlert<Item: Identifiable>(
         item: Binding<Item?>,
-        @ViewBuilder content: @escaping (Item) -> Content
+        @ViewBuilder content: @escaping (Item) -> Alert
     ) -> some View {
         if #available(iOS 15.0, *) {
             self.alert(item: item, content: content)
@@ -1111,6 +1143,125 @@ extension View {
                     content(value)
                 }
             }
+        }
+    }
+}
+
+// MARK: - 标题可见性（iOS 15+ 的 Visibility）
+
+/// `Visibility` 的跨版本表示。
+///
+/// SwiftUI 的 `Visibility` 类型本身在 iOS 14 SDK 中不存在，
+/// 因此不能出现在低版本可编译的函数签名里，这里自建等价枚举。
+enum ReadingTitleVisibility {
+    case automatic
+    case visible
+    case hidden
+
+    @available(iOS 15.0, *)
+    var swiftUIValue: Visibility {
+        switch self {
+        case .automatic: return .automatic
+        case .visible: return .visible
+        case .hidden: return .hidden
+        }
+    }
+}
+
+// MARK: - 安全区插入与焦点（iOS 15+）
+
+extension View {
+    /// `safeAreaInset(edge:spacing:content:)` 的 iOS 14 等价实现。
+    ///
+    /// iOS 15 才提供该修饰符。iOS 14 上 top 边缘用 VStack 把内容顶到安全区
+    /// 之前，bottom 边缘用 VStack 把内容压到安全区之后——
+    /// 这在列表/表单场景下与 safeAreaInset 的视觉效果基本一致。
+    @ViewBuilder
+    func readingSafeAreaInset(
+        edge: Edge,
+        spacing: CGFloat = 0,
+        @ViewBuilder content: () -> some View
+    ) -> some View {
+        if #available(iOS 15.0, *) {
+            safeAreaInset(edge: edge, spacing: spacing, content: content)
+        } else {
+            switch edge {
+            case .top:
+                VStack(spacing: spacing) {
+                    content()
+                    self
+                }
+            case .bottom:
+                VStack(spacing: spacing) {
+                    self
+                    content()
+                }
+            default:
+                self
+            }
+        }
+    }
+
+    /// `FocusState` 的 iOS 14 替身。
+    ///
+    /// iOS 15 的 `@FocusState` 基于 SwiftUI 焦点系统，iOS 14 不可用。
+    /// 本项目仅用焦点状态判断「是否显示取消按钮」，
+    /// 因此这里退化为不改变布局的空操作，焦点相关交互由调用方保持原样。
+    func readingFocusBinding(_ isFocused: Binding<Bool>) -> some View {
+        modifier(ReadingFocusModifier(isFocused: isFocused))
+    }
+}
+
+private struct ReadingFocusModifier: ViewModifier {
+    @Binding var isFocused: Bool
+
+    func body(content: Content) -> some View { content }
+}
+
+// MARK: - Canvas（SwiftUI iOS 15+）
+
+/// `Canvas` 的 iOS 14 等价实现。
+///
+/// SwiftUI 的 `Canvas` 与 `GraphicsContext` 都是 iOS 15 才引入的类型，
+/// 在 iOS 14 SDK 中根本不存在，无法用 `#available` 绕过，
+/// 因此这里用 `UIViewRepresentable` + CoreGraphics 重绘。
+/// 本项目的绘制只用到填充与描边，均可等价还原。
+struct ReadingCanvas: UIViewRepresentable {
+    /// 接收已缩放到目标尺寸的 `CGContext`，由调用方完成具体绘制。
+    var draw: (CGContext, CGSize) -> Void
+
+    func makeUIView(context: Context) -> CanvasView {
+        let view = CanvasView()
+        view.draw = draw
+        return view
+    }
+
+    func updateUIView(_ uiView: CanvasView, context: Context) {
+        uiView.draw = draw
+        uiView.setNeedsDisplay()
+    }
+
+    final class CanvasView: UIView {
+        var draw: ((CGContext, CGSize) -> Void)?
+
+        override init(frame: CGRect) {
+            super.init(frame: frame)
+            backgroundColor = .clear
+            isOpaque = false
+            contentMode = .redraw
+        }
+
+        required init?(coder: NSCoder) {
+            super.init(coder: coder)
+            backgroundColor = .clear
+            isOpaque = false
+        }
+
+        override func draw(_ rect: CGRect) {
+            guard let draw, let ctx = UIGraphicsGetCurrentContext() else { return }
+            ctx.setAllowsAntialiasing(true)
+            ctx.setShouldAntialias(true)
+            draw(ctx, bounds.size)
         }
     }
 }

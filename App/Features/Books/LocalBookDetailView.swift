@@ -39,7 +39,7 @@ struct LocalBookDetailView: View {
                         StatusPill(text: "本地 TXT", systemImage: "doc.text.fill")
                         if let charset = book.charset { StatusPill(text: charset, color: ReadingTheme.coral, systemImage: "character") }
                     }
-                    Text(book.originName).font(.caption).foregroundStyle(.secondary)
+                    Text(book.originName).font(.caption).foregroundColor(.secondary)
                 }
                 .padding(.top, 12)
 
@@ -48,7 +48,7 @@ struct LocalBookDetailView: View {
                         HStack {
                             Label("目录", systemImage: "list.bullet.rectangle.portrait.fill").font(.headline)
                             Spacer()
-                            Text("\(model.chapters.count) 章").font(.caption).foregroundStyle(.secondary)
+                            Text("\(model.chapters.count) 章").font(.caption).foregroundColor(.secondary)
                         }
                         .padding(.bottom, 12)
                         if model.isLoading {
@@ -63,10 +63,10 @@ struct LocalBookDetailView: View {
                                 } label: {
                                     HStack(spacing: 12) {
                                         Text(String(format: "%02d", chapter.index + 1))
-                                            .font(.caption.monospacedDigit()).foregroundStyle(.tertiary).frame(width: 28)
-                                        Text(chapter.title).font(.subheadline).foregroundStyle(.primary).lineLimit(2)
+                                            .font(.caption.monospacedDigit()).foregroundColor(.secondary).frame(width: 28)
+                                        Text(chapter.title).font(.subheadline).foregroundColor(.primary).lineLimit(2)
                                         Spacer()
-                                        Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
+                                        Image(systemName: "chevron.right").font(.caption.bold()).foregroundColor(.secondary)
                                     }
                                     .padding(.vertical, 12)
                                 }
@@ -129,11 +129,11 @@ private struct LocalBookTableOfContentsView: View {
                     ReaderView(book: book, chapters: chapters, initialIndex: chapter.index)
                 } label: {
                     HStack {
-                        Text("\(chapter.index + 1)").font(.caption.monospacedDigit()).foregroundStyle(.secondary).frame(width: 42, alignment: .trailing)
+                        Text("\(chapter.index + 1)").font(.caption.monospacedDigit()).foregroundColor(.secondary).frame(width: 42, alignment: .trailing)
                         Text(chapter.title).lineLimit(2)
                         Spacer()
                         if chapter.index == book.durChapterIndex {
-                            Image(systemName: "location.fill").foregroundStyle(ReadingTheme.accent)
+                            Image(systemName: "location.fill").foregroundColor(ReadingTheme.accent)
                         }
                     }
                 }

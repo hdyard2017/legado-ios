@@ -37,12 +37,12 @@ struct ReplaceRuleManagementView: View {
                             Button { edit(rule) } label: {
                                 HStack(spacing: 12) {
                                     Image(systemName: rule.isRegex ? "textformat.alt" : "character.cursor.ibeam")
-                                        .foregroundStyle(rule.isEnabled ? ReadingTheme.accent : .secondary)
+                                        .foregroundColor(rule.isEnabled ? ReadingTheme.accent : .secondary)
                                     VStack(alignment: .leading, spacing: 4) {
-                                        Text(rule.name.isEmpty ? rule.pattern : rule.name).foregroundStyle(.primary).lineLimit(1)
+                                        Text(rule.name.isEmpty ? rule.pattern : rule.name).foregroundColor(.primary).lineLimit(1)
                                         Text(rule.group ?? (rule.scopeTitle && rule.scopeContent ? "标题与正文" : rule.scopeTitle ? "标题" : "正文"))
-                                            .font(.caption).foregroundStyle(.secondary)
-                                        Text(rule.pattern).font(.caption.monospaced()).foregroundStyle(.secondary).lineLimit(1)
+                                            .font(.caption).foregroundColor(.secondary)
+                                        Text(rule.pattern).font(.caption.monospaced()).foregroundColor(.secondary).lineLimit(1)
                                     }
                                     Spacer()
                                 }
@@ -108,7 +108,7 @@ private struct ReplaceRuleTextImportView: View {
     var body: some View {
         ReadingNavigationStack {
             VStack(alignment: .leading, spacing: 12) {
-                Text("粘贴净化规则 JSON、HTTP(S) 链接或 Legado 净化规则深链。").font(.footnote).foregroundStyle(.secondary)
+                Text("粘贴净化规则 JSON、HTTP(S) 链接或 Legado 净化规则深链。").font(.footnote).foregroundColor(.secondary)
                 SyntaxCodeEditor(text: $value, language: .json)
             }.padding()
             .navigationTitle("导入净化规则").navigationBarTitleDisplayMode(.inline)

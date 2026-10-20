@@ -434,11 +434,11 @@ struct ReaderView: View {
                     .font(.subheadline.weight(.medium))
                 Text(model.title)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundColor(.secondary)
                     .lineLimit(1)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .foregroundStyle(foregroundColor)
+            .foregroundColor(foregroundColor)
             .background(backgroundColor.ignoresSafeArea())
             .contentShape(Rectangle())
             .onTapGesture { showsReaderMenu.toggle() }
@@ -449,14 +449,14 @@ struct ReaderView: View {
                 Text(model.currentChapterError == nil ? "正文为空" : "本章加载失败").font(.title3.weight(.semibold))
                 Text(model.currentChapterError ?? "本章暂无正文。")
                     .font(.subheadline).multilineTextAlignment(.center)
-                    .foregroundStyle(.secondary)
+                    .foregroundColor(.secondary)
                 readerRecoveryActions
                 Button("打开阅读菜单") { showsReaderMenu = true }
                     .accessibilityIdentifier("reader.failureMenu")
             }
             .padding(24)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .foregroundStyle(foregroundColor)
+            .foregroundColor(foregroundColor)
             .background(backgroundColor.ignoresSafeArea())
         } else {
             VStack(spacing: 0) {
@@ -475,7 +475,7 @@ struct ReaderView: View {
                     }
                     .padding(16)
                     .frame(maxWidth: .infinity)
-                    .foregroundStyle(foregroundColor)
+                    .foregroundColor(foregroundColor)
                     .background(backgroundColor)
                 }
             }
@@ -679,11 +679,11 @@ struct ReaderView: View {
     }
 
     private var backgroundColor: Color {
-        Color(uiColor: resolvedStyle.background)
+        Color(resolvedStyle.background)
     }
 
     private var foregroundColor: Color {
-        Color(uiColor: resolvedStyle.foreground)
+        Color(resolvedStyle.foreground)
     }
 
     private var resolvedStyle: ReaderStylePreset {
@@ -740,7 +740,7 @@ struct ReaderView: View {
                 .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .font(.system(size: 12))
-        .foregroundStyle(foregroundColor)
+        .foregroundColor(foregroundColor)
         .lineLimit(1)
         .padding(.leading, isHeader ? headerPaddingLeft : footerPaddingLeft)
         .padding(.trailing, isHeader ? headerPaddingRight : footerPaddingRight)
@@ -780,9 +780,9 @@ struct ReaderView: View {
 
     @ViewBuilder private var readerChromeBackground: some View {
         if resolvedStyle.id == "night" {
-            Color(uiColor: .secondarySystemBackground)
+            Color(.secondarySystemBackground)
         } else {
-            Color(uiColor: .systemBackground)
+            Color(.systemBackground)
         }
     }
 
@@ -814,7 +814,7 @@ struct ReaderView: View {
                     }
                 }
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundColor(.secondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityElement(children: .combine)
@@ -824,14 +824,14 @@ struct ReaderView: View {
             .accessibilityValue(bookmarkSaved ? "已添加" : "添加当前位置")
             readerMoreMenu
         }
-        .foregroundStyle(readerChromeTint)
+        .foregroundColor(readerChromeTint)
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .frame(maxWidth: .infinity)
         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         .background(readerChromeBackground.ignoresSafeArea(edges: .top))
         .overlay(alignment: .bottom) {
-            Rectangle().fill(Color(uiColor: .separator).opacity(0.35)).frame(height: 0.5)
+            Rectangle().fill(Color(.separator).opacity(0.35)).frame(height: 0.5)
         }
     }
 
@@ -871,7 +871,7 @@ struct ReaderView: View {
     private var readerBottomChrome: some View {
         VStack(spacing: 12) {
             readerChapterControls
-            Rectangle().fill(Color(uiColor: .separator).opacity(0.35)).frame(height: 0.5)
+            Rectangle().fill(Color(.separator).opacity(0.35)).frame(height: 0.5)
             LazyVGrid(columns: readerToolbarColumns, spacing: 12) {
                 readerChromeAction("list.bullet", "目录") {
                     showsReaderMenu = false
@@ -893,7 +893,7 @@ struct ReaderView: View {
                 }
             }
         }
-        .foregroundStyle(readerChromeTint)
+        .foregroundColor(readerChromeTint)
         .padding(.horizontal, 20)
         .padding(.top, 12)
         .padding(.bottom, 10)
@@ -901,7 +901,7 @@ struct ReaderView: View {
         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         .background(readerChromeBackground.ignoresSafeArea(edges: .bottom))
         .overlay(alignment: .top) {
-            Rectangle().fill(Color(uiColor: .separator).opacity(0.35)).frame(height: 0.5)
+            Rectangle().fill(Color(.separator).opacity(0.35)).frame(height: 0.5)
         }
     }
 
@@ -931,7 +931,7 @@ struct ReaderView: View {
                     Text(chapterProgress, format: .percent.precision(.fractionLength(0)))
                 }
                 .font(.caption.monospacedDigit())
-                .foregroundStyle(.secondary)
+                .foregroundColor(.secondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
                 ProgressView(value: chapterProgress)
@@ -965,7 +965,7 @@ struct ReaderView: View {
                     .frame(height: 28)
                 Text(title)
                     .font(.caption)
-                    .foregroundStyle(isActive ? Color.primary : .secondary)
+                    .foregroundColor(isActive ? Color.primary : .secondary)
             }
             .frame(maxWidth: .infinity, minHeight: 58)
             .contentShape(Rectangle())
@@ -1066,7 +1066,7 @@ struct ReaderView: View {
                     HStack {
                         Text("自动翻页速度")
                         Spacer()
-                        Text("\(autoReadSpeed)s").monospacedDigit().foregroundStyle(.secondary)
+                        Text("\(autoReadSpeed)s").monospacedDigit().foregroundColor(.secondary)
                     }
                     Slider(
                         value: Binding(
@@ -1130,7 +1130,7 @@ struct ReaderView: View {
                         VStack(spacing: 2) {
                             Text("字号")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundColor(.secondary)
                             Text("\(Int(fontSize))")
                                 .font(.headline.monospacedDigit())
                         }
@@ -1165,18 +1165,11 @@ struct ReaderView: View {
                                 } label: {
                                     VStack(spacing: 6) {
                                         RoundedRectangle(cornerRadius: 7)
-                                            .fill(Color(uiColor: preset.background))
+                                            .fill(Color(preset.background))
                                             .frame(width: 54, height: 72)
-                                            .overlay {
-                                                Text("文字")
-                                                    .font(.caption)
-                                                    .foregroundStyle(Color(uiColor: preset.foreground))
-                                            }
-                                            .overlay {
-                                                RoundedRectangle(cornerRadius: 7)
-                                                    .stroke(resolvedStyle.id == preset.id ? ReadingTheme.accent : Color.secondary, lineWidth: resolvedStyle.id == preset.id ? 3 : 1)
-                                            }
-                                        Text(preset.name).font(.caption2).foregroundStyle(.primary)
+                                            .overlay(Text("文字") .font(.caption) .foregroundColor(Color(preset.foreground)))
+                                            .overlay(RoundedRectangle(cornerRadius: 7) .stroke(resolvedStyle.id == preset.id ? ReadingTheme.accent : Color.secondary, lineWidth: resolvedStyle.id == preset.id ? 3 : 1))
+                                        Text(preset.name).font(.caption2).foregroundColor(.primary)
                                     }
                                 }
                                 .buttonStyle(.plain)
@@ -1205,7 +1198,7 @@ struct ReaderView: View {
                         }
                     }
                     if let backgroundError {
-                        Text(backgroundError).font(.footnote).foregroundStyle(.red)
+                        Text(backgroundError).font(.footnote).foregroundColor(.red)
                     }
                 }
 
@@ -1229,12 +1222,12 @@ struct ReaderView: View {
                             Text("当前字体")
                             Spacer()
                             Text(URL(fileURLWithPath: fontPath).lastPathComponent)
-                                .foregroundStyle(.secondary)
+                                .foregroundColor(.secondary)
                         }
                         Button("恢复默认字体", role: .destructive) { fontPath = "" }
                     }
                     if let fontError {
-                        Text(fontError).font(.footnote).foregroundStyle(.red)
+                        Text(fontError).font(.footnote).foregroundColor(.red)
                     }
                     Picker("下划线", selection: $underlineMode) {
                         Text("关闭").tag(0)
@@ -1268,12 +1261,9 @@ struct ReaderView: View {
                                         Text(choice.title)
                                             .font(.caption2)
                                     }
-                                    .foregroundStyle(pageAnimation == choice.value ? Color.white : Color.primary)
+                                    .foregroundColor(pageAnimation == choice.value ? Color.white : Color.primary)
                                     .frame(width: 58, height: 54)
-                                    .background(
-                                        pageAnimation == choice.value ? ReadingTheme.accent : Color.secondary.opacity(0.1),
-                                        in: RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    )
+                                    .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(pageAnimation == choice.value ? ReadingTheme.accent : Color.secondary.opacity(0.1)))
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -1283,7 +1273,7 @@ struct ReaderView: View {
                          ? "滚动模式连续滚动；其余模式按整屏翻页。左右滑动或点击左右三分之一区域翻页，点击中间区域打开菜单。"
                          : "当前模式按整屏翻页；左右滑动或点击左右三分之一区域翻页，点击中间区域打开菜单。")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundColor(.secondary)
                 }
 
                 Section("正文边距") {
@@ -1351,10 +1341,10 @@ struct ReaderView: View {
         Button(action: action) {
             Text(title)
                 .font(.caption.weight(.medium))
-                .foregroundStyle(selected ? Color.white : Color.primary)
+                .foregroundColor(selected ? Color.white : Color.primary)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 7)
-                .background(selected ? ReadingTheme.accent : Color.secondary.opacity(0.1), in: Capsule())
+                .background(Capsule().fill(selected ? ReadingTheme.accent : Color.secondary.opacity(0.1)))
         }
         .buttonStyle(.plain)
     }
@@ -1370,7 +1360,7 @@ struct ReaderView: View {
             HStack {
                 Text(title)
                 Spacer()
-                Text(format(value.wrappedValue)).monospacedDigit().foregroundStyle(.secondary)
+                Text(format(value.wrappedValue)).monospacedDigit().foregroundColor(.secondary)
             }
             Slider(value: value, in: range, step: step)
         }
@@ -1413,11 +1403,11 @@ struct ReaderView: View {
                             let index = row * 3 + column
                             VStack(spacing: 8) {
                                 Text(["左上", "上中", "右上", "左中", "中央", "右中", "左下", "下中", "右下"][index])
-                                    .font(.caption).foregroundStyle(.secondary)
+                                    .font(.caption).foregroundColor(.secondary)
                                 if index == 4 {
                                     Text("固定：菜单")
                                         .font(.caption.weight(.medium))
-                                        .foregroundStyle(ReadingTheme.accent)
+                                        .foregroundColor(ReadingTheme.accent)
                                         .frame(maxWidth: .infinity, minHeight: 32)
                                 } else {
                                     Picker("动作", selection: clickActionBinding(at: index)) {
@@ -1431,7 +1421,7 @@ struct ReaderView: View {
                             }
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .padding(6)
-                            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10))
+                            .background(RoundedRectangle(cornerRadius: 10).fill(.thinMaterial))
                         }
                     }
                 }
@@ -1586,10 +1576,10 @@ struct ReaderView: View {
                     if speechTimerRemaining > 0 {
                         Text("本次朗读还剩 \(speechTimerRemaining) 分钟")
                             .font(.footnote.monospacedDigit())
-                            .foregroundStyle(.secondary)
+                            .foregroundColor(.secondary)
                     }
                     if let error = speech.errorMessage {
-                        Text(error).font(.footnote).foregroundStyle(.red)
+                        Text(error).font(.footnote).foregroundColor(.red)
                     }
                 }
 
@@ -1625,7 +1615,7 @@ struct ReaderView: View {
                 if let contentEditError {
                     Text(contentEditError)
                         .font(.footnote)
-                        .foregroundStyle(.red)
+                        .foregroundColor(.red)
                         .padding(.horizontal)
                         .padding(.bottom, 8)
                 }
@@ -1689,7 +1679,7 @@ struct ReaderView: View {
                                 Text(chapter.title).font(.headline)
                                 Spacer()
                             }
-                            .foregroundStyle(ReadingTheme.accent)
+                            .foregroundColor(ReadingTheme.accent)
                             .padding(.vertical, 4)
                             .listRowBackground(ReadingTheme.accent.opacity(0.07))
                         } else {
@@ -1706,11 +1696,11 @@ struct ReaderView: View {
                                 HStack(spacing: 12) {
                                     Text(tocChapterNumber(chapter))
                                         .font(.caption.monospacedDigit())
-                                        .foregroundStyle(isCurrent ? ReadingTheme.accent : .secondary)
+                                        .foregroundColor(isCurrent ? ReadingTheme.accent : .secondary)
                                         .frame(width: 30, alignment: .trailing)
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(chapter.title)
-                                            .foregroundStyle(.primary)
+                                            .foregroundColor(.primary)
                                             .lineLimit(2)
                                         if isCurrent {
                                             HStack(spacing: 6) {
@@ -1719,13 +1709,13 @@ struct ReaderView: View {
                                                     .tint(ReadingTheme.accent)
                                             }
                                             .font(.caption2)
-                                            .foregroundStyle(ReadingTheme.accent)
+                                            .foregroundColor(ReadingTheme.accent)
                                         }
                                     }
                                     Spacer(minLength: 8)
                                     if isCurrent {
                                         Image(systemName: "checkmark.circle.fill")
-                                            .foregroundStyle(ReadingTheme.accent)
+                                            .foregroundColor(ReadingTheme.accent)
                                     }
                                 }
                                 .padding(.vertical, 4)
@@ -1741,13 +1731,13 @@ struct ReaderView: View {
                             Spacer()
                             Text("\(tocReadableChapterCount) 章")
                                 .font(.caption.monospacedDigit())
-                                .foregroundStyle(.secondary)
+                                .foregroundColor(.secondary)
                         }
                         ProgressView(value: chapterProgress)
                             .tint(ReadingTheme.accent)
                         Text("第 \(max(model.currentIndex + 1, 1)) 章 · \(Int(chapterProgress * 100))%")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundColor(.secondary)
                     }
                     .textCase(nil)
                     .padding(.vertical, 4)
@@ -1797,7 +1787,7 @@ struct ReaderView: View {
                             showsContentSearch = false
                         } label: {
                             Text(paragraph.text)
-                                .foregroundStyle(.primary)
+                                .foregroundColor(.primary)
                                 .lineLimit(3)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
@@ -1846,11 +1836,11 @@ struct ReaderView: View {
                             jump(to: bookmark)
                         } label: {
                             VStack(alignment: .leading, spacing: 6) {
-                                Text(bookmark.chapterName).font(.headline).foregroundStyle(.primary)
+                                Text(bookmark.chapterName).font(.headline).foregroundColor(.primary)
                                 if !bookmark.bookText.isEmpty {
-                                    Text(bookmark.bookText).font(.subheadline).foregroundStyle(.secondary).lineLimit(3)
+                                    Text(bookmark.bookText).font(.subheadline).foregroundColor(.secondary).lineLimit(3)
                                 }
-                                Text("位置 \(bookmark.chapterPosition)").font(.caption.monospacedDigit()).foregroundStyle(.tertiary)
+                                Text("位置 \(bookmark.chapterPosition)").font(.caption.monospacedDigit()).foregroundColor(.secondary)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                         }
