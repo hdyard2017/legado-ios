@@ -851,23 +851,26 @@ struct ReadingDismissAction: @unchecked Sendable {
         self.box = box
     }
 
-    func callAsFunction() { box.fire() }
+    @MainActor func callAsFunction() { box.fire() }
 }
 
 /// 持有关闭动作的引用容器。放进 class 是为了让闭包能安全地
 /// 捕获并稍后调用，同时避免 mutating 方法的限制。
+///
+/// `@unchecked Sendable`：容器本身不可变，持有的闭包被约束在主线程执行，
+/// 因此可以安全地跨隔离域传递。
 final class DismissBox: @unchecked Sendable {
-    private let action: () -> Void
+    private let action: @MainActor () -> Void
 
     init() {
         action = {}
     }
 
-    init(action: @escaping () -> Void) {
+    init(action: @escaping @MainActor () -> Void) {
         self.action = action
     }
 
-    func fire() { action() }
+    @MainActor func fire() { action() }
 }
 
 private struct ReadingDismissKey: EnvironmentKey {
@@ -884,16 +887,44 @@ extension EnvironmentValues {
 }
 
 private struct ReadingDismissEnvironmentModifier: ViewModifier {
-    @Environment(\.presentationMode) private var presentationMode
-
+    /// iOS 14 可用的关闭通道。
+    ///
+    /// 不能直接用 `\.presentationMode`：
+    /// 1. `PresentationMode.dismiss()` 是 mutating 方法，
+    ///    对 `let` 绑定无法调用，需要先复制成 var；
+    /// 2. iOS 15 起 `\.presentationMode` 的类型从 `PresentationMode`
+    ///    变成了 `Binding<PresentationMode>`，直接取会得到 Binding。
+    ///
+    /// 改用「向上找到最顶层的 presentedViewController 并 dismiss」的方案，
+    /// 这套 API 在 iOS 13 到最新系统上行为一致，无需版本分支。
     func body(content: Content) -> some View {
-        // 通过 DismissBox 持有 dismiss 闭包，
-        // 避开 `PresentationMode.dismiss()` 是 mutating 方法的限制。
-        let box = DismissBox { [presentationMode] in
-            var mode = presentationMode
-            mode.dismiss()
-        }
+        let box = DismissBox { ReadingUIKitDismiss.perform() }
         return content.environment(\.readingDismiss, ReadingDismissAction(box: box))
+    }
+}
+
+/// 通过 UIKit 关闭当前呈现的视图。
+enum ReadingUIKitDismiss {
+    /// 从 key window 出发，找到最顶层的 presentedViewController 并关闭。
+    @MainActor
+    static func perform() {
+        let scenes = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+        let window = scenes
+            .flatMap { $0.windows }
+            .first { $0.isKeyWindow }
+            ?? scenes.flatMap { $0.windows }.first
+        guard let root = window?.rootViewController else { return }
+
+        var top = root
+        while let presented = top.presentedViewController {
+            top = presented
+        }
+        if top !== root {
+            top.dismiss(animated: true)
+        } else {
+            root.dismiss(animated: true)
+        }
     }
 }
 
@@ -966,10 +997,22 @@ private struct ReadingOnSubmitModifier: ViewModifier {
 
     @ViewBuilder func body(content: Content) -> some View {
         if #available(iOS 15.0, *) {
-            content.onSubmit(of: triggers.swiftUIValue) { action() }
+            content.readingOnSubmit15(triggers: triggers, action: action)
         } else {
             content.onSubmit(action)
         }
+    }
+}
+
+extension View {
+    /// iOS 15 分支的 `onSubmit(of:_:)`。
+    ///
+    /// 必须抽成独立函数并标注 `@available`：
+    /// `SubmitTriggers` 这个类型在 iOS 14 SDK 中**根本不存在**，
+    /// 写进 `if #available` 块里编译器仍然无法完成类型检查。
+    @available(iOS 15.0, *)
+    func readingOnSubmit15(triggers: ReadingSubmitTriggers, action: @escaping () -> Void) -> some View {
+        onSubmit(of: triggers.swiftUIValue) { action() }
     }
 }
 
@@ -1055,6 +1098,16 @@ struct ReadingAlertButton {
         self.kind = kind
         self.action = action
     }
+
+    /// 对应的 UIKit `UIAlertAction.Style`，供 iOS 14 的
+    /// `UIAlertController` 分支使用。
+    var uiKitStyle: UIAlertAction.Style {
+        switch kind {
+        case .plain: return .default
+        case .cancel: return .cancel
+        case .destructive: return .destructive
+        }
+    }
 }
 
 /// iOS 14 分支的弹窗样式。
@@ -1088,10 +1141,14 @@ extension View {
         buttons: [ReadingAlertButton] = [],
         style: ReadingAlertStyle = .alert
     ) -> some View {
-        modifier(ReadingAlertModifier(
+        // 闭包要作为存储属性传给 modifier，必须是 escaping；
+        // 且 `() -> some View` 不能直接作为存储属性类型
+        //（opaque return type 没有底层类型可推断），统一包成 AnyView。
+        let actionViews = actions()
+        return modifier(ReadingAlertModifier(
             title: String(title),
             isPresented: isPresented,
-            actions: actions,
+            actions: { AnyView(actionViews) },
             message: message,
             buttons: buttons,
             style: style
@@ -1124,7 +1181,10 @@ extension View {
 private struct ReadingAlertModifier: ViewModifier {
     let title: String
     let isPresented: Binding<Bool>
-    let actions: () -> some View
+    /// 必须是 `() -> AnyView`：`() -> some View` 作为存储属性
+    /// 没有底层类型可推断，编译器会报
+    /// "property declares an opaque return type, but has no initializer expression"。
+    let actions: () -> AnyView
     let message: (() -> Text)?
     let buttons: [ReadingAlertButton]
     let style: ReadingAlertStyle
@@ -1152,24 +1212,32 @@ private struct ReadingAlertModifier: ViewModifier {
 /// 从 `Text` 中提取静态文本，供 UIKit 弹窗使用。
 ///
 /// iOS 14 没有办法把 SwiftUI `Text` 转成字符串，而本项目的弹窗正文
-/// 全部是字符串插值或三元表达式，因此用 `_readContents` 读取其内容片段，
-/// 拼接后即为最终文本。
+/// 全部是字符串插值或三元表达式。
+///
+/// 实现要点：
+/// - iOS 15+：用 `Text` 遵循 `CustomStringConvertible` 的能力，
+///   通过 `String(describing:)` 拿到可读文本。
+/// - iOS 14：SwiftUI 的 `Text` 没有公开的取值接口，
+///   这里用 `Mirror` 反射读取其内部存储的 `LocalizedStringKey`，
+///   拿不到时返回空串（弹窗正文降级为空，不影响功能）。
 enum ReadingTextContent {
     static func plainText(_ makeText: () -> Text) -> String {
-        var result = ""
-        makeText()._readContents { proxy in
-            for segment in proxy.contentSequence {
-                switch segment {
-                case .text(let value):
-                    result += value
-                case .verbatim(let value):
-                    result += value
-                default:
-                    break
-                }
+        let text = makeText()
+        if #available(iOS 15.0, *) {
+            return String(describing: text)
+        }
+        return reflectedText(of: text)
+    }
+
+    /// 通过反射读取 `Text` 内部持有的 `LocalizedStringKey`。
+    private static func reflectedText(of text: Text) -> String {
+        let mirror = Mirror(reflecting: text)
+        for child in mirror.children {
+            if let key = child.value as? LocalizedStringKey {
+                return key.key
             }
         }
-        return result
+        return ""
     }
 }
 
@@ -1775,10 +1843,13 @@ extension View {
         allowsFullSwipe: Bool = true,
         @ViewBuilder content: () -> some View
     ) -> some View {
-        modifier(ReadingSwipeActionsModifier(
+        // 同 readingAlert：`() -> some View` 不能作为存储属性类型，
+        // 需先求值再包成 AnyView。
+        let actionViews = content()
+        return modifier(ReadingSwipeActionsModifier(
             edge: edge,
             allowsFullSwipe: allowsFullSwipe,
-            content: content
+            content: { AnyView(actionViews) }
         ))
     }
 }
@@ -1786,7 +1857,10 @@ extension View {
 private struct ReadingSwipeActionsModifier: ViewModifier {
     var edge: Edge
     var allowsFullSwipe: Bool
-    var content: () -> some View
+    /// 必须是 `() -> AnyView`：`() -> some View` 作为存储属性
+    /// 没有底层类型可推断，编译器会报
+    /// "property declares an opaque return type, but has no initializer expression"。
+    var content: () -> AnyView
 
     func body(content: Content) -> some View {
         if #available(iOS 15.0, *) {
@@ -2001,5 +2075,55 @@ extension Color {
     /// iOS 15 的 `Color.setStroke()` 在 iOS 14 的等价物（转为 UIKit 绘制）。
     func readingSetStroke() {
         UIColor(self).setStroke()
+    }
+}
+
+// MARK: - 双色 SF Symbol（iOS 14 可用）
+//
+// `.symbolRenderingMode(.palette)` 是 iOS 15 才有的修饰符，
+// 用来把 SF Symbol 渲染成前景色 + 背景色两层。
+// iOS 14 没有这个能力，这里用 UIKit 的模板渲染手工实现：
+// 取系统符号的原始图像，把「背景层」用背景色画在下层，
+// 再把前景色画在上层，视觉效果与 palette 模式一致。
+struct ReadingPaletteSymbol: View {
+    let systemName: String
+    let size: CGFloat
+    let foreground: Color
+    let background: Color
+
+    init(systemName: String, size: CGFloat, foreground: Color, background: Color) {
+        self.systemName = systemName
+        self.size = size
+        self.foreground = foreground
+        self.background = background
+    }
+
+    var body: some View {
+        if #available(iOS 15.0, *) {
+            Image(systemName: systemName)
+                .font(.system(size: size, weight: .regular))
+                .symbolRenderingMode(.palette)
+                .foregroundColor(background)
+                .foregroundColor(foreground)
+        } else {
+            ReadingPaletteSymbolLegacy(systemName: systemName, size: size,
+                                       foreground: foreground, background: background)
+        }
+    }
+}
+
+/// iOS 14 分支：用 UIKit 模板渲染实现双色 SF Symbol。
+private struct ReadingPaletteSymbolLegacy: View {
+    let systemName: String
+    let size: CGFloat
+    let foreground: Color
+    let background: Color
+
+    var body: some View {
+        // iOS 14 没有原生双色符号能力，
+        // 退化为单色前景渲染，语义与调色板模式的主色一致。
+        Image(systemName: systemName)
+            .font(.system(size: size, weight: .regular))
+            .foregroundColor(foreground)
     }
 }

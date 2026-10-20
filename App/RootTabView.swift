@@ -1521,15 +1521,15 @@ private struct ProfileSettingIcon: View {
                 }
                 .frame(width: 22, height: 22)
             } else {
-                Image(systemName: systemName)
-                    .font(.system(size: 20, weight: .regular))
-                    .symbolRenderingMode(.palette)
-                    // 原实现是 iOS 15 的 .foregroundStyle(ink, detail)，
-                    // 用于 palette 模式下的前景/背景分层。
-                    // iOS 14 没有双参数重载，改为叠加两次 foregroundColor：
-                    // 先铺背景层 detail，再以 ink 覆盖前景层。
-                    .foregroundColor(ProfileTheme.detail)
-                    .foregroundColor(ProfileTheme.ink)
+                // 原实现是 iOS 15 的 .symbolRenderingMode(.palette)
+                // 配合 .foregroundStyle(ink, detail) 做前景/背景分层。
+                // iOS 14 没有 palette 能力，改用兼容组件。
+                ReadingPaletteSymbol(
+                    systemName: systemName,
+                    size: 20,
+                    foreground: ProfileTheme.ink,
+                    background: ProfileTheme.detail
+                )
             }
         }
     }

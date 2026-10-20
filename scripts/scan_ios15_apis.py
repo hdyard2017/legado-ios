@@ -83,6 +83,7 @@ FAMILIES: list[tuple[str, str, str, str]] = [
     ("Color.setFill", r"\.setFill\s*\(\s*\)", "15.0", "Color.readingSetFill()"),
     ("Color.setStroke", r"\.setStroke\s*\(\s*\)", "15.0", "Color.readingSetStroke()"),
     ("foregroundColor2", r"\.foregroundColor\s*\([^()]*?,[^()]*?\)", "15.0", "单色 + symbolRenderingMode"),
+    ("symbolRenderingMode", r"\.symbolRenderingMode\s*\(", "15.0", "ReadingPaletteSymbol"),
     # --- iOS 17 ---
     ("scrollTargetBehavior", r"\.scrollTargetBehavior\s*\(", "17.0", "自建"),
     ("scrollPosition", r"\.scrollPosition\s*\(", "17.0", "自建"),
