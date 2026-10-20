@@ -1084,7 +1084,7 @@ extension View {
         _ title: T,
         isPresented: Binding<Bool>,
         @ViewBuilder actions: () -> some View,
-        message: (@escaping () -> Text)? = nil,
+        message: (() -> Text)? = nil,
         buttons: [ReadingAlertButton] = [],
         style: ReadingAlertStyle = .alert
     ) -> some View {
@@ -1107,7 +1107,7 @@ extension View {
         isPresented: Binding<Bool>,
         titleVisibility: ReadingTitleVisibility = .automatic,
         @ViewBuilder actions: () -> some View,
-        message: (@escaping () -> Text)? = nil,
+        message: (() -> Text)? = nil,
         buttons: [ReadingAlertButton] = []
     ) -> some View {
         readingAlert(
