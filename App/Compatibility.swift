@@ -1919,3 +1919,61 @@ private struct ReadingConfirmationAlertModifier<Item: Identifiable>: ViewModifie
         )
     }
 }
+
+extension View {
+    /// 跨版本的「单按钮提示弹窗」，由可选数据触发。
+    ///
+    /// iOS 15+ 走 `alert(item:)`；iOS 14 走 UIKit `UIAlertController`，
+    /// 因此可以避开已废弃、且不再遵循 `View` 的 `Alert` 类型。
+    ///
+    /// - Parameters:
+    ///   - item: 触发显示的数据，为 nil 时不显示。
+    ///   - title: 标题文本。
+    ///   - message: 正文文本。
+    ///   - confirmTitle: 确认按钮文案。
+    ///   - onConfirm: 点击确认时执行，通常用于清理触发源。
+    func readingAlert<Item: Identifiable>(
+        item: Binding<Item?>,
+        title: (Item) -> String,
+        message: (Item) -> String,
+        confirmTitle: String = "好",
+        onConfirm: @escaping (Item) -> Void = { _ in }
+    ) -> some View {
+        modifier(ReadingItemAlertModifier(
+            item: item,
+            title: title,
+            message: message,
+            confirmTitle: confirmTitle,
+            onConfirm: onConfirm
+        ))
+    }
+}
+
+private struct ReadingItemAlertModifier<Item: Identifiable>: ViewModifier {
+    let item: Binding<Item?>
+    let title: (Item) -> String
+    let message: (Item) -> String
+    var confirmTitle: String
+    var onConfirm: (Item) -> Void
+
+    func body(content: Content) -> some View {
+        content.readingAlert(
+            item.wrappedValue.map(title) ?? "",
+            isPresented: Binding(
+                get: { item.wrappedValue != nil },
+                set: { if !$0 { item.wrappedValue = nil } }
+            ),
+            actions: {
+                Button(confirmTitle) {
+                    if let value = item.wrappedValue { onConfirm(value) }
+                }
+            },
+            message: { Text(item.wrappedValue.map(message) ?? "") },
+            buttons: [
+                ReadingAlertButton(confirmTitle) { [item] in
+                    if let value = item.wrappedValue { onConfirm(value) }
+                }
+            ]
+        )
+    }
+}
