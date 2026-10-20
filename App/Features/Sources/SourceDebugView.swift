@@ -82,7 +82,7 @@ struct SourceDebugView: View {
                         .font(.headline).frame(maxWidth: .infinity)
                 }
                 .readingButtonStyle(.borderedProminent)
-                .tint(ReadingTheme.accent)
+                .readingTint(ReadingTheme.accent)
                 .disabled(model.isRunning || model.keyword.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
         }

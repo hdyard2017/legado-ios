@@ -935,7 +935,7 @@ struct ReaderView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
                 ProgressView(value: chapterProgress)
-                    .tint(readerChromeTint)
+                    .readingTint(readerChromeTint)
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("阅读进度")
@@ -1709,7 +1709,7 @@ struct ReaderView: View {
                                             HStack(spacing: 6) {
                                                 Text("正在阅读")
                                                 ProgressView(value: chapterProgress)
-                                                    .tint(ReadingTheme.accent)
+                                                    .readingTint(ReadingTheme.accent)
                                             }
                                             .font(.caption2)
                                             .foregroundColor(ReadingTheme.accent)
@@ -1737,7 +1737,7 @@ struct ReaderView: View {
                                 .foregroundColor(.secondary)
                         }
                         ProgressView(value: chapterProgress)
-                            .tint(ReadingTheme.accent)
+                            .readingTint(ReadingTheme.accent)
                         Text("第 \(max(model.currentIndex + 1, 1)) 章 · \(Int(chapterProgress * 100))%")
                             .font(.caption)
                             .foregroundColor(.secondary)

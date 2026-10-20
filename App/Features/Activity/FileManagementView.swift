@@ -266,7 +266,7 @@ struct FileManagementView: View {
                 .swipeActions {
                     Button("删除") { pendingDeletion = [file.url] }
                     .readingRole(.destructive)
-                    Button("导出", systemImage: "square.and.arrow.up") { export(file) }.tint(.blue)
+                    Button("导出", systemImage: "square.and.arrow.up") { export(file) }.readingTint(.blue)
                 }
             }
         }

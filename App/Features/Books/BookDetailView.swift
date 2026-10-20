@@ -141,7 +141,7 @@ struct BookDetailView: View {
                         .font(.caption.monospacedDigit()).foregroundColor(.secondary)
                 }
                 ProgressView(value: Double(model.cacheCompleted), total: Double(max(model.cacheTotal, 1)))
-                    .tint(ReadingTheme.accent)
+                    .readingTint(ReadingTheme.accent)
                 if model.isCaching {
                     Button("停止缓存") { model.cancelCaching() }
                     .readingRole(.destructive)

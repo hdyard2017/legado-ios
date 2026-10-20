@@ -1298,7 +1298,7 @@ private struct ReadingButtonRoleModifier: ViewModifier {
         } else {
             switch role {
             case .destructive:
-                content.readingButtonStyle(.bordered).tint(.red)
+                content.readingButtonStyle(.bordered).readingTint(.red)
             case .cancel:
                 content.readingButtonStyle(.bordered)
             }
@@ -1363,5 +1363,33 @@ private struct BorderedButtonStyle: ButtonStyle {
             )
             .contentShape(Rectangle())
             .opacity(configuration.isPressed ? 0.65 : 1)
+    }
+}
+
+// MARK: - View.tint（SwiftUI iOS 16+）
+
+extension View {
+    /// `View.tint(_:)` 的 iOS 14 等价实现。
+    ///
+    /// `tint(_:)` 这个 `View` 扩展是 iOS 16 才有的；
+    /// iOS 14/15 上只能用 `.accentColor` 近似。
+    /// - iOS 16+：原样转发。
+    /// - iOS 14/15：退化为 `.accentColor`，视觉基本一致。
+    func readingTint(_ color: Color?) -> some View {
+        modifier(ReadingTintModifier(color: color))
+    }
+}
+
+private struct ReadingTintModifier: ViewModifier {
+    var color: Color?
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if #available(iOS 16.0, *) {
+            content.tint(color)
+        } else if let color {
+            content.accentColor(color)
+        } else {
+            content
+        }
     }
 }

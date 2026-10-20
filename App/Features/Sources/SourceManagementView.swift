@@ -307,7 +307,7 @@ private struct SourceRow: View {
                     }
                 ))
                 .labelsHidden()
-                .tint(.green)
+                .readingTint(.green)
                 .accessibilityLabel("启用\(source.bookSourceName)")
             }
         }

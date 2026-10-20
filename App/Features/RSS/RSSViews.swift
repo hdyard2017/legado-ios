@@ -96,7 +96,7 @@ struct RSSHomeView: View {
                     }.padding(.vertical, 3)
                 }
                 .swipeActions(edge: .leading) {
-                    Button(source.enabled ? "停用" : "启用") { Task { await library.setEnabled(!source.enabled, source: source) } }.tint(.orange)
+                    Button(source.enabled ? "停用" : "启用") { Task { await library.setEnabled(!source.enabled, source: source) } }.readingTint(.orange)
                 }
                 .swipeActions {
                     Button("删除") { Task { await library.remove(source) } }
@@ -118,7 +118,7 @@ struct RSSHomeView: View {
                     if let source = library.sources.first(where: { $0.sourceUrl == star.origin }) {
                         NavigationLink { RSSArticleDetailView(article: star.article, source: source) } label: { RSSArticleRow(article: star.article) }
                     } else { RSSArticleRow(article: star.article) }
-                }.swipeActions(edge: .leading) { Button("编辑", systemImage: "pencil") { editingStar = star }.tint(.blue) }
+                }.swipeActions(edge: .leading) { Button("编辑", systemImage: "pencil") { editingStar = star }.readingTint(.blue) }
             }.onDelete { offsets in
                 let values = offsets.map { filteredStars[$0] }
                 Task { for value in values { await library.removeStar(value) } }
@@ -152,7 +152,7 @@ private struct RSSArticleListView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack { ForEach(Array(sorts.enumerated()), id: \.element.id) { index, sort in
                         Button(sort.name.isEmpty ? "默认" : sort.name) { selectedSort = index; Task { await refresh() } }
-                            .readingButtonStyle(.bordered).tint(selectedSort == index ? ReadingTheme.accent : .secondary)
+                            .readingButtonStyle(.bordered).readingTint(selectedSort == index ? ReadingTheme.accent : .secondary)
                     }}.padding(.horizontal)
                 }.padding(.vertical, 6)
             }

@@ -110,7 +110,7 @@ struct TxtTocRuleManagementView: View {
                 }
                 .swipeActions(edge: .leading) {
                     Button(rule.enable ? "停用" : "启用") { Task { await model.toggle(rule) } }
-                        .tint(rule.enable ? .orange : .green)
+                        .readingTint(rule.enable ? .orange : .green)
                 }
             }
             .onDelete { offsets in Task { await model.remove(at: offsets) } }

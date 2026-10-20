@@ -99,7 +99,7 @@ struct RootTabView: View {
                 .tabItem { Label("我的", systemImage: "person.crop.circle") }
                 .tag(Tab.my)
         }
-        .tint(ReadingTheme.accent)
+        .readingTint(ReadingTheme.accent)
         .readingTabBarBackground()
         .preferredColorScheme(themeMode == "2" ? .dark : (themeMode == "1" || themeMode == "3" ? .light : nil))
         .transaction { transaction in
@@ -968,7 +968,7 @@ struct SearchView: View {
                             .font(.subheadline.weight(.medium))
                     }
                     ProgressView(value: searchProgress)
-                        .tint(ReadingTheme.accent)
+                        .readingTint(ReadingTheme.accent)
                     Text("结果会在书源返回后立即显示，无需等待全部完成。")
                         .font(.caption).foregroundColor(.secondary)
                 }
@@ -1000,7 +1000,7 @@ struct SearchView: View {
                     }
                 }
                 if model.state == .searching {
-                    ProgressView(value: searchProgress).tint(ReadingTheme.accent)
+                    ProgressView(value: searchProgress).readingTint(ReadingTheme.accent)
                 }
             }
             .padding(.vertical, 4)
@@ -1042,7 +1042,7 @@ struct SearchView: View {
         ) {
             if model.isPaused {
                 Button("继续搜索", systemImage: "play.fill") { model.resume() }
-                    .readingButtonStyle(.borderedProminent).tint(ReadingTheme.accent)
+                    .readingButtonStyle(.borderedProminent).readingTint(ReadingTheme.accent)
             }
             Button("修改关键词", systemImage: "text.cursor") { searchIsPresented = true }
                 .readingButtonStyle(.bordered)
@@ -1056,7 +1056,7 @@ struct SearchView: View {
             systemImage: "network.slash"
         ) {
             Button("调整范围", systemImage: "scope") { showsScope = true }
-                .readingButtonStyle(.borderedProminent).tint(ReadingTheme.accent)
+                .readingButtonStyle(.borderedProminent).readingTint(ReadingTheme.accent)
             NavigationLink {
                 SourceManagementView()
             } label: {
