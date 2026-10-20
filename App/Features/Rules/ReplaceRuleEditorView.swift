@@ -124,7 +124,7 @@ struct ReplaceRuleEditorView: View {
         Group {
             Section("测试上下文") {
                 TextField("书名（用于作用范围判断）", text: $testBook)
-                TextField("书源地址（用于作用范围判断）", text: $testSource).textInputAutocapitalization(.never)
+                TextField("书源地址（用于作用范围判断）", text: $testSource).readingInputConfiguration(autocapitalization: .never)
                 TextField("章节标题", text: $testTitle)
                 NavigationLink {
                     RuleCodeFieldView(title: "测试正文", path: "测试输入", text: $testContent)
@@ -137,7 +137,7 @@ struct ReplaceRuleEditorView: View {
                 if !rule.isEnabled { Text("规则处于停用状态，结果将保持原文。可在编辑页启用后测试。").font(.footnote).foregroundStyle(.secondary) }
             }
             if let result = testResult {
-                Section("测试结果 · \(result.elapsedMilliseconds.formatted(.number.precision(.fractionLength(1)))) ms") {
+                Section("测试结果 · \(result.elapsedMilliseconds.readingFormattedFraction(fractionDigits: 1)) ms") {
                     Label(result.report.effectiveRuleIDs.isEmpty ? "未改变文本（请检查匹配、启用状态及作用范围）" : "规则已生效",
                           systemImage: result.report.effectiveRuleIDs.isEmpty ? "info.circle" : "checkmark.circle")
                     ReadingLabeledContent("标题", value: result.report.title)

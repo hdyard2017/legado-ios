@@ -147,7 +147,7 @@ private struct RuleSubscriptionEditView: View {
             Form {
                 Picker("类型", selection: $value.type) { Text("书源").tag(0); Text("净化规则").tag(2) }
                 TextField("名称", text: $value.name)
-                ReadingTextField("订阅URL", text: $value.url, axis: .vertical).textInputAutocapitalization(.never).disableAutocorrection(true)
+                ReadingTextField("订阅URL", text: $value.url, axis: .vertical).readingInputConfiguration(autocapitalization: .never, disableAutocorrection: true)
                 Toggle("自动更新", isOn: $value.autoUpdate)
                 if value.autoUpdate {
                     Stepper("更新间隔：\(value.updateInterval) 小时", value: $value.updateInterval, in: 1...720)

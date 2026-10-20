@@ -3,7 +3,7 @@
 ## 环境
 
 - macOS；支持 Swift 6 的 Xcode，当前开发环境为 Xcode 26.1。
-- App 最低 iOS 15.0；核心包也可在 macOS 14+ 测试。
+- App 最低 iOS 14.0；核心包也可在 macOS 14+ 测试。
 - Swift Package Manager 依赖由 `Package.resolved` 锁定，初次解析需要网络。
 - 运行脚本需 Python 3 和 `rg`（ripgrep）。
 
@@ -43,7 +43,8 @@ sh scripts/self-check.sh
 
 ## 兼容性验证
 
-最低部署版本为 iOS 15.0。`App/Compatibility.swift` 为导航、分享、照片选择和弹窗提供兼容实现；新增系统 API 时需保留最低版本路径。调试构建可用 `-uiLegacyCompatibility` 启动参数在新系统上执行旧版界面分支，对应回归位于 `Tests/LegadoReaderUITests/`。这些测试不能替代 iOS 15 真机或模拟器实测。
+最低部署版本为 iOS 14.0。`App/Compatibility.swift` 为导航、分享、照片选择、弹窗、异步图片、周期刷新、日期格式化、
+文本输入与控件尺寸提供兼容实现；新增系统 API 时需保留最低版本路径。调试构建可用 `-uiLegacyCompatibility` 启动参数在新系统上执行旧版界面分支，对应回归位于 `Tests/LegadoReaderUITests/`。这些测试不能替代 iOS 14 真机或模拟器实测。
 
 搜索调度与缓存回归见 `Tests/LegadoCoreTests/SearchPerformanceTests.swift`，包括复杂书源限流和普通书源的及时执行；这些测试验证行为，不提供真实网络速度排名。
 

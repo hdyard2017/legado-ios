@@ -16,7 +16,7 @@ struct RSSSourceEditorView: View {
         Form {
             Section("基本") {
                 TextField("名称", text: $source.sourceName)
-                TextField("URL", text: $source.sourceUrl).textInputAutocapitalization(.never).keyboardType(.URL)
+                TextField("URL", text: $source.sourceUrl).readingInputConfiguration(autocapitalization: .never).keyboardType(.URL)
                 requiredField("图标", \.sourceIcon)
                 optionalField("分组", \.sourceGroup)
                 optionalField("注释", \.sourceComment, axis: .vertical)
@@ -78,10 +78,10 @@ struct RSSSourceEditorView: View {
     }
 
     @ViewBuilder private func optionalField(_ title: String, _ keyPath: WritableKeyPath<RssSource, String?>, axis: Axis = .horizontal) -> some View {
-        ReadingTextField(title, text: optionalText(keyPath), axis: axis).textInputAutocapitalization(.never)
+        ReadingTextField(title, text: optionalText(keyPath), axis: axis).readingInputConfiguration(autocapitalization: .never)
     }
     @ViewBuilder private func requiredField(_ title: String, _ keyPath: WritableKeyPath<RssSource, String>, axis: Axis = .horizontal) -> some View {
-        ReadingTextField(title, text: Binding(get: { source[keyPath: keyPath] }, set: { source[keyPath: keyPath] = $0 }), axis: axis).textInputAutocapitalization(.never)
+        ReadingTextField(title, text: Binding(get: { source[keyPath: keyPath] }, set: { source[keyPath: keyPath] = $0 }), axis: axis).readingInputConfiguration(autocapitalization: .never)
     }
     private func optionalText(_ keyPath: WritableKeyPath<RssSource, String?>) -> Binding<String> {
         Binding(get: { source[keyPath: keyPath] ?? "" }, set: { source[keyPath: keyPath] = $0.isEmpty ? nil : $0 })

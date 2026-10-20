@@ -180,7 +180,7 @@ struct BookDetailView: View {
                     HStack(spacing: 12) { readingActions }
                 }
             }
-            .controlSize(.large)
+            .readingControlSize(.large)
         }
         .padding(.top, 16)
     }

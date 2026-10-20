@@ -244,7 +244,7 @@ private struct SourceTextImportView: View {
                 Section(mode == 0 ? "书源 URL" : "书源 JSON") {
                     if mode == 0 {
                         TextField("https://example.com/sources.json", text: $value)
-                            .textInputAutocapitalization(.never)
+                            .readingInputConfiguration(autocapitalization: .never)
                             .keyboardType(.URL)
                     } else {
                         SyntaxCodeEditor(text: $value, language: .json)

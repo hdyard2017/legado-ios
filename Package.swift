@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "LegadoIOS",
     platforms: [
-        .iOS(.v15),
+        .iOS(.v14),
         .macOS(.v14)
     ],
     products: [

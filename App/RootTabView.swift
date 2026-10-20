@@ -302,7 +302,7 @@ private struct BookshelfView: View {
     @ViewBuilder
     private var bookshelfMenu: some View {
         if library.isCheckingUpdates {
-            ProgressView().controlSize(.small).frame(width: 44, height: 44)
+            ProgressView().readingControlSize(.small).frame(width: 44, height: 44)
         } else {
             Menu {
                 Button("更新目录", systemImage: "arrow.clockwise") {
@@ -727,7 +727,7 @@ private struct EmptyBookshelfHero: View {
             VStack(spacing: 12) {
                 Button("导入本地书", action: onImport)
                     .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
+                    .readingControlSize(.large)
                 NavigationLink("添加书源") { SourceManagementView() }
                     .font(.subheadline)
                     .frame(minHeight: 44)
@@ -960,7 +960,7 @@ struct SearchView: View {
             ReadingCard {
                 VStack(alignment: .leading, spacing: 14) {
                     HStack(spacing: 12) {
-                        ProgressView().controlSize(.regular)
+                        ProgressView().readingControlSize(.regular)
                         VStack(alignment: .leading, spacing: 3) {
                             Text("正在搜索“\(model.submittedKeyword)”").font(.headline)
                             Text(searchProgressText).font(.caption).foregroundStyle(.secondary)
@@ -994,7 +994,7 @@ struct SearchView: View {
                     if model.isPaused {
                         Button("继续", systemImage: "play.fill") { model.resume() }
                             .buttonStyle(.bordered)
-                            .controlSize(.small)
+                            .readingControlSize(.small)
                     } else if model.state == .searching {
                         StatusPill(text: "\(model.completedSourceCount)/\(model.totalSourceCount)", systemImage: "magnifyingglass")
                     } else {
@@ -1023,7 +1023,7 @@ struct SearchView: View {
             }
             if model.isLoadingMore {
                 HStack(spacing: 10) {
-                    ProgressView().controlSize(.small)
+                    ProgressView().readingControlSize(.small)
                     Text("正在查找更多结果…").font(.subheadline).foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity)
@@ -1356,13 +1356,13 @@ private struct SettingsView: View {
             }
             .padding(14)
             .frame(maxWidth: .infinity, minHeight: 86, alignment: .leading)
-            .background {
+            .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(LinearGradient(
                         colors: [ProfileTheme.surface, ProfileTheme.appCardTint],
                         startPoint: .topLeading, endPoint: .bottomTrailing
                     ))
-            }
+            )
             .overlay {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .strokeBorder(ProfileTheme.surface.opacity(0.9), lineWidth: 0.75)

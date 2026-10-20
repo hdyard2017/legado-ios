@@ -186,7 +186,7 @@ private struct TxtTocRuleEditView: View {
             Form {
                 TextField("名称", text: $value.name)
                 ReadingTextField("目录正则", text: $value.rule, axis: .vertical)
-                    .font(.body.monospaced()).textInputAutocapitalization(.never).disableAutocorrection(true)
+                    .font(.body.monospaced()).readingInputConfiguration(autocapitalization: .never, disableAutocorrection: true)
                 ReadingTextField("标题处理JavaScript（可选）", text: Binding(
                     get: { value.replacement }, set: { value.replacement = $0 }
                 ), axis: .vertical).font(.body.monospaced())

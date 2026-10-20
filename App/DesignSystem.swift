@@ -110,8 +110,8 @@ private struct ReadingSearchModifier: ViewModifier {
                                 .accessibilityHidden(true)
                             TextField(prompt, text: $text)
                                 .focused($isFocused)
-                                .textInputAutocapitalization(.never)
-                                .disableAutocorrection(true)
+                                .readingInputConfiguration(autocapitalization: .never)
+                                .readingInputConfiguration(disableAutocorrection: true)
                                 .submitLabel(.search)
                             if !text.isEmpty {
                                 Button {
@@ -273,12 +273,14 @@ struct BookCoverArtwork: View {
     }
 
     var body: some View {
-        AsyncImage(url: remoteURL.flatMap(URL.init(string:))) { phase in
+        ReadingRemoteImage(url: remoteURL.flatMap(URL.init(string:))) { phase in
             if case .success(let image) = phase {
                 image.resizable().scaledToFill()
             } else {
                 placeholder
             }
+        } placeholder: {
+            placeholder
         }
         .frame(width: width, height: height)
         .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))

@@ -8,7 +8,7 @@
 
 一款优先兼容阅读书源的 iOS 阅读器
 
-![iOS 15+](https://img.shields.io/badge/iOS-15%2B-315C50)
+![iOS 14+](https://img.shields.io/badge/iOS-14%2B-315C50)
 ![Swift](https://img.shields.io/badge/Swift-F05138?logo=swift&logoColor=white)
 [![GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue)](LICENSE)
 
@@ -24,7 +24,7 @@
 
 ## 下载安装
 
-支持 **iOS / iPadOS 15.0 及以上**。
+支持 **iOS / iPadOS 14.0 及以上**。
 
 **IPA 下载见 [GitHub Releases](https://github.com/Aminark/legado-ios/releases)，需要自行签名安装。** 请下载附件中的 `.ipa` 文件；`Source code` 是源码压缩包。
 

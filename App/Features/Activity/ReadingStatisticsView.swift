@@ -31,7 +31,7 @@ struct ReadingStatisticsView: View {
                 Text("今日阅读")
                     .font(.subheadline)
                 Spacer()
-                Text(Date.now.formatted(.dateTime.locale(Locale(identifier: "zh_CN")).month().day()))
+                Text(Date.now.readingFormattedMonthDay())
                     .font(.caption)
             }
             .foregroundStyle(ReadingTheme.onAccent.opacity(0.7))

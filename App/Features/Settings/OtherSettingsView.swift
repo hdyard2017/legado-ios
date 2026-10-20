@@ -104,14 +104,14 @@ struct NetworkSettingsView: View {
         Form {
             Section {
                 ReadingTextField("留空使用默认浏览器 UA", text: $settings.userAgent, axis: .vertical)
-                    .textInputAutocapitalization(.never).disableAutocorrection(true)
+                    .readingInputConfiguration(autocapitalization: .never, disableAutocorrection: true)
                     .accessibilityLabel("User-Agent")
             } header: { Text("默认 User-Agent") } footer: {
                 Text("书源或 RSS 单独设置的 UA 优先于此项。")
             }
             Section {
                 TextField("例如 http://127.0.0.1:7890", text: $settings.proxy)
-                    .keyboardType(.URL).textInputAutocapitalization(.never).disableAutocorrection(true)
+                    .keyboardType(.URL).readingInputConfiguration(autocapitalization: .never, disableAutocorrection: true)
                     .accessibilityLabel("全局代理")
             } header: { Text("全局代理") } footer: {
                 Text("支持 HTTP、HTTPS 和 SOCKS5 地址，不含账号密码。书源代理优先于全局代理；使用代理时由代理解析域名。")
@@ -119,7 +119,7 @@ struct NetworkSettingsView: View {
             Section {
                 TextEditor(text: $settings.hosts)
                     .font(.system(.footnote, design: .monospaced)).frame(minHeight: 130)
-                    .textInputAutocapitalization(.never).disableAutocorrection(true)
+                    .readingInputConfiguration(autocapitalization: .never, disableAutocorrection: true)
                     .accessibilityLabel("Hosts")
             } header: { Text("自定义 Hosts") } footer: {
                 Text("每行填写 IP地址 域名，例如 192.168.1.2 books.example.com。支持 IPv4、IPv6 和 # 注释。适用于应用内 HTTP/HTTPS 请求；系统网页、登录网页和系统媒体播放器使用系统网络设置。")

@@ -340,3 +340,394 @@ private struct ReadingHiddenTabBar: UIViewControllerRepresentable {
         }
     }
 }
+
+// MARK: - iOS 14 兼容层
+//
+// 以下实现为 iOS 14 缺失的 SwiftUI API 提供等价替代，保证在 iOS 14.0+ 上
+// 与iOS 15+ 走同一套代码路径，无需在业务侧散落版本分支。
+
+// MARK: AsyncImage（SwiftUI iOS 15+）
+
+/// 远程图片加载结果的轻量模型，对应 `AsyncImagePhase` 中本项目实际用到的部分。
+enum ReadingRemoteImagePhase {
+    case empty
+    case success(Image)
+    case failure
+}
+
+/// `AsyncImage` 的 iOS 14 等价实现，基于 `URLSession` 共享会话与 `NSCache` 缓存。
+struct ReadingRemoteImage<Content: View, Placeholder: View>: View {
+    let url: URL?
+    @ViewBuilder var content: (ReadingRemoteImagePhase) -> Content
+    @ViewBuilder var placeholder: () -> Placeholder
+
+    @StateObject private var loader = ReadingRemoteImageLoader()
+
+    var body: some View {
+        content(loader.phase)
+            .onAppear { loader.load(url) }
+            .onChange(of: url) { loader.load($0) }
+    }
+}
+
+extension ReadingRemoteImage where Content == AnyView {
+    /// `AsyncImage` 的等价签名：`content` 收到phase，`placeholder` 为加载中/失败时的占位视图。
+    init(
+        url: URL?,
+        @ViewBuilder content: @escaping (ReadingRemoteImagePhase) -> some View,
+        @ViewBuilder placeholder: @escaping () -> some View
+    ) {
+        self.init(
+            url: url,
+            content: { phase in
+                AnyView(content(phase))
+            },
+            placeholder: placeholder
+        )
+    }
+}
+
+@MainActor
+final class ReadingRemoteImageLoader: ObservableObject {
+    @Published private(set) var phase: ReadingRemoteImagePhase = .empty
+
+    private static let cache = NSCache<NSURL, UIImage>()
+    private var task: URLSessionDataTask?
+
+    func load(_ url: URL?) {
+        task?.cancel()
+        task = nil
+        guard let url else { phase = .empty; return }
+
+        if let cached = Self.cache.object(forKey: url as NSURL) {
+            phase = .success(cached)
+            return
+        }
+
+        phase = .empty
+        // 配置缓存策略：图片体积小、复用率高，交给 URLCache 处理。
+        let configuration = URLSessionConfiguration.default
+        configuration.requestCachePolicy = .returnCacheDataElseLoad
+        configuration.urlCache = URLCache(
+            memoryCapacity: 32 * 1024 * 1024,
+            diskCapacity: 128 * 1024 * 1024
+        )
+        configuration.timeoutIntervalForRequest = 20
+        let session = URLSession(configuration: configuration)
+
+        task = session.dataTask(with: url) { [weak self] data, _, _ in
+            guard let data, let image = UIImage(data: data) else {
+                Task { @MainActor in
+                    guard let self, self.task?.state != .canceling else { return }
+                    self.phase = .failure
+                }
+                return
+            }
+            Self.cache.setObject(image, forKey: url as NSURL)
+            Task { @MainActor in
+                guard let self, self.task?.state != .canceling else { return }
+                self.phase = .success(image)
+            }
+        }
+        task?.resume()
+    }
+
+    deinit { task?.cancel() }
+}
+
+// MARK: TimelineView（SwiftUI iOS 15+）
+
+/// `TimelineView` 的 iOS 14 等价实现，用 `Timer` 周期驱动日期刷新。
+/// 仅用于刷新时钟类展示，不参与高频动画。
+struct ReadingPeriodicTimeline<Content: View>: View {
+    let interval: TimeInterval
+    @ViewBuilder var content: (Date) -> Content
+
+    @StateObject private var ticker = ReadingTimelineTicker()
+
+    var body: some View {
+        content(ticker.date)
+            .onAppear { ticker.start(interval: interval) }
+            .onDisappear { ticker.stop() }
+    }
+}
+
+@MainActor
+final class ReadingTimelineTicker: ObservableObject {
+    @Published private(set) var date = Date()
+
+    private var timer: Timer?
+
+    func start(interval: TimeInterval) {
+        stop()
+        date = Date()
+        let timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.date = Date() }
+        }
+        // 注册到 .common 模式，避免滚动阅读时计时器被暂停。
+        RunLoop.main.add(timer, forMode: .common)
+        self.timer = timer
+    }
+
+    func stop() {
+        timer?.invalidate()
+        timer = nil
+    }
+
+    deinit { timer?.invalidate() }
+}
+
+extension ReadingPeriodicTimeline where Content == AnyView {
+    init(_ schedule: ReadingTimelineSchedule, @ViewBuilder content: @escaping (Date) -> some View) {
+        self.init(interval: schedule.interval) { date in
+            AnyView(content(date))
+        }
+    }
+}
+
+/// 对应 `TimelineSchedule.periodic(from:by:)`，`.now` 为起始时刻故简化为仅保留间隔。
+enum ReadingTimelineSchedule {
+    case periodic(TimeInterval)
+
+    var interval: TimeInterval {
+        switch self {
+        case .periodic(let interval): return interval
+        }
+    }
+}
+
+// MARK: Date.formatted / Double.formatted（Foundation iOS 15+）
+
+extension Date {
+    /// `date.formatted(.dateTime.hour().minute())` 的 iOS 14 等价实现。
+    func readingFormattedTime() -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "zh_CN")
+        formatter.dateFormat = "HH:mm"
+        return formatter.string(from: self)
+    }
+
+    /// `date.formatted(.dateTime.locale(_:).month().day())` 的 iOS 14 等价实现。
+    func readingFormattedMonthDay(locale identifier: String = "zh_CN") -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: identifier)
+        formatter.setLocalizedDateFormatFromTemplate("Md")
+        return formatter.string(from: self)
+    }
+}
+
+extension BinaryFloatingPoint {
+    /// `value.formatted(.number.precision(.fractionLength(n)))` 的 iOS 14 等价实现。
+    func readingFormattedFraction(fractionDigits: Int) -> String {
+        String(format: "%.\(fractionDigits)f", Double(self))
+    }
+
+    /// `value.formatted(.percent.precision(.fractionLength(n)))` 的 iOS 14 等价实现。
+    func readingFormattedPercent(fractionDigits: Int) -> String {
+        String(format: "%.\(fractionDigits)f%%", Double(self) * 100)
+    }
+}
+
+// MARK: - 文本输入兼容（iOS 15+ 的 textInput* 修饰符）
+
+/// iOS 14 上承载文本输入行为的修饰符。
+///
+/// `.textInputAutocapitalization(_:)` 与 `.disableAutocorrection(_:)` 由 SwiftUI 在 iOS 15 才引入，
+/// 且未提供低版本重载，无法用同名方法绕过。这里的策略是：
+/// - iOS 15+：原样转发系统修饰符，行为与改造前完全一致。
+/// - iOS 14：`.disableAutocorrection` 落到 SwiftUI 早在 iOS 13 提供的
+///   `\.autocorrectionDisabled` 环境值；自动大写无等价修饰符，退化为 UIKit 层设置。
+struct ReadingInputConfiguration: ViewModifier {
+    var autocapitalization: ReadingTextAutocapitalization?
+    var disableAutocorrection: Bool?
+
+    func body(content: Content) -> some View {
+        if #available(iOS 15.0, *) {
+            content
+                .modifier(ReadingCapitalizationModifier(autocapitalization: autocapitalization))
+                .modifier(ReadingCorrectionModifier(disable: disableAutocorrection))
+        } else {
+            content
+                .modifier(ReadingLegacyCorrectionModifier(disable: disableAutocorrection))
+                .background(ReadingLegacyCapitalizationModifier(autocapitalization: autocapitalization))
+        }
+    }
+}
+
+@available(iOS 15.0, *)
+private struct ReadingCapitalizationModifier: ViewModifier {
+    var autocapitalization: ReadingTextAutocapitalization?
+
+    func body(content: Content) -> some View {
+        if let autocapitalization {
+            content.textInputAutocapitalization(autocapitalization.swiftUIValue)
+        } else {
+            content
+        }
+    }
+}
+
+@available(iOS 15.0, *)
+private struct ReadingCorrectionModifier: ViewModifier {
+    var disable: Bool?
+
+    func body(content: Content) -> some View {
+        if let disable {
+            content.disableAutocorrection(disable)
+        } else {
+            content
+        }
+    }
+}
+
+/// iOS 14 分支：用环境值关闭自动纠错（SwiftUI iOS 13+ 即可用）。
+private struct ReadingLegacyCorrectionModifier: ViewModifier {
+    var disable: Bool?
+
+    func body(content: Content) -> some View {
+        if disable == true {
+            content.environment(\.autocorrectionDisabled, true)
+        } else {
+            content
+        }
+    }
+}
+
+/// iOS 14 分支：自动大写通过表示层设置 `autocapitalizationType`。
+private struct ReadingLegacyCapitalizationModifier: UIViewRepresentable {
+    var autocapitalization: ReadingTextAutocapitalization?
+
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView(frame: .zero)
+        view.isUserInteractionEnabled = false
+        view.isHidden = true
+        return view
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {
+        guard let autocapitalization else { return }
+        // 等宿主视图完成布局后再下探，保证 TextField 已创建。
+        DispatchQueue.main.async {
+            guard let host = uiView.superview else { return }
+            for field in host.collectReadingTextFields() {
+                field.autocapitalizationType = autocapitalization.uiKitValue
+            }
+        }
+    }
+}
+
+extension UIView {
+    /// 收集视图树中的所有 `UITextField`，含 `UITextView` 内部承载输入的文本框。
+    fileprivate func collectReadingTextFields() -> [UITextField] {
+        var result: [UITextField] = []
+        func walk(_ node: UIView) {
+            if let field = node as? UITextField { result.append(field) }
+            if let textView = node as? UITextView {
+                for case let field as UITextField in textView.subviews { result.append(field) }
+            }
+            for subview in node.subviews { walk(subview) }
+        }
+        walk(self)
+        return result
+    }
+}
+
+extension View {
+    /// iOS 14+ 统一的文本输入配置入口，替代 iOS 15 才提供的
+    /// `.textInputAutocapitalization(_:)` 与 `.disableAutocorrection(_:)`。
+    func readingInputConfiguration(
+        autocapitalization: ReadingTextAutocapitalization? = nil,
+        disableAutocorrection: Bool? = nil
+    ) -> some View {
+        modifier(ReadingInputConfiguration(
+            autocapitalization: autocapitalization,
+            disableAutocorrection: disableAutocorrection
+        ))
+    }
+}
+
+/// 自动大写策略的跨版本表示。
+enum ReadingTextAutocapitalization {
+    case never
+    case words
+    case sentences
+    case characters
+
+    var uiKitValue: UITextAutocapitalizationType {
+        switch self {
+        case .never: return .none
+        case .words: return .words
+        case .sentences: return .sentences
+        case .characters: return .allCharacters
+        }
+    }
+}
+
+@available(iOS 15.0, *)
+private extension ReadingTextAutocapitalization {
+    var swiftUIValue: TextInputAutocapitalization {
+        switch self {
+        case .never: return .never
+        case .words: return .words
+        case .sentences: return .sentences
+        case .characters: return .characters
+        }
+    }
+}
+
+// MARK: ProgressView.controlSize（SwiftUI iOS 15+）
+
+/// `ControlSize` 的跨版本表示，避免直接引用 iOS 15 才有的类型。
+enum ReadingControlSize {
+    case small
+    case regular
+    case large
+
+    var uiKitValue: UIActivityIndicatorView.Style {
+        switch self {
+        case .small, .regular: return .medium
+        case .large: return .large
+        }
+    }
+
+    var scale: CGFloat {
+        switch self {
+        case .small: return 0.7
+        case .regular: return 1.0
+        case .large: return 1.4
+        }
+    }
+}
+
+extension View {
+    /// `ProgressView` 的 iOS 14 尺寸兼容入口。
+    ///
+    /// iOS 15 提供 `.controlSize(_:)` 直接控制 `ProgressView` 尺寸，
+    /// iOS 14 无对应 API，这里通过缩放与 UIKit 指示器样式近似还原。
+    func readingControlSize(_ size: ReadingControlSize) -> some View {
+        modifier(ReadingControlSizeModifier(size: size))
+    }
+}
+
+private struct ReadingControlSizeModifier: ViewModifier {
+    var size: ReadingControlSize
+
+    func body(content: Content) -> some View {
+        if #available(iOS 15.0, *) {
+            content.controlSize(size.swiftUIValue)
+        } else {
+            content.scaleEffect(size.scale)
+        }
+    }
+}
+
+@available(iOS 15.0, *)
+private extension ReadingControlSize {
+    var swiftUIValue: ControlSize {
+        switch self {
+        case .small: return .small
+        case .regular: return .regular
+        case .large: return .large
+        }
+    }
+}

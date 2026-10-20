@@ -13,7 +13,7 @@ struct SourceLoginView: View {
                 Image(systemName: "lock.shield.fill").foregroundStyle(ReadingTheme.accent)
                 Text(status).font(.caption).foregroundStyle(.secondary).lineLimit(2)
                 Spacer()
-                if isChecking { ProgressView().controlSize(.small) }
+                if isChecking { ProgressView().readingControlSize(.small) }
             }
             .padding(.horizontal, 14).padding(.vertical, 10)
             .background(Color(uiColor: .secondarySystemBackground))

@@ -25,18 +25,30 @@ struct SyntaxCodeEditor: UIViewRepresentable {
         if #available(iOS 16.0, *) { view.isFindInteractionEnabled = true }
         let bar = UIToolbar()
         bar.sizeToFit()
+        // iOS 14 兼容：不使用 iOS 16 才有的 UIBarButtonItem(_:primaryAction:)，
+        // 改用target-action，行为与新写法一致。
+        let coordinator = context.coordinator
+        coordinator.textView = view
+        let symbolItems = ["@", "$", "{}", "[]", "##", "\n", "\t"].map { symbol -> UIBarButtonItem in
+            let identifier = "symbol:\(symbol)"
+            Coordinator.registerSymbol(identifier, text: symbol)
+            let item = UIBarButtonItem(
+                title: symbol == "\n" ? "↵" : symbol == "\t" ? "⇥" : symbol,
+                style: .plain,
+                target: coordinator,
+                action: #selector(Coordinator.insertSymbol(_:))
+            )
+            item.accessibilityIdentifier = identifier
+            return item
+        }
         bar.items = [
-            UIBarButtonItem(image: UIImage(systemName: "magnifyingglass"), primaryAction: UIAction(title: "", subtitle: nil) { [weak view, coordinator = context.coordinator] _ in
-                guard let view else { return }
-                if #available(iOS 16.0, *) { view.findInteraction?.presentFindNavigator(showingReplace: true) }
-                else { coordinator.presentFindAndReplace(in: view) }
-            }),
-            UIBarButtonItem(image: UIImage(systemName: "arrow.uturn.backward"), primaryAction: UIAction(title: "", subtitle: nil) { [weak view] _ in view?.undoManager?.undo() }),
-            UIBarButtonItem(image: UIImage(systemName: "arrow.uturn.forward"), primaryAction: UIAction(title: "", subtitle: nil) { [weak view] _ in view?.undoManager?.redo() }),
-        ] + ["@", "$", "{}", "[]", "##", "\n", "\t"].map { symbol in
-            UIBarButtonItem(title: symbol == "\n" ? "↵" : symbol == "\t" ? "⇥" : symbol,
-                primaryAction: UIAction(title: "", subtitle: nil) { [weak view] _ in view?.insertText(symbol) })
-        } + [UIBarButtonItem(systemItem: .flexibleSpace), UIBarButtonItem(title: "完成", primaryAction: UIAction(title: "", subtitle: nil) { [weak view] _ in view?.resignFirstResponder() })]
+            coordinator.toolbarItem(systemName: "magnifyingglass", label: "查找替换", action: #selector(Coordinator.presentFindAndReplaceFromToolbar(_:))),
+            coordinator.toolbarItem(systemName: "arrow.uturn.backward", label: "撤销", action: #selector(Coordinator.undoFromToolbar(_:))),
+            coordinator.toolbarItem(systemName: "arrow.uturn.forward", label: "重做", action: #selector(Coordinator.redoFromToolbar(_:))),
+        ] + symbolItems + [
+            UIBarButtonItem(systemItem: .flexibleSpace),
+            coordinator.toolbarItem(systemName: "checkmark", label: "完成", action: #selector(Coordinator.dismissKeyboardFromToolbar(_:)))
+        ]
         view.inputAccessoryView = bar
         view.text = text
         context.coordinator.highlight(view)
@@ -68,6 +80,62 @@ struct SyntaxCodeEditor: UIViewRepresentable {
         private var highlightedLanguage: Language?
         var pendingLocalText: String?
         init(_ parent: SyntaxCodeEditor) { self.parent = parent }
+
+        // MARK: 工具栏 target-action（iOS 14 兼容层）
+
+        /// 记录每个符号按钮对应的插入文本，供 target-action 取用。
+        private static var symbolTexts: [String: String] = [:]
+        private static let symbolTextsLock = NSLock()
+
+        /// 由 makeUIView 挂载，供工具栏 action 定位当前编辑框。
+        weak var textView: UITextView?
+
+        func toolbarItem(systemName: String, label: String, action: Selector) -> UIBarButtonItem {
+            let item = UIBarButtonItem(
+                image: UIImage(systemName: systemName),
+                style: .plain,
+                target: self,
+                action: action
+            )
+            item.accessibilityLabel = label
+            return item
+        }
+
+        static func registerSymbol(_ identifier: String, text: String) {
+            symbolTextsLock.lock()
+            defer { symbolTextsLock.unlock() }
+            symbolTexts[identifier] = text
+        }
+
+        static func symbolText(for identifier: String) -> String? {
+            symbolTextsLock.lock()
+            defer { symbolTextsLock.unlock() }
+            return symbolTexts[identifier]
+        }
+
+        @objc func insertSymbol(_ sender: UIBarButtonItem) {
+            guard let identifier = sender.accessibilityIdentifier,
+                  let text = Self.symbolText(for: identifier) else { return }
+            textView?.insertText(text)
+        }
+
+        @objc func presentFindAndReplaceFromToolbar(_ sender: UIBarButtonItem) {
+            guard let view = textView else { return }
+            if #available(iOS 16.0, *) { view.findInteraction?.presentFindNavigator(showingReplace: true) }
+            else { presentFindAndReplace(in: view) }
+        }
+
+        @objc func undoFromToolbar(_ sender: UIBarButtonItem) {
+            textView?.undoManager?.undo()
+        }
+
+        @objc func redoFromToolbar(_ sender: UIBarButtonItem) {
+            textView?.undoManager?.redo()
+        }
+
+        @objc func dismissKeyboardFromToolbar(_ sender: UIBarButtonItem) {
+            textView?.resignFirstResponder()
+        }
 
         func presentFindAndReplace(in view: UITextView) {
             guard var presenter = view.window?.rootViewController else { return }

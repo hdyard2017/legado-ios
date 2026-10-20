@@ -56,7 +56,7 @@ struct RSSHomeView: View {
             if case .failure(let error) = result { library.errorMessage = error.localizedDescription }
         })
         let status = AnyView(exporting
-            .overlay { if library.isWorking { ProgressView().controlSize(.large) } }
+            .overlay { if library.isWorking { ProgressView().readingControlSize(.large) } }
             .alert("RSS操作失败", isPresented: Binding(get: { library.errorMessage != nil }, set: { if !$0 { library.errorMessage = nil } })) {
             Button("好") { library.errorMessage = nil }
         } message: { Text(library.errorMessage ?? "") })
@@ -288,10 +288,12 @@ private struct RSSArticleCard: View {
     @ViewBuilder private var articleImage: some View {
         let height = imageHeight
         if let raw = article.image, let url = URL(string: raw) {
-            AsyncImage(url: url) { phase in
-                if let image = phase.image { image.resizable().scaledToFill() }
-                else if phase.error != nil { placeholder }
+            ReadingRemoteImage(url: url) { phase in
+                if case .success(let image) = phase { image.resizable().scaledToFill() }
+                else if case .failure = phase { placeholder }
                 else { ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity) }
+            } placeholder: {
+                ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
             }.frame(maxWidth: .infinity).frame(height: height).clipped()
         } else { placeholder.frame(height: height) }
     }

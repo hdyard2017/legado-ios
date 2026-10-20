@@ -187,10 +187,10 @@ struct ReaderView: View {
         .preferredColorScheme(resolvedStyle.id == "night" ? .dark : .light)
         .readingTabBarHidden()
         .navigationBarBackButtonHidden(true)
-        .background {
+        .background(
             ReaderInteractivePopEnabler()
                 .frame(width: 0, height: 0)
-        }
+        )
         .statusBarHidden(hideStatusBar)
         .readingHomeIndicatorHidden(hideHomeIndicator)
         .overlay(alignment: .top) {
@@ -410,7 +410,7 @@ struct ReaderView: View {
             readerContent
             readerMenuDismissOverlay
         }
-        .background {
+        .background(
             ZStack {
                 backgroundColor
                 if themeMode != "3", useBackgroundImage, let backgroundImage {
@@ -421,7 +421,7 @@ struct ReaderView: View {
             }
             .clipped()
             .ignoresSafeArea()
-        }
+        )
     }
 
     @ViewBuilder private var readerContent: some View {
@@ -429,7 +429,7 @@ struct ReaderView: View {
            (model.isLoading && model.content.isEmpty) || (model.content.isEmpty && !model.hasLoadedCurrentChapter) {
             VStack(spacing: 14) {
                 ProgressView()
-                    .controlSize(.regular)
+                    .readingControlSize(.regular)
                 Text("正在打开本章")
                     .font(.subheadline.weight(.medium))
                 Text(model.title)
@@ -717,10 +717,10 @@ struct ReaderView: View {
 
 
     private func readerTipBar(isHeader: Bool) -> some View {
-        TimelineView(.periodic(from: .now, by: 30)) { context in
+        ReadingPeriodicTimeline(.periodic(30)) { date in
             readerTipRow(
                 isHeader ? [tipHeaderLeft, tipHeaderMiddle, tipHeaderRight] : [tipFooterLeft, tipFooterMiddle, tipFooterRight],
-                date: context.date,
+                date: date,
                 showDivider: isHeader ? showHeaderLine : showFooterLine,
                 isHeader: isHeader
             )
@@ -750,7 +750,7 @@ struct ReaderView: View {
     }
 
     private func readerTipText(_ value: Int, date: Date) -> String {
-        let time = date.formatted(.dateTime.hour(.twoDigits(amPM: .omitted)).minute(.twoDigits))
+        let time = date.readingFormattedTime()
         let batteryValue = UIDevice.current.batteryLevel
         let battery = batteryValue >= 0 ? Int((batteryValue * 100).rounded()) : 100
         let chapterCount = max(model.chapters.filter { !$0.isVolume }.count, 1)
@@ -829,7 +829,7 @@ struct ReaderView: View {
         .padding(.vertical, 4)
         .frame(maxWidth: .infinity)
         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
-        .background { readerChromeBackground.ignoresSafeArea(edges: .top) }
+        .background(readerChromeBackground.ignoresSafeArea(edges: .top))
         .overlay(alignment: .bottom) {
             Rectangle().fill(Color(uiColor: .separator).opacity(0.35)).frame(height: 0.5)
         }
@@ -899,7 +899,7 @@ struct ReaderView: View {
         .padding(.bottom, 10)
         .frame(maxWidth: .infinity)
         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
-        .background { readerChromeBackground.ignoresSafeArea(edges: .bottom) }
+        .background(readerChromeBackground.ignoresSafeArea(edges: .bottom))
         .overlay(alignment: .top) {
             Rectangle().fill(Color(uiColor: .separator).opacity(0.35)).frame(height: 0.5)
         }
@@ -939,7 +939,7 @@ struct ReaderView: View {
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("阅读进度")
-            .accessibilityValue(chapterProgress.formatted(.percent.precision(.fractionLength(0))))
+            .accessibilityValue(chapterProgress.readingFormattedPercent(fractionDigits: 0))
             readerChromeIconButton("chevron.right", label: "下一章") { moveChapter(1) }
                 .disabled(!model.canGoNext)
                 .opacity(model.canGoNext ? 1 : 0.25)
@@ -1220,7 +1220,7 @@ struct ReaderView: View {
                         Text("细体").tag(2)
                     }
                     TextField("段落缩进字符", text: $paragraphIndent)
-                        .textInputAutocapitalization(.never)
+                        .readingInputConfiguration(autocapitalization: .never)
                     Button(fontPath.isEmpty ? "选择字体文件" : "更换字体文件", systemImage: "textformat") {
                         showsFontImporter = true
                     }

@@ -74,7 +74,7 @@ struct SourceDebugView: View {
                 Text("样本关键词").font(.caption.bold()).foregroundStyle(.secondary)
                 TextField("输入该书源能搜到的书名", text: $model.keyword)
                     .textFieldStyle(.roundedBorder)
-                    .textInputAutocapitalization(.never)
+                    .readingInputConfiguration(autocapitalization: .never)
                     .submitLabel(.go)
                     .onSubmit { model.run(source: source) }
                 Button { model.run(source: source) } label: {
@@ -246,7 +246,7 @@ struct SourceBatchTestView: View {
         List {
             Section {
                 TextField("校验搜索词", text: $keyword)
-                    .textInputAutocapitalization(.never)
+                    .readingInputConfiguration(autocapitalization: .never)
                 Toggle("包含已停用书源", isOn: $includesDisabled)
                     .disabled(model.isTesting)
                 Toggle("只看失败", isOn: $onlyShowsFailed)

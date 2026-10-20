@@ -30,7 +30,7 @@ struct RSSSourceDebugView: View {
             Section("调试输入") {
                 Text(source.sourceName).font(.headline)
                 TextField("关键词，或 分类::地址", text: $model.input)
-                    .textInputAutocapitalization(.never).disableAutocorrection(true)
+                    .readingInputConfiguration(autocapitalization: .never, disableAutocorrection: true)
                     .onSubmit { model.run(source) }
                 Button { model.run(source) } label: { Label(model.running ? "正在调试…" : "运行完整链路", systemImage: "play.fill") }
                     .disabled(model.running)

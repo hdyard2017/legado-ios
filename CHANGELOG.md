@@ -1,5 +1,20 @@
 # 更新记录
 
+## 0.1.9-ios14（2026-10-20）
+
+- 最低支持版本降至 **iOS 14.0**，实测目标为 iOS 14.7.1。
+- 新增 `App/Compatibility.swift` iOS 14 兼容层，替换以下 iOS 15+ API：
+  - `AsyncImage` → `ReadingRemoteImage`（`URLSession` + `NSCache`，含磁盘缓存）
+  - `TimelineView` → `ReadingPeriodicTimeline`（`Timer` 驱动，`.common` 模式避免滚动暂停）
+  - `Date.formatted` / `Double.formatted` → `readingFormattedTime` / `readingFormattedMonthDay` /
+    `readingFormattedFraction` / `readingFormattedPercent`
+  - `.textInputAutocapitalization` / `.disableAutocorrection` → `.readingInputConfiguration`
+  - `ProgressView.controlSize` → `.readingControlSize`
+- 规则编辑器工具栏改用 target-action，移除 iOS 16 才有的
+  `UIBarButtonItem(_:primaryAction:)` 与 `UIAction`。
+- 5 处 `.background {}` 闭包重载改为 iOS 14 原生的 `.background(_:)`。
+- 依赖确认：SwiftSoup 2.13.5（iOS 13+）、Kanna 6.1.0（iOS 13+）均已支持 iOS 14。
+
 ## 0.1.9（2026-10-14）
 
 - 个人中心采用阅读静物头图、暖白圆角卡片和黑金双色图标，适配深色模式。
