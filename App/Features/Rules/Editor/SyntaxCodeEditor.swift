@@ -228,7 +228,7 @@ struct RuleCodeFieldView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Text(path).font(.caption.monospaced()).foregroundColor(.secondary)
+            Text(path).font(.system(.caption, design: .monospaced)).foregroundColor(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading).padding(12)
             if let help {
                 Text(help).font(.footnote).foregroundColor(.secondary)

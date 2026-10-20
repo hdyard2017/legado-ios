@@ -20,7 +20,7 @@ struct RSSAddBookView: View {
                 VStack(spacing: 14) {
                     ProgressView()
                     Text("正在匹配书源并解析详情…").foregroundColor(.secondary)
-                    Text(bookURL).font(.caption.monospaced()).foregroundColor(.secondary).lineLimit(3)
+                    Text(bookURL).font(.system(.caption, design: .monospaced)).foregroundColor(.secondary).lineLimit(3)
                 }.padding()
             }
         }

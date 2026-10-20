@@ -138,7 +138,7 @@ struct BookDetailView: View {
                         .font(.headline)
                     Spacer()
                     Text("\(model.cacheCompleted)/\(model.cacheTotal)")
-                        .font(.caption.monospacedDigit()).foregroundColor(.secondary)
+                        .font(.system(.caption, design: .monospaced)).foregroundColor(.secondary)
                 }
                 ProgressView(value: Double(model.cacheCompleted), total: Double(max(model.cacheTotal, 1)))
                     .readingTint(ReadingTheme.accent)
@@ -271,7 +271,7 @@ struct BookDetailView: View {
                         } label: {
                             HStack(spacing: 12) {
                                 Text(String(format: "%02d", chapter.index + 1))
-                                    .font(.caption.monospacedDigit()).foregroundColor(.secondary).frame(width: 28)
+                                    .font(.system(.caption, design: .monospaced)).foregroundColor(.secondary).frame(width: 28)
                                 Text(chapter.title).font(.subheadline).foregroundColor(.primary).lineLimit(2)
                                 Spacer()
                                 if chapter.isVip { Image(systemName: "lock.fill").font(.caption).foregroundColor(.orange) }
@@ -323,7 +323,7 @@ private struct BookTableOfContentsView: View {
                     } label: {
                         HStack(spacing: 12) {
                             Text("\(chapter.index + 1)")
-                                .font(.caption.monospacedDigit()).foregroundColor(.secondary).frame(width: 42, alignment: .trailing)
+                                .font(.system(.caption, design: .monospaced)).foregroundColor(.secondary).frame(width: 42, alignment: .trailing)
                             Text(chapter.title).lineLimit(2)
                             Spacer()
                             if chapter.index == book.durChapterIndex {

@@ -42,7 +42,7 @@ struct RSSSourceDebugView: View {
                         DisclosureGroup {
                             if step.diagnostics.isEmpty { Text("无规则诊断").foregroundColor(.secondary) }
                             ForEach(step.diagnostics) { item in
-                                VStack(alignment: .leading) { Text(item.message); Text(item.code).font(.caption.monospaced()).foregroundColor(.secondary) }
+                                VStack(alignment: .leading) { Text(item.message); Text(item.code).font(.system(.caption, design: .monospaced)).foregroundColor(.secondary) }
                             }
                         } label: {
                             Label { VStack(alignment: .leading) { Text(step.stage.title); Text(step.summary).font(.caption).foregroundColor(.secondary).lineLimit(2) } } icon: { Image(systemName: icon(step.status)).foregroundColor(color(step.status)) }
@@ -65,7 +65,7 @@ struct RSSSourceDebugView: View {
             }
         }
         .sheet(isPresented: Binding(get: { rawText != nil }, set: { if !$0 { rawText = nil } })) {
-            ReadingNavigationStack { ScrollView { Text(rawText ?? "").font(.caption.monospaced()).readingTextSelection().frame(maxWidth: .infinity, alignment: .leading).padding() }.navigationTitle(rawTitle).toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { rawText = nil } } } }
+            ReadingNavigationStack { ScrollView { Text(rawText ?? "").font(.system(.caption, design: .monospaced)).readingTextSelection().frame(maxWidth: .infinity, alignment: .leading).padding() }.navigationTitle(rawTitle).toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { rawText = nil } } } }
         }
     }
 

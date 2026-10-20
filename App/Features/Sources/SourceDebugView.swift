@@ -263,7 +263,7 @@ struct SourceBatchTestView: View {
                         Text("失败 \(model.failedCount) · 已选 \(model.selectedFailedIDs.count)")
                             .foregroundColor(model.failedCount == 0 ? Color.secondary : Color.red)
                     }
-                    .font(.subheadline.monospacedDigit())
+                    .font(.system(.subheadline, design: .monospaced))
                 }
             }
 
@@ -392,7 +392,7 @@ private struct DebugStepCard: View {
                     ForEach(step.diagnostics) { diagnostic in
                         VStack(alignment: .leading, spacing: 2) {
                             Text(diagnostic.message).font(.caption)
-                            Text(diagnostic.code).font(.caption2.monospaced()).foregroundColor(.secondary)
+                            Text(diagnostic.code).font(.system(.caption2, design: .monospaced)).foregroundColor(.secondary)
                         }
                     }
                 }
@@ -412,7 +412,7 @@ private struct DebugStepCard: View {
                 Spacer()
                 if step.elapsedMilliseconds > 0 {
                     Text("\(step.elapsedMilliseconds) ms")
-                        .font(.caption2.monospacedDigit()).foregroundColor(.secondary)
+                        .font(.system(.caption2, design: .monospaced)).foregroundColor(.secondary)
                 }
             }
         }

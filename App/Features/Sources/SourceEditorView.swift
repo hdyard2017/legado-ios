@@ -96,7 +96,7 @@ struct SourceEditorView: View {
                         VStack(alignment: .leading, spacing: 5) {
                             Text(field.title)
                             Text(document.value(at: field.path)?.stringValue.isEmpty == false ? document.value(at: field.path)!.stringValue : field.path)
-                                .font(.caption.monospaced()).foregroundColor(.secondary).lineLimit(2)
+                                .font(.system(.caption, design: .monospaced)).foregroundColor(.secondary).lineLimit(2)
                         }
                     }
                 }

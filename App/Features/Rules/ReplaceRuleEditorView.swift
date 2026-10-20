@@ -144,7 +144,7 @@ struct ReplaceRuleEditorView: View {
                           systemImage: result.report.effectiveRuleIDs.isEmpty ? "info.circle" : "checkmark.circle")
                     ReadingLabeledContent("标题", value: result.report.title)
                     Text(result.report.content.isEmpty ? "（正文为空）" : result.report.content)
-                        .font(.body.monospaced()).readingTextSelection()
+                        .font(.system(.body, design: .monospaced)).readingTextSelection()
                 } header: { Text("测试结果 · \(result.elapsedMilliseconds.readingFormattedFraction(fractionDigits: 1)) ms") }
                 if !result.report.diagnostics.isEmpty {
                     Section {
@@ -166,7 +166,7 @@ struct ReplaceRuleEditorView: View {
     private func fieldPreview(_ title: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 5) {
             Text(title)
-            Text(value.isEmpty ? "未填写" : value).font(.caption.monospaced()).foregroundColor(.secondary).lineLimit(3)
+            Text(value.isEmpty ? "未填写" : value).font(.system(.caption, design: .monospaced)).foregroundColor(.secondary).lineLimit(3)
         }
     }
     private func runTest() {

@@ -930,7 +930,7 @@ struct ReaderView: View {
                     Spacer(minLength: 8)
                     Text(chapterProgress, format: .percent.precision(.fractionLength(0)))
                 }
-                .font(.caption.monospacedDigit())
+                .font(.system(.caption, design: .monospaced))
                 .foregroundColor(.secondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
@@ -1133,7 +1133,7 @@ struct ReaderView: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                             Text("\(Int(fontSize))")
-                                .font(.headline.monospacedDigit())
+                                .font(.system(.headline, design: .monospaced))
                         }
                         .frame(maxWidth: .infinity)
 
@@ -1578,7 +1578,7 @@ struct ReaderView: View {
                     Stepper("默认定时：\(ttsTimer) 分钟", value: $ttsTimer, in: 0...180)
                     if speechTimerRemaining > 0 {
                         Text("本次朗读还剩 \(speechTimerRemaining) 分钟")
-                            .font(.footnote.monospacedDigit())
+                            .font(.system(.footnote, design: .monospaced))
                             .foregroundColor(.secondary)
                     }
                     if let error = speech.errorMessage {
@@ -1613,7 +1613,7 @@ struct ReaderView: View {
         ReadingNavigationStack {
             VStack(spacing: 0) {
                 TextEditor(text: $editedContent)
-                    .font(.body.monospaced())
+                    .font(.system(.body, design: .monospaced))
                     .padding(8)
                 if let contentEditError {
                     Text(contentEditError)
@@ -1698,7 +1698,7 @@ struct ReaderView: View {
                             } label: {
                                 HStack(spacing: 12) {
                                     Text(tocChapterNumber(chapter))
-                                        .font(.caption.monospacedDigit())
+                                        .font(.system(.caption, design: .monospaced))
                                         .foregroundColor(isCurrent ? ReadingTheme.accent : .secondary)
                                         .frame(width: 30, alignment: .trailing)
                                     VStack(alignment: .leading, spacing: 4) {
@@ -1733,7 +1733,7 @@ struct ReaderView: View {
                             Text(book.name).font(.headline).lineLimit(1)
                             Spacer()
                             Text("\(tocReadableChapterCount) 章")
-                                .font(.caption.monospacedDigit())
+                                .font(.system(.caption, design: .monospaced))
                                 .foregroundColor(.secondary)
                         }
                         ProgressView(value: chapterProgress)
@@ -1843,7 +1843,7 @@ struct ReaderView: View {
                                 if !bookmark.bookText.isEmpty {
                                     Text(bookmark.bookText).font(.subheadline).foregroundColor(.secondary).lineLimit(3)
                                 }
-                                Text("位置 \(bookmark.chapterPosition)").font(.caption.monospacedDigit()).foregroundColor(.secondary)
+                                Text("位置 \(bookmark.chapterPosition)").font(.system(.caption, design: .monospaced)).foregroundColor(.secondary)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                         }

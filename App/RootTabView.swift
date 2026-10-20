@@ -484,7 +484,7 @@ private struct ContinueReadingCard: View {
                     HStack(spacing: 10) {
                         ReadingProgressLine(value: BookReadingPresentation.progress(book))
                         Text("\(Int((BookReadingPresentation.progress(book) * 100).rounded()))%")
-                            .font(.caption2.monospacedDigit())
+                            .font(.system(.caption2, design: .monospaced))
                             .foregroundColor(.secondary)
                     }
                     .padding(.top, 12)
@@ -797,7 +797,7 @@ private struct BookshelfRow: View {
                     Spacer(minLength: 0)
                     if book.lastCheckCount > 0 {
                         Text("+\(book.lastCheckCount)")
-                            .font(.caption.monospacedDigit())
+                            .font(.system(.caption, design: .monospaced))
                             .foregroundColor(ReadingTheme.accent)
                             .fixedSize()
                             .accessibilityLabel("更新 \(book.lastCheckCount) 章")
@@ -1099,7 +1099,7 @@ struct SearchView: View {
                         Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.orange)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(diagnostic.message).font(.subheadline)
-                            Text(diagnostic.code).font(.caption.monospaced()).foregroundColor(.secondary)
+                            Text(diagnostic.code).font(.system(.caption, design: .monospaced)).foregroundColor(.secondary)
                         }
                     }
                 }

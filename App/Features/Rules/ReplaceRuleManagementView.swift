@@ -42,7 +42,7 @@ struct ReplaceRuleManagementView: View {
                                         Text(rule.name.isEmpty ? rule.pattern : rule.name).foregroundColor(.primary).lineLimit(1)
                                         Text(rule.group ?? (rule.scopeTitle && rule.scopeContent ? "标题与正文" : rule.scopeTitle ? "标题" : "正文"))
                                             .font(.caption).foregroundColor(.secondary)
-                                        Text(rule.pattern).font(.caption.monospaced()).foregroundColor(.secondary).lineLimit(1)
+                                        Text(rule.pattern).font(.system(.caption, design: .monospaced)).foregroundColor(.secondary).lineLimit(1)
                                     }
                                     Spacer()
                                 }

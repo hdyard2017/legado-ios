@@ -63,7 +63,7 @@ struct LocalBookDetailView: View {
                                 } label: {
                                     HStack(spacing: 12) {
                                         Text(String(format: "%02d", chapter.index + 1))
-                                            .font(.caption.monospacedDigit()).foregroundColor(.secondary).frame(width: 28)
+                                            .font(.system(.caption, design: .monospaced)).foregroundColor(.secondary).frame(width: 28)
                                         Text(chapter.title).font(.subheadline).foregroundColor(.primary).lineLimit(2)
                                         Spacer()
                                         Image(systemName: "chevron.right").font(.caption.bold()).foregroundColor(.secondary)
@@ -132,7 +132,7 @@ private struct LocalBookTableOfContentsView: View {
                     ReaderView(book: book, chapters: chapters, initialIndex: chapter.index)
                 } label: {
                     HStack {
-                        Text("\(chapter.index + 1)").font(.caption.monospacedDigit()).foregroundColor(.secondary).frame(width: 42, alignment: .trailing)
+                        Text("\(chapter.index + 1)").font(.system(.caption, design: .monospaced)).foregroundColor(.secondary).frame(width: 42, alignment: .trailing)
                         Text(chapter.title).lineLimit(2)
                         Spacer()
                         if chapter.index == book.durChapterIndex {

@@ -104,7 +104,7 @@ struct TxtTocRuleManagementView: View {
                             .foregroundColor(rule.enable ? ReadingTheme.accent : .secondary)
                         VStack(alignment: .leading, spacing: 4) {
                             Text(rule.name).foregroundColor(.primary)
-                            Text(rule.rule).font(.caption.monospaced()).foregroundColor(.secondary).lineLimit(2)
+                            Text(rule.rule).font(.system(.caption, design: .monospaced)).foregroundColor(.secondary).lineLimit(2)
                         }
                     }
                 }
@@ -186,14 +186,14 @@ private struct TxtTocRuleEditView: View {
             Form {
                 TextField("名称", text: $value.name)
                 ReadingTextField("目录正则", text: $value.rule, axis: .vertical)
-                    .font(.body.monospaced()).readingInputConfiguration(autocapitalization: .never, disableAutocorrection: true)
+                    .font(.system(.body, design: .monospaced)).readingInputConfiguration(autocapitalization: .never, disableAutocorrection: true)
                 ReadingTextField("标题处理JavaScript（可选）", text: Binding(
                     get: { value.replacement }, set: { value.replacement = $0 }
-                ), axis: .vertical).font(.body.monospaced())
+                ), axis: .vertical).font(.system(.body, design: .monospaced))
                 Toggle("启用", isOn: $value.enable)
                 Section {
                     TextEditor(text: $sample).frame(minHeight: 130)
-                    Text(testResult).font(.caption.monospaced()).foregroundColor(.secondary).readingTextSelection()
+                    Text(testResult).font(.system(.caption, design: .monospaced)).foregroundColor(.secondary).readingTextSelection()
                 } header: { Text("测试文本") }
             }
             .navigationTitle("TXT目录规则")

@@ -99,7 +99,7 @@ struct ReadingStatisticsView: View {
                     ForEach(statistics.recentDays, id: \.date) { day in
                         VStack(spacing: 7) {
                             Text(barLabel(day.readTime))
-                                .font(.caption2.monospacedDigit())
+                                .font(.system(.caption2, design: .monospaced))
                                 .foregroundColor(.secondary)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.7)
