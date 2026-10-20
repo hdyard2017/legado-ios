@@ -337,19 +337,19 @@ private struct BookshelfView: View {
                         .font(.subheadline.weight(selectedGroupID == group.id ? .semibold : .regular))
                         .foregroundColor(selectedGroupID == group.id ? Color.primary : .secondary)
                         .frame(minHeight: 44)
-                        .overlay(alignment: .bottom) {
+                        .overlay(
                             if selectedGroupID == group.id {
                                 Rectangle().fill(ReadingTheme.accent).frame(height: 2)
                             }
-                        }
+                        , alignment: .bottom)
                         .accessibilityAddTraits(selectedGroupID == group.id ? .isSelected : [])
                 }
             }
             .padding(.horizontal, 24)
         }
-        .overlay(alignment: .bottom) {
+        .overlay(
             Rectangle().fill(ReadingTheme.separator).frame(height: 0.5)
-        }
+        , alignment: .bottom)
     }
 
     private var gridColumns: [GridItem] {
@@ -423,7 +423,7 @@ private struct BookshelfGridItem: View {
             .aspectRatio(0.70, contentMode: .fit)
             .frame(maxWidth: 180)
             .frame(maxWidth: .infinity)
-            .overlay(alignment: .topTrailing) {
+            .overlay(
                 if book.lastCheckCount > 0 {
                     Circle()
                         .fill(ReadingTheme.coral)
@@ -432,7 +432,7 @@ private struct BookshelfGridItem: View {
                         .offset(x: 3, y: -3)
                         .accessibilityLabel("更新 \(book.lastCheckCount) 章")
                 }
-            }
+            , alignment: .topTrailing)
             Text(book.name)
                 .font(.caption.weight(.semibold))
                 .lineLimit(2)
@@ -1245,10 +1245,10 @@ private struct SearchBookRow: View {
             Image(systemName: "chevron.right").font(.caption.bold()).foregroundColor(.secondary)
         }
         .padding(.vertical, 12)
-        .overlay(alignment: .bottom) {
+        .overlay(
             Rectangle().fill(ReadingTheme.separator).frame(height: 0.5)
                 .padding(.leading, 66)
-        }
+        , alignment: .bottom)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
     }
@@ -1278,22 +1278,22 @@ private struct SettingsView: View {
                     .padding(.horizontal, 28)
                     .padding(.bottom, 32)
                 }
-                .background(alignment: .top) {
+                .background(
                     Image("ProfileHeader")
                         .resizable()
                         .scaledToFill()
                         .frame(width: geometry.size.width, height: geometry.safeAreaInsets.top + 156)
                         .clipped()
                         .overlay(if colorScheme == .dark { Color.black.opacity(0.62) })
-                        .overlay(alignment: .bottom) {
+                        .overlay(
                             LinearGradient(
                                 colors: [ProfileTheme.canvas.opacity(0), ProfileTheme.canvas],
                                 startPoint: .top, endPoint: .bottom
                             )
                             .frame(height: 44)
-                        }
+                        , alignment: .bottom)
                         .accessibilityHidden(true)
-                }
+                , alignment: .top)
             }
             .background(ProfileTheme.canvas)
             .ignoresSafeArea(.container, edges: .top)
@@ -1487,7 +1487,7 @@ private struct SettingsView: View {
         .padding(.vertical, 12)
         .frame(minHeight: rowHeight)
         .contentShape(Rectangle())
-        .overlay(alignment: .bottom) {
+        .overlay(
             if showsSeparator {
                 Rectangle()
                     .fill(ProfileTheme.separator)
@@ -1496,7 +1496,7 @@ private struct SettingsView: View {
                     .padding(.trailing, 18)
                     .accessibilityHidden(true)
             }
-        }
+        , alignment: .bottom)
         .accessibilityElement(children: .combine)
     }
 }

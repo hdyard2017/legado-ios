@@ -193,12 +193,12 @@ struct ReaderView: View {
         )
         .statusBarHidden(hideStatusBar)
         .readingHomeIndicatorHidden(hideHomeIndicator)
-        .overlay(alignment: .top) {
+        .overlay(
             if showsReaderMenu {
                 readerTopChrome
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
-        }
+        , alignment: .top)
         .animation(.easeOut(duration: 0.22), value: showsReaderMenu)
         .onAppear {
             activity.beginReading(book)
@@ -248,12 +248,12 @@ struct ReaderView: View {
             speech.onPreviousChapter = nil
             speech.onRemoteStop = nil
         }
-        .overlay(alignment: .bottom) {
+        .overlay(
             if showsReaderMenu {
                 readerBottomChrome
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
-        }
+        , alignment: .bottom)
         .sheet(isPresented: $showsTableOfContents) { tableOfContents }
         .sheet(isPresented: $showsBookmarks) { bookmarksSheet }
         .sheet(isPresented: $showsAutoReadControls) { autoReadControls }
@@ -466,7 +466,7 @@ struct ReaderView: View {
             }
             .frame(maxWidth: readingColumnMaxWidth)
             .frame(maxWidth: .infinity)
-            .overlay(alignment: .bottom) {
+            .overlay(
                 if pageAnimation == 3, let error = model.currentChapterError, !showsReaderMenu {
                     VStack(spacing: 10) {
                         Text("本章加载失败").font(.subheadline.weight(.semibold))
@@ -478,7 +478,7 @@ struct ReaderView: View {
                     .foregroundColor(foregroundColor)
                     .background(backgroundColor)
                 }
-            }
+            , alignment: .bottom)
         }
     }
 
@@ -744,9 +744,12 @@ struct ReaderView: View {
         .lineLimit(1)
         .padding(.leading, isHeader ? headerPaddingLeft : footerPaddingLeft)
         .padding(.trailing, isHeader ? headerPaddingRight : footerPaddingRight)
-        .overlay(alignment: .bottom) {
-            if showDivider { Divider().overlay(foregroundColor.opacity(0.35)) }
-        }
+        .overlay(
+            showDivider
+                ? AnyView(Divider().overlay(foregroundColor.opacity(0.35)))
+                : AnyView(Color.clear),
+            alignment: .bottom
+        )
     }
 
     private func readerTipText(_ value: Int, date: Date) -> String {
@@ -830,9 +833,9 @@ struct ReaderView: View {
         .frame(maxWidth: .infinity)
         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         .background(readerChromeBackground.ignoresSafeArea(edges: .top))
-        .overlay(alignment: .bottom) {
+        .overlay(
             Rectangle().fill(Color(.separator).opacity(0.35)).frame(height: 0.5)
-        }
+        , alignment: .bottom)
     }
 
     private var readerMoreMenu: some View {
@@ -900,9 +903,9 @@ struct ReaderView: View {
         .frame(maxWidth: .infinity)
         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         .background(readerChromeBackground.ignoresSafeArea(edges: .bottom))
-        .overlay(alignment: .top) {
+        .overlay(
             Rectangle().fill(Color(.separator).opacity(0.35)).frame(height: 0.5)
-        }
+        , alignment: .top)
     }
 
     private var readerToolbarColumns: [GridItem] {

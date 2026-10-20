@@ -265,11 +265,11 @@ private struct ExploreSourceView: View {
                         .padding(.horizontal, 12)
                         .frame(minHeight: 44)
                         .foregroundColor(model.selectedKind?.id == kind.id ? Color.primary : .secondary)
-                        .overlay(alignment: .bottom) {
+                        .overlay(
                             if model.selectedKind?.id == kind.id {
                                 Rectangle().fill(Color.primary).frame(height: 2)
                             }
-                        }
+                        , alignment: .bottom)
                         .accessibilityAddTraits(model.selectedKind?.id == kind.id ? .isSelected : [])
                 }
             }
@@ -346,9 +346,9 @@ private struct ExploreBookRow: View {
                 .padding(.top, 4)
         }
         .padding(.vertical, 12)
-        .overlay(alignment: .bottom) {
+        .overlay(
             Rectangle().fill(ReadingTheme.separator).frame(height: 0.5)
                 .padding(.leading, 65)
-        }
+        , alignment: .bottom)
     }
 }

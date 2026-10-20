@@ -238,10 +238,10 @@ struct ReadingProgressLine: View {
     var body: some View {
         GeometryReader { geometry in
             Capsule().fill(ReadingTheme.separator)
-                .overlay(alignment: .leading) {
+                .overlay(
                     Capsule().fill(ReadingTheme.accent)
                         .frame(width: geometry.size.width * min(1, max(0, value)))
-                }
+                , alignment: .leading)
         }
         .frame(height: 3)
         .accessibilityHidden(true)
@@ -284,9 +284,9 @@ struct BookCoverArtwork: View {
         }
         .frame(width: width, height: height)
         .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
-        .overlay(alignment: .leading) {
+        .overlay(
             Rectangle().fill(.black.opacity(0.15)).frame(width: max(2, width * 0.035))
-        }
+        , alignment: .leading)
         .overlay(RoundedRectangle(cornerRadius: 4, style: .continuous) .strokeBorder(.black.opacity(0.08), lineWidth: 0.5))
         .accessibilityHidden(true)
     }

@@ -20,10 +20,10 @@ struct QRCodeImportView: View {
                 if cameraAuthorized, scanError == nil {
                     cameraScanner
                         .clipShape(RoundedRectangle(cornerRadius: 18))
-                        .overlay(alignment: .bottom) {
+                        .overlay(
                             Text("将书源或净化规则二维码放入取景框").font(.footnote)
                                 .padding(10).background(Capsule().fill(.ultraThinMaterial)).padding()
-                        }
+                        , alignment: .bottom)
                 } else {
                     ReadingUnavailableView("相机扫描暂不可用", systemImage: "qrcode.viewfinder",
                         description: Text(scanError ?? cameraMessage))
