@@ -62,16 +62,18 @@ struct DiagnosticLogView: View {
                         exportText = DiagnosticLog.shared.export()
                         exportsLog = true
                     }.disabled(entries.isEmpty)
-                    Button("清空日志", systemImage: "trash", role: .destructive) { confirmsClear = true }
+                    Button("清空日志", systemImage: "trash") { confirmsClear = true }
+                    .readingRole(.destructive)
                         .disabled(entries.isEmpty)
                 }
             }
         }
         .readingConfirmationDialog("清空全部日志？", isPresented: $confirmsClear, titleVisibility: .visible) {
-            Button("清空日志", role: .destructive) {
+            Button("清空日志") {
                 do { try DiagnosticLog.shared.clear(); reload() }
                 catch { errorMessage = error.localizedDescription }
             }
+            .readingRole(.destructive)
         }
         .fileExporter(isPresented: $exportsLog, document: DiagnosticLogDocument(text: exportText), contentType: .plainText, defaultFilename: "阅读诊断日志") { result in
             if case .failure(let error) = result { errorMessage = error.localizedDescription }

@@ -46,9 +46,10 @@ struct CacheManagementView: View {
                     .font(.footnote).foregroundColor(.secondary)
             }
             Section {
-                Button("清空章节缓存", systemImage: "trash", role: .destructive) {
+                Button("清空章节缓存", systemImage: "trash") {
                     Task { await model.clear() }
                 }
+                .readingRole(.destructive)
                 .disabled(model.entries == 0 || model.isWorking)
             }
         }

@@ -80,7 +80,8 @@ struct BookDetailView: View {
                         .disabled(model.chapters.isEmpty || model.isCaching)
                     if model.isCaching {
                         Divider()
-                        Button("停止缓存", systemImage: "stop.circle", role: .destructive) { model.cancelCaching() }
+                        Button("停止缓存", systemImage: "stop.circle") { model.cancelCaching() }
+                        .readingRole(.destructive)
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle")
@@ -120,10 +121,12 @@ struct BookDetailView: View {
             BookTableOfContentsView(book: model.book, chapters: model.chapters, source: model.source)
         }
         .readingConfirmationDialog("从书架移除《\(model.book.name)》？", isPresented: $showsRemoveConfirmation) {
-            Button("移出书架", role: .destructive) {
+            Button("移出书架") {
                 Task { await library.remove(bookURL: model.book.bookUrl) }
             }
-            Button("取消", role: .cancel) { }
+            .readingRole(.destructive)
+            Button("取消") { }
+            .readingRole(.cancel)
         }
     }
 
@@ -140,7 +143,8 @@ struct BookDetailView: View {
                 ProgressView(value: Double(model.cacheCompleted), total: Double(max(model.cacheTotal, 1)))
                     .tint(ReadingTheme.accent)
                 if model.isCaching {
-                    Button("停止缓存", role: .destructive) { model.cancelCaching() }
+                    Button("停止缓存") { model.cancelCaching() }
+                    .readingRole(.destructive)
                         .font(.subheadline)
                 }
             }

@@ -395,9 +395,10 @@ private struct BookshelfBookLink: View {
                 Label("书籍信息", systemImage: "info.circle")
             }
             Button("移至分组", systemImage: "rectangle.3.group") { showsGroupSelector = true }
-            Button("移出书架", systemImage: "trash", role: .destructive) {
+            Button("移出书架", systemImage: "trash") {
                 Task { await library.remove(bookURL: book.bookUrl) }
             }
+            .readingRole(.destructive)
         }
         .sheet(isPresented: $showsGroupSelector) {
             BookGroupSelectView(book: book).environmentObject(library)
@@ -549,9 +550,10 @@ private struct BookGroupManagerView: View {
                             .buttonStyle(.borderless)
                         }
                         .swipeActions {
-                            Button("删除", role: .destructive) {
+                            Button("删除") {
                                 Task { await library.deleteGroup(group) }
                             }
+                            .readingRole(.destructive)
                         }
                     }
                     .onMove { offsets, destination in
@@ -570,7 +572,8 @@ private struct BookGroupManagerView: View {
             }
             .readingAlert("新建分组", isPresented: $showsCreate) {
                 TextField("分组名称", text: $newName)
-                Button("取消", role: .cancel) {}
+                Button("取消") {}
+                .readingRole(.cancel)
                 Button("确定") { Task { await library.createGroup(name: newName) } }
             }
             .readingAlert("编辑分组", isPresented: Binding(
@@ -578,7 +581,8 @@ private struct BookGroupManagerView: View {
                 set: { if !$0 { editingGroup = nil } }
             )) {
                 TextField("分组名称", text: $editingName)
-                Button("取消", role: .cancel) { editingGroup = nil }
+                Button("取消") { editingGroup = nil }
+                .readingRole(.cancel)
                 Button("确定") {
                     guard let group = editingGroup else { return }
                     Task { await library.renameGroup(group, name: editingName) }
@@ -897,9 +901,10 @@ struct SearchView: View {
                         Label("书源管理", systemImage: "network")
                     }
                     if model.state == .searching {
-                        Button("停止搜索", systemImage: "stop.fill", role: .destructive) {
+                        Button("停止搜索", systemImage: "stop.fill") {
                             model.cancel()
                         }
+                        .readingRole(.destructive)
                     } else if model.isPaused {
                         Button("继续搜索", systemImage: "play.fill") { model.resume() }
                     }
@@ -958,7 +963,8 @@ struct SearchView: View {
                             Text(searchProgressText).font(.caption).foregroundColor(.secondary)
                         }
                         Spacer()
-                        Button("停止", role: .destructive) { model.cancel() }
+                        Button("停止") { model.cancel() }
+                        .readingRole(.destructive)
                             .font(.subheadline.weight(.medium))
                     }
                     ProgressView(value: searchProgress)
@@ -1782,9 +1788,10 @@ private struct BookmarkEditorView: View {
                 Section("原文") { TextEditor(text: $bookText).frame(minHeight: 150) }
                 Section("摘要") { TextEditor(text: $content).frame(minHeight: 120) }
                 Section {
-                    Button("删除书签", role: .destructive) {
+                    Button("删除书签") {
                         Task { await activity.removeBookmark(bookmark); dismiss() }
                     }
+                    .readingRole(.destructive)
                 }
             }
             .navigationTitle(bookmark.chapterName.isEmpty ? "编辑书签" : bookmark.chapterName)

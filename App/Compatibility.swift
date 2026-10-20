@@ -1265,3 +1265,43 @@ struct ReadingCanvas: UIViewRepresentable {
         }
     }
 }
+
+// MARK: - Button role（SwiftUI iOS 15+）
+
+/// 按钮角色的跨版本表示。
+///
+/// `ButtonRole` 类型本身在 iOS 14 SDK 中不存在，不能出现在低版本可编译的
+/// 签名里，因此自建枚举。
+enum ReadingButtonRole {
+    case destructive
+    case cancel
+}
+
+extension View {
+    /// 为按钮补上 iOS 14 上等价的外观。
+    ///
+    /// - iOS 15+：不做任何事，样式由 `Button(role:)` 原生处理。
+    /// - iOS 14：`Button(role:)` 不存在，退化为
+    ///   `.bordered` + 对应颜色；`.cancel` 在 iOS 14 无对应概念，
+    ///   保持普通样式，仅靠文案区分。
+    func readingRole(_ role: ReadingButtonRole) -> some View {
+        modifier(ReadingButtonRoleModifier(role: role))
+    }
+}
+
+private struct ReadingButtonRoleModifier: ViewModifier {
+    var role: ReadingButtonRole
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if #available(iOS 15.0, *) {
+            content
+        } else {
+            switch role {
+            case .destructive:
+                content.buttonStyle(.bordered).tint(.red)
+            case .cancel:
+                content.buttonStyle(.bordered)
+            }
+        }
+    }
+}

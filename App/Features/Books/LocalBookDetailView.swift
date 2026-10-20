@@ -91,7 +91,8 @@ struct LocalBookDetailView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     Button("全部目录", systemImage: "list.bullet") { showsTableOfContents = true }
-                    Button("移出书架", systemImage: "trash", role: .destructive) { showsRemoveConfirmation = true }
+                    Button("移出书架", systemImage: "trash") { showsRemoveConfirmation = true }
+                    .readingRole(.destructive)
                 } label: { Image(systemName: "ellipsis.circle") }
             }
         }
@@ -100,10 +101,12 @@ struct LocalBookDetailView: View {
             LocalBookTableOfContentsView(book: book, chapters: model.chapters)
         }
         .readingConfirmationDialog("从书架移除《\(book.name)》？", isPresented: $showsRemoveConfirmation) {
-            Button("移出书架", role: .destructive) {
+            Button("移出书架") {
                 Task { await library.remove(bookURL: book.bookUrl); dismiss() }
             }
-            Button("取消", role: .cancel) {}
+            .readingRole(.destructive)
+            Button("取消") {}
+            .readingRole(.cancel)
         }
     }
 }

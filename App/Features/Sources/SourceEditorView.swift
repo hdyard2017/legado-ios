@@ -43,10 +43,12 @@ struct SourceEditorView: View {
                     if let debugSource { SourceDebugView(source: debugSource) }
                 }
                 .readingAlert("无法完成操作", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
-                    Button("好", role: .cancel) {}
+                    Button("好") {}
+                    .readingRole(.cancel)
                 } message: { Text(errorMessage ?? "") }
                 .readingConfirmationDialog("放弃未保存的修改？", isPresented: $showsDiscard, titleVisibility: .visible) {
-                    Button("放弃修改", role: .destructive) { dismiss() }
+                    Button("放弃修改") { dismiss() }
+                    .readingRole(.destructive)
                 }
         }
         .readingInteractiveDismissDisabled(isDirty || isSaving)

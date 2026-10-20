@@ -37,8 +37,13 @@ struct RSSHomeView: View {
             }
             ToolbarItem(placement: .primaryAction) { if section == 0 { EditButton() } }
             ToolbarItem(placement: .primaryAction) {
-                if section == 1, !library.stars.isEmpty { Button("清空收藏", systemImage: "trash", role: .destructive) { confirmsClear = true } }
-                else if section == 2, !library.records.isEmpty { Button("清空记录", systemImage: "trash", role: .destructive) { confirmsClear = true } }
+                if section == 1, !library.stars.isEmpty {
+                    Button("清空收藏", systemImage: "trash") { confirmsClear = true }
+                        .readingRole(.destructive)
+                } else if section == 2, !library.records.isEmpty {
+                    Button("清空记录", systemImage: "trash") { confirmsClear = true }
+                        .readingRole(.destructive)
+                }
             }
         })
         let importing = AnyView(actions.fileImporter(isPresented: $showsFiles, allowedContentTypes: [.json, .text], allowsMultipleSelection: true) { result in
@@ -61,8 +66,10 @@ struct RSSHomeView: View {
             Button("好") { library.errorMessage = nil }
         } message: { Text(library.errorMessage ?? "") })
         return status.confirmationDialog(section == 1 ? "确定清空全部RSS收藏？" : "确定清空全部RSS阅读记录？", isPresented: $confirmsClear, titleVisibility: Visibility.visible) {
-            Button("清空", role: .destructive) { Task { if section == 1 { await library.clearStars() } else { await library.clearRecords() } } }
-            Button("取消", role: .cancel) {}
+            Button("清空") { Task { if section == 1 { await library.clearStars() } else { await library.clearRecords() } } }
+            .readingRole(.destructive)
+            Button("取消") {}
+            .readingRole(.cancel)
         }
     }
 
@@ -92,7 +99,8 @@ struct RSSHomeView: View {
                     Button(source.enabled ? "停用" : "启用") { Task { await library.setEnabled(!source.enabled, source: source) } }.tint(.orange)
                 }
                 .swipeActions {
-                    Button("删除", role: .destructive) { Task { await library.remove(source) } }
+                    Button("删除") { Task { await library.remove(source) } }
+                    .readingRole(.destructive)
                 }
                 .contextMenu {
                     NavigationLink { RSSSourceEditorView(source: source) } label: { Label("编辑", systemImage: "pencil") }

@@ -63,7 +63,8 @@ struct OtherSettingsView: View {
             if let operation = maintenance {
                 Button(operation.rawValue) { Task { await perform(operation) } }
             }
-            Button("取消", role: .cancel) { maintenance = nil }
+            Button("取消") { maintenance = nil }
+            .readingRole(.cancel)
         } message: {
             Text(maintenance == .webCache ? "清理网页和图片的临时缓存，保留登录 Cookie、书架和阅读进度。" : "回收数据库中的空闲空间，保留全部书籍、规则和阅读记录。")
         }

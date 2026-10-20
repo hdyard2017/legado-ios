@@ -50,7 +50,8 @@ struct ReadingHistoryView: View {
                                 }
                             }
                             .swipeActions {
-                                Button("删除", role: .destructive) { pendingDelete = record }
+                                Button("删除") { pendingDelete = record }
+                                .readingRole(.destructive)
                             }
                         }
                     }
@@ -70,14 +71,17 @@ struct ReadingHistoryView: View {
                         sortButton("最后阅读", value: 2)
                     }
                     if !activity.summaries.isEmpty {
-                        Button("清空", systemImage: "trash", role: .destructive) { confirmsClear = true }
+                        Button("清空", systemImage: "trash") { confirmsClear = true }
+                        .readingRole(.destructive)
                     }
                 }
             }
         }
         .readingAlert("清空阅读记录", isPresented: $confirmsClear) {
-            Button("取消", role: .cancel) {}
-            Button("删除", role: .destructive) { Task { await activity.clearHistory() } }
+            Button("取消") {}
+            .readingRole(.cancel)
+            Button("删除") { Task { await activity.clearHistory() } }
+            .readingRole(.destructive)
         } message: {
             Text("确定删除全部阅读记录吗？")
         }
@@ -85,12 +89,14 @@ struct ReadingHistoryView: View {
             get: { pendingDelete != nil },
             set: { if !$0 { pendingDelete = nil } }
         )) {
-            Button("取消", role: .cancel) { pendingDelete = nil }
-            Button("删除", role: .destructive) {
+            Button("取消") { pendingDelete = nil }
+            .readingRole(.cancel)
+            Button("删除") {
                 guard let record = pendingDelete else { return }
                 pendingDelete = nil
                 Task { await activity.removeHistory(bookName: record.bookName) }
             }
+            .readingRole(.destructive)
         } message: {
             Text("确定删除“\(pendingDelete?.bookName ?? "")”的阅读记录吗？")
         }

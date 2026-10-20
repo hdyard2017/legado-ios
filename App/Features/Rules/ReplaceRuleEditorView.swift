@@ -68,10 +68,12 @@ struct ReplaceRuleEditorView: View {
                 }
             }
             .readingAlert("规则提示", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
-                Button("好", role: .cancel) {}
+                Button("好") {}
+                .readingRole(.cancel)
             } message: { Text(errorMessage ?? "") }
             .readingConfirmationDialog("放弃未保存的修改？", isPresented: $showsDiscard, titleVisibility: .visible) {
-                Button("放弃修改", role: .destructive) { dismiss() }
+                Button("放弃修改") { dismiss() }
+                .readingRole(.destructive)
             }
             .onChange(of: rule) { _ in testResult = nil }
             .onChange(of: testTitle + testContent + testBook + testSource) { _ in testResult = nil }

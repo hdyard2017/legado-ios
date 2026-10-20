@@ -146,7 +146,8 @@ struct FileManagementView: View {
                         selection = selection.count == displayedFiles.count ? [] : Set(displayedFiles.map(\.url))
                     }
                     Spacer()
-                    Button("删除 \(selection.count) 个文件", role: .destructive) { pendingDeletion = Array(selection) }
+                    Button("删除 \(selection.count) 个文件") { pendingDeletion = Array(selection) }
+                    .readingRole(.destructive)
                         .disabled(selection.isEmpty)
                 }
                 .padding().background(.bar)
@@ -170,7 +171,8 @@ struct FileManagementView: View {
         }
         .readingAlert("重命名文件", isPresented: Binding(get: { renameURL != nil }, set: { if !$0 { renameURL = nil } }), presenting: renameURL) { url in
             TextField("文件名", text: $newName)
-            Button("取消", role: .cancel) { renameURL = nil }
+            Button("取消") { renameURL = nil }
+            .readingRole(.cancel)
             Button("保存") {
                 let name = newName
                 renameURL = nil
@@ -184,7 +186,7 @@ struct FileManagementView: View {
     private var deletionView: some View {
         importAndRenameView
         .readingConfirmationDialog("删除 \(pendingDeletion.count) 个文件？", isPresented: Binding(get: { !pendingDeletion.isEmpty }, set: { if !$0 { pendingDeletion = [] } }), titleVisibility: .visible, presenting: pendingDeletion) { urls in
-            Button("删除文件并移出书架", role: .destructive) {
+            Button("删除文件并移出书架") {
                 pendingDeletion = []
                 Task {
                     await model.run(library) {
@@ -198,7 +200,9 @@ struct FileManagementView: View {
                     }
                 }
             }
-            Button("取消", role: .cancel) { pendingDeletion = [] }
+            .readingRole(.destructive)
+            Button("取消") { pendingDeletion = [] }
+            .readingRole(.cancel)
         } message: { _ in
             Text("将删除应用内文件及对应书架条目，系统“文件”中用于导入的原文件保留。")
         }
@@ -220,7 +224,8 @@ struct FileManagementView: View {
                 model.readyExport = file
                 model.partialExport = nil
             }
-            Button("取消", role: .cancel) { model.finishExport() }
+            Button("取消") { model.finishExport() }
+            .readingRole(.cancel)
         } message: { file in
             Text("已缓存 \(file.cachedChapters)/\(file.totalChapters) 章。导出文件会标记未缓存章节，可先返回详情缓存完整后再导出。")
         }
@@ -255,10 +260,12 @@ struct FileManagementView: View {
                 .contextMenu {
                     Button("导出文件", systemImage: "square.and.arrow.up") { export(file) }
                     Button("重命名", systemImage: "pencil") { renameURL = file.url; newName = filename(for: file.url) }
-                    Button("删除文件", systemImage: "trash", role: .destructive) { pendingDeletion = [file.url] }
+                    Button("删除文件", systemImage: "trash") { pendingDeletion = [file.url] }
+                    .readingRole(.destructive)
                 }
                 .swipeActions {
-                    Button("删除", role: .destructive) { pendingDeletion = [file.url] }
+                    Button("删除") { pendingDeletion = [file.url] }
+                    .readingRole(.destructive)
                     Button("导出", systemImage: "square.and.arrow.up") { export(file) }.tint(.blue)
                 }
             }
@@ -269,9 +276,10 @@ struct FileManagementView: View {
                     HStack {
                         Label(book.name, systemImage: "doc.badge.ellipsis")
                         Spacer()
-                        Button("移出书架", role: .destructive) {
+                        Button("移出书架") {
                             if let url = URL(string: book.bookUrl) { pendingDeletion = [url] }
                         }.buttonStyle(.borderless)
+                        .readingRole(.destructive)
                     }
                 }
             }

@@ -1092,10 +1092,11 @@ struct ReaderView: View {
                         showsAutoReadControls = false
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { showsReaderMenu = true }
                     }
-                    Button("停止自动阅读", systemImage: "stop.fill", role: .destructive) {
+                    Button("停止自动阅读", systemImage: "stop.fill") {
                         isAutoReading = false
                         showsAutoReadControls = false
                     }
+                    .readingRole(.destructive)
                     Button("设置", systemImage: "gearshape") {
                         showsAutoReadControls = false
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { showsStyleControls = true }
@@ -1191,11 +1192,12 @@ struct ReaderView: View {
                     }
                     if backgroundImage != nil {
                         Toggle("使用背景图片", isOn: $useBackgroundImage)
-                        Button("删除背景图片", systemImage: "trash", role: .destructive) {
+                        Button("删除背景图片", systemImage: "trash") {
                             ReaderBackgroundStore.remove()
                             backgroundImage = nil
                             useBackgroundImage = false
                         }
+                        .readingRole(.destructive)
                     }
                     if let backgroundError {
                         Text(backgroundError).font(.footnote).foregroundColor(.red)
@@ -1224,7 +1226,8 @@ struct ReaderView: View {
                             Text(URL(fileURLWithPath: fontPath).lastPathComponent)
                                 .foregroundColor(.secondary)
                         }
-                        Button("恢复默认字体", role: .destructive) { fontPath = "" }
+                        Button("恢复默认字体") { fontPath = "" }
+                        .readingRole(.destructive)
                     }
                     if let fontError {
                         Text(fontError).font(.footnote).foregroundColor(.red)
@@ -1845,7 +1848,8 @@ struct ReaderView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         .swipeActions {
-                            Button("删除", role: .destructive) { Task { await activity.removeBookmark(bookmark) } }
+                            Button("删除") { Task { await activity.removeBookmark(bookmark) } }
+                            .readingRole(.destructive)
                         }
                     }
                 }

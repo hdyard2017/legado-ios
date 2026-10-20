@@ -163,7 +163,8 @@ struct HttpTTSManagementView: View {
             get: { model.errorMessage != nil },
             set: { if !$0 { model.errorMessage = nil } }
         )) {
-            Button("确定", role: .cancel) { model.errorMessage = nil }
+            Button("确定") { model.errorMessage = nil }
+            .readingRole(.cancel)
         } message: {
             Text(model.errorMessage ?? "")
         }

@@ -297,7 +297,8 @@ struct SourceBatchTestView: View {
                 HStack {
                     Button("停用所选", systemImage: "pause.circle") { cleanupAction = .disable }
                     Spacer()
-                    Button("删除所选", systemImage: "trash", role: .destructive) { cleanupAction = .delete }
+                    Button("删除所选", systemImage: "trash") { cleanupAction = .delete }
+                    .readingRole(.destructive)
                 }
                 .font(.subheadline.weight(.semibold))
                 .padding(.horizontal, 18).padding(.vertical, 12)

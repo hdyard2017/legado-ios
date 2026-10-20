@@ -54,7 +54,8 @@ struct ReplaceRuleManagementView: View {
                             Button("编辑", systemImage: "pencil") { edit(rule) }
                             Button("测试", systemImage: "play") { edit(rule, test: true) }
                             Button("复制", systemImage: "doc.on.doc") { edit(library.newRule(copying: rule)) }
-                            Button("删除", systemImage: "trash", role: .destructive) { Task { await library.remove(id: rule.id) } }
+                            Button("删除", systemImage: "trash") { Task { await library.remove(id: rule.id) } }
+                            .readingRole(.destructive)
                         }
                     }
                     .onDelete { offsets in

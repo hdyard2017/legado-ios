@@ -103,9 +103,10 @@ struct SourceManagementView: View {
                                     Button(source.enabledExplore ? "停用发现" : "启用发现", systemImage: "safari") {
                                         Task { await library.setExploreEnabled(!source.enabledExplore, for: source.id) }
                                     }
-                                    Button("删除", systemImage: "trash", role: .destructive) {
+                                    Button("删除", systemImage: "trash") {
                                         Task { await library.remove(sourceIDs: [source.id]) }
                                     }
+                                    .readingRole(.destructive)
                                 }
                             }
                         }
@@ -350,9 +351,10 @@ private struct SourceGroupManagerView: View {
                                     renaming = group
                                     renamedValue = group
                                 }
-                                Button("删除分组", systemImage: "trash", role: .destructive) {
+                                Button("删除分组", systemImage: "trash") {
                                     Task { await library.deleteGroup(group) }
                                 }
+                                .readingRole(.destructive)
                             } label: { Image(systemName: "ellipsis.circle") }
                         }
                     }
@@ -366,7 +368,8 @@ private struct SourceGroupManagerView: View {
                 set: { if !$0 { renaming = nil } }
             )) {
                 TextField("分组名称", text: $renamedValue)
-                Button("取消", role: .cancel) { renaming = nil }
+                Button("取消") { renaming = nil }
+                .readingRole(.cancel)
                 Button("保存") {
                     if let old = renaming { Task { await library.renameGroup(old, to: renamedValue) } }
                     renaming = nil
@@ -405,9 +408,10 @@ private struct SourceBatchGroupView: View {
                 }
                 Section("从分组移除") {
                     ForEach(library.groups, id: \.self) { group in
-                        Button(role: .destructive) {
+                        Button {
                             Task { await library.removeGroup(group, from: sourceIDs) }
                         } label: { Label(group, systemImage: "folder.badge.minus") }
+                        .readingRole(.destructive)
                     }
                 }
             }
@@ -655,7 +659,8 @@ struct SourceImportReviewView: View {
         }
         .readingInteractiveDismissDisabled()
         .readingAlert("导入保存失败", isPresented: Binding(get: { importError != nil }, set: { if !$0 { importError = nil } })) {
-            Button("好", role: .cancel) {}
+            Button("好") {}
+            .readingRole(.cancel)
         } message: { Text(importError ?? "") }
     }
 
