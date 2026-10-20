@@ -1298,10 +1298,70 @@ private struct ReadingButtonRoleModifier: ViewModifier {
         } else {
             switch role {
             case .destructive:
-                content.buttonStyle(.bordered).tint(.red)
+                content.readingButtonStyle(.bordered).tint(.red)
             case .cancel:
-                content.buttonStyle(.bordered)
+                content.readingButtonStyle(.bordered)
             }
         }
+    }
+}
+
+// MARK: - ButtonStyle（SwiftUI iOS 15+）
+
+/// 按钮样式的跨版本表示。
+///
+/// `.bordered` / `.borderedProminent` / `.borderless` 都是 iOS 15 才有的
+/// `PrimitiveButtonStyle`，在 iOS 14 SDK 中不存在。
+enum ReadingButtonStyle {
+    case bordered
+    case borderedProminent
+    case borderless
+}
+
+extension View {
+    /// iOS 14+ 可用的按钮样式入口，替代 iOS 15 的 PrimitiveButtonStyle。
+    ///
+    /// - iOS 15+：原样使用系统样式。
+    /// - iOS 14：退化为 `.bordered`（带描边）或 `.plain`（无描边），
+    ///   视觉上比 iOS 15 略简，但保持可点击区域的提示效果。
+    func readingButtonStyle(_ style: ReadingButtonStyle) -> some View {
+        modifier(ReadingButtonStyleModifier(style: style))
+    }
+}
+
+private struct ReadingButtonStyleModifier: ViewModifier {
+    var style: ReadingButtonStyle
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if #available(iOS 15.0, *) {
+            switch style {
+            case .bordered: content.buttonStyle(.bordered)
+            case .borderedProminent: content.buttonStyle(.borderedProminent)
+            case .borderless: content.buttonStyle(.borderless)
+            }
+        } else {
+            switch style {
+            case .bordered, .borderedProminent:
+                content.buttonStyle(BorderedButtonStyle())
+            case .borderless:
+                content.buttonStyle(.plain)
+            }
+        }
+    }
+}
+
+/// iOS 14 上的描边按钮样式，对应 iOS 15 的 `.bordered`。
+private struct BorderedButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .strokeBorder(configuration.isPressed ? Color.secondary.opacity(0.6) : Color.secondary.opacity(0.35),
+                                  lineWidth: 1)
+            )
+            .contentShape(Rectangle())
+            .opacity(configuration.isPressed ? 0.65 : 1)
     }
 }

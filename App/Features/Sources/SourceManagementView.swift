@@ -59,7 +59,7 @@ struct SourceManagementView: View {
                     Text("新建书源，或从文件、链接、JSON、二维码导入。")
                 } actions: {
                     Button("导入书源") { showsImporter = true }
-                        .buttonStyle(.borderedProminent)
+                        .readingButtonStyle(.borderedProminent)
                 }
             } else {
                 List {

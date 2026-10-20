@@ -152,7 +152,7 @@ private struct RSSArticleListView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack { ForEach(Array(sorts.enumerated()), id: \.element.id) { index, sort in
                         Button(sort.name.isEmpty ? "默认" : sort.name) { selectedSort = index; Task { await refresh() } }
-                            .buttonStyle(.bordered).tint(selectedSort == index ? ReadingTheme.accent : .secondary)
+                            .readingButtonStyle(.bordered).tint(selectedSort == index ? ReadingTheme.accent : .secondary)
                     }}.padding(.horizontal)
                 }.padding(.vertical, 6)
             }
@@ -447,7 +447,7 @@ private struct RSSDownloadView: View {
                 Image(systemName: "doc.badge.arrow.up").font(.system(size: 48)).foregroundColor(ReadingTheme.accent)
                 Text(fileName).font(.headline)
                 Text(ByteCountFormatter.string(fromByteCount: Int64(data.count), countStyle: .file)).foregroundColor(.secondary)
-                Button("选择保存位置", systemImage: "folder") { showsExporter = true }.buttonStyle(.borderedProminent)
+                Button("选择保存位置", systemImage: "folder") { showsExporter = true }.readingButtonStyle(.borderedProminent)
             }
         }.padding().navigationTitle("文件下载").toolbar { ToolbarItem(placement: .cancellationAction) { Button("关闭") { dismiss() } } }
             .task(id: url) { await download() }

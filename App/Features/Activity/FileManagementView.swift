@@ -278,7 +278,7 @@ struct FileManagementView: View {
                         Spacer()
                         Button("移出书架") {
                             if let url = URL(string: book.bookUrl) { pendingDeletion = [url] }
-                        }.buttonStyle(.borderless)
+                        }.readingButtonStyle(.borderless)
                         .readingRole(.destructive)
                     }
                 }

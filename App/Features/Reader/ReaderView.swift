@@ -504,7 +504,7 @@ struct ReaderView: View {
                 .accessibilityIdentifier("reader.failureChangeSource")
             }
         }
-        .buttonStyle(.bordered)
+        .readingButtonStyle(.bordered)
     }
 
     private func openSourceSwitch() {
@@ -1126,7 +1126,7 @@ struct ReaderView: View {
                             Image(systemName: "textformat.size.smaller")
                                 .frame(width: 38, height: 32)
                         }
-                        .buttonStyle(.bordered)
+                        .readingButtonStyle(.bordered)
 
                         VStack(spacing: 2) {
                             Text("字号")
@@ -1143,7 +1143,7 @@ struct ReaderView: View {
                             Image(systemName: "textformat.size.larger")
                                 .frame(width: 38, height: 32)
                         }
-                        .buttonStyle(.bordered)
+                        .readingButtonStyle(.bordered)
                     }
 
                     HStack(spacing: 8) {

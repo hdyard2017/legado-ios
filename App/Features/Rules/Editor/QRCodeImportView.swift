@@ -39,7 +39,7 @@ struct QRCodeImportView: View {
                 } label: {
                     Label("从照片选择二维码", systemImage: "photo")
                         .frame(maxWidth: .infinity)
-                }.buttonStyle(.borderedProminent).disabled(isReading)
+                }.readingButtonStyle(.borderedProminent).disabled(isReading)
                 Text("支持 HTTP(S) 链接、Legado 导入深链和 JSON 内容。识别后进入导入流程。")
                     .font(.footnote).foregroundColor(.secondary)
                 if values.count > 1 {

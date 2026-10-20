@@ -75,10 +75,10 @@ struct SourceEditorView: View {
             HStack {
                 ForEach(BookSourceEditorSchema.sections) { section in
                     Button(section.title) { sectionID = section.id }
-                        .buttonStyle(.bordered)
+                        .readingButtonStyle(.bordered)
                         .tint(sectionID == section.id ? ReadingTheme.accent : .secondary)
                 }
-                Button("选项") { sectionID = "options" }.buttonStyle(.bordered)
+                Button("选项") { sectionID = "options" }.readingButtonStyle(.bordered)
                     .tint(sectionID == "options" ? ReadingTheme.accent : .secondary)
             }.padding(.horizontal)
         }.padding(.vertical, 6)

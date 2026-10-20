@@ -547,7 +547,7 @@ private struct BookGroupManagerView: View {
                             } label: {
                                 Image(systemName: "pencil")
                             }
-                            .buttonStyle(.borderless)
+                            .readingButtonStyle(.borderless)
                         }
                         .swipeActions {
                             Button("删除") {
@@ -722,7 +722,7 @@ private struct EmptyBookshelfHero: View {
             }
             VStack(spacing: 12) {
                 Button("导入本地书", action: onImport)
-                    .buttonStyle(.borderedProminent)
+                    .readingButtonStyle(.borderedProminent)
                     .readingControlSize(.large)
                 NavigationLink("添加书源") { SourceManagementView() }
                     .font(.subheadline)
@@ -991,7 +991,7 @@ struct SearchView: View {
                     Spacer()
                     if model.isPaused {
                         Button("继续", systemImage: "play.fill") { model.resume() }
-                            .buttonStyle(.bordered)
+                            .readingButtonStyle(.bordered)
                             .readingControlSize(.small)
                     } else if model.state == .searching {
                         StatusPill(text: "\(model.completedSourceCount)/\(model.totalSourceCount)", systemImage: "magnifyingglass")
@@ -1042,10 +1042,10 @@ struct SearchView: View {
         ) {
             if model.isPaused {
                 Button("继续搜索", systemImage: "play.fill") { model.resume() }
-                    .buttonStyle(.borderedProminent).tint(ReadingTheme.accent)
+                    .readingButtonStyle(.borderedProminent).tint(ReadingTheme.accent)
             }
             Button("修改关键词", systemImage: "text.cursor") { searchIsPresented = true }
-                .buttonStyle(.bordered)
+                .readingButtonStyle(.bordered)
         }
     }
 
@@ -1056,13 +1056,13 @@ struct SearchView: View {
             systemImage: "network.slash"
         ) {
             Button("调整范围", systemImage: "scope") { showsScope = true }
-                .buttonStyle(.borderedProminent).tint(ReadingTheme.accent)
+                .readingButtonStyle(.borderedProminent).tint(ReadingTheme.accent)
             NavigationLink {
                 SourceManagementView()
             } label: {
                 Label("管理书源", systemImage: "network")
             }
-            .buttonStyle(.bordered)
+            .readingButtonStyle(.bordered)
         }
     }
 

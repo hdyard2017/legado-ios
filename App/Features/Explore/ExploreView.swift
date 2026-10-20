@@ -155,7 +155,7 @@ struct ExploreView: View {
                             Text("添加带有发现分类的书源，即可在这里浏览书籍。")
                         } actions: {
                             NavigationLink("管理书源") { SourceManagementView() }
-                                .buttonStyle(.borderedProminent)
+                                .readingButtonStyle(.borderedProminent)
                         }
                     } else {
                         LazyVStack(spacing: 0) {
