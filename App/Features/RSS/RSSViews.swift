@@ -57,7 +57,7 @@ struct RSSHomeView: View {
         })
         let status = AnyView(exporting
             .overlay { if library.isWorking { ProgressView().readingControlSize(.large) } }
-            .alert("RSS操作失败", isPresented: Binding(get: { library.errorMessage != nil }, set: { if !$0 { library.errorMessage = nil } })) {
+            .readingAlert("RSS操作失败", isPresented: Binding(get: { library.errorMessage != nil }, set: { if !$0 { library.errorMessage = nil } })) {
             Button("好") { library.errorMessage = nil }
         } message: { Text(library.errorMessage ?? "") })
         return status.confirmationDialog(section == 1 ? "确定清空全部RSS收藏？" : "确定清空全部RSS阅读记录？", isPresented: $confirmsClear, titleVisibility: Visibility.visible) {
@@ -490,7 +490,7 @@ private struct RSSPhotoView: View {
                 ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() } }
             }
             .task(id: value) { await load() }
-            .alert("图片", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) { Button("好") { message = nil } } message: { Text(message ?? "") }
+            .readingAlert("图片", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) { Button("好") { message = nil } } message: { Text(message ?? "") }
         }
     }
 

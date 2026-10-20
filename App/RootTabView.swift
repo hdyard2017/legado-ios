@@ -116,7 +116,7 @@ struct RootTabView: View {
         .onChange(of: sourceLibrary.notice?.id) { _ in
             if !sourceImportIsPresented { displayedSourceNotice = sourceLibrary.notice }
         }
-        .alert(item: $displayedSourceNotice) { notice in
+        .readingAlert(item: $displayedSourceNotice) { notice in
             Alert(
                 title: Text(notice.title),
                 message: Text(notice.detail),
@@ -249,7 +249,7 @@ private struct BookshelfView: View {
             BookGroupManagerView()
                 .environmentObject(library)
         }
-        .alert("本地书导入失败", isPresented: Binding(
+        .readingAlert("本地书导入失败", isPresented: Binding(
             get: { library.errorMessage != nil },
             set: { if !$0 { library.clearError() } }
         )) {
@@ -257,7 +257,7 @@ private struct BookshelfView: View {
         } message: {
             Text(library.errorMessage ?? "未知错误")
         }
-        .alert("书架更新", isPresented: Binding(
+        .readingAlert("书架更新", isPresented: Binding(
             get: { library.updateMessage != nil },
             set: { if !$0 { library.clearUpdateMessage() } }
         )) {
@@ -572,12 +572,12 @@ private struct BookGroupManagerView: View {
                     Button("新建", systemImage: "plus") { newName = ""; showsCreate = true }
                 }
             }
-            .alert("新建分组", isPresented: $showsCreate) {
+            .readingAlert("新建分组", isPresented: $showsCreate) {
                 TextField("分组名称", text: $newName)
                 Button("取消", role: .cancel) {}
                 Button("确定") { Task { await library.createGroup(name: newName) } }
             }
-            .alert("编辑分组", isPresented: Binding(
+            .readingAlert("编辑分组", isPresented: Binding(
                 get: { editingGroup != nil },
                 set: { if !$0 { editingGroup = nil } }
             )) {

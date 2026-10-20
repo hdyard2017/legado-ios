@@ -75,13 +75,13 @@ struct ReadingHistoryView: View {
                 }
             }
         }
-        .alert("清空阅读记录", isPresented: $confirmsClear) {
+        .readingAlert("清空阅读记录", isPresented: $confirmsClear) {
             Button("取消", role: .cancel) {}
             Button("删除", role: .destructive) { Task { await activity.clearHistory() } }
         } message: {
             Text("确定删除全部阅读记录吗？")
         }
-        .alert("删除阅读记录", isPresented: Binding(
+        .readingAlert("删除阅读记录", isPresented: Binding(
             get: { pendingDelete != nil },
             set: { if !$0 { pendingDelete = nil } }
         )) {

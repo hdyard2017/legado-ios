@@ -304,7 +304,7 @@ struct SourceBatchTestView: View {
                 .background(.ultraThinMaterial)
             }
         }
-        .alert(item: $cleanupAction) { action in
+        .readingAlert(item: $cleanupAction) { action in
             Alert(
                 title: Text(action == .delete ? "删除失败书源？" : "停用失败书源？"),
                 message: Text("将处理已勾选的 \(model.selectedFailedIDs.count) 个书源。搜索不到当前关键词不一定代表书源永久失效。"),

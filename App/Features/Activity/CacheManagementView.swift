@@ -55,7 +55,7 @@ struct CacheManagementView: View {
         .navigationTitle("缓存管理")
         .task { await model.load() }
         .overlay { if model.isWorking { ProgressView() } }
-        .alert("缓存操作失败", isPresented: Binding(
+        .readingAlert("缓存操作失败", isPresented: Binding(
             get: { model.errorMessage != nil },
             set: { if !$0 { model.errorMessage = nil } }
         )) {

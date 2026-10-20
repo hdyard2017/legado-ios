@@ -119,7 +119,7 @@ struct BookDetailView: View {
         .sheet(isPresented: $showsTableOfContents) {
             BookTableOfContentsView(book: model.book, chapters: model.chapters, source: model.source)
         }
-        .confirmationDialog("从书架移除《\(model.book.name)》？", isPresented: $showsRemoveConfirmation) {
+        .readingConfirmationDialog("从书架移除《\(model.book.name)》？", isPresented: $showsRemoveConfirmation) {
             Button("移出书架", role: .destructive) {
                 Task { await library.remove(bookURL: model.book.bookUrl) }
             }

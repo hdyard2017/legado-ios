@@ -67,7 +67,7 @@ struct DiagnosticLogView: View {
                 }
             }
         }
-        .confirmationDialog("清空全部日志？", isPresented: $confirmsClear, titleVisibility: .visible) {
+        .readingConfirmationDialog("清空全部日志？", isPresented: $confirmsClear, titleVisibility: .visible) {
             Button("清空日志", role: .destructive) {
                 do { try DiagnosticLog.shared.clear(); reload() }
                 catch { errorMessage = error.localizedDescription }
@@ -76,7 +76,7 @@ struct DiagnosticLogView: View {
         .fileExporter(isPresented: $exportsLog, document: DiagnosticLogDocument(text: exportText), contentType: .plainText, defaultFilename: "阅读诊断日志") { result in
             if case .failure(let error) = result { errorMessage = error.localizedDescription }
         }
-        .alert("日志操作失败", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
+        .readingAlert("日志操作失败", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("好") { errorMessage = nil }
         } message: { Text(errorMessage ?? "") }
     }

@@ -107,7 +107,7 @@ struct SourceSwitchView: View {
         }
         .task { await model.load(sources: sources) }
         .onDisappear { model.cancelSelection() }
-        .alert("换源失败", isPresented: Binding(
+        .readingAlert("换源失败", isPresented: Binding(
             get: { model.errorMessage != nil },
             set: { if !$0 { model.clearError() } }
         )) {

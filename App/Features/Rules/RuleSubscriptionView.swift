@@ -121,7 +121,7 @@ struct RuleSubscriptionView: View {
         .toolbar { ToolbarItem(placement: .primaryAction) { Button("新建", systemImage: "plus") { editing = RuleSub() } }; ToolbarItem(placement: .primaryAction) { EditButton() } }
         .task { await model.load() }
         .sheet(item: $editing) { value in RuleSubscriptionEditView(value: value) { item in await model.save(item) } }
-        .alert("规则订阅", isPresented: Binding(get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } })) { Button("好") { model.errorMessage = nil } } message: { Text(model.errorMessage ?? "") }
+        .readingAlert("规则订阅", isPresented: Binding(get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } })) { Button("好") { model.errorMessage = nil } } message: { Text(model.errorMessage ?? "") }
     }
 
     private func open(_ value: RuleSub) {

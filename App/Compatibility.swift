@@ -991,3 +991,126 @@ private struct ReadingInteractiveDismissModifier: ViewModifier {
         }
     }
 }
+
+// MARK: - Alert / confirmationDialog 的 message（iOS 15+）
+
+extension View {
+    /// 跨版本的 `alert`，替代 iOS 15 才有的
+    /// `alert(_:isPresented:actions:message:)` 形态。
+    ///
+    /// iOS 14 的 `.alert` 只能返回 `Alert` 值，而 SwiftUI 无法把
+    /// `@ViewBuilder` 构造出的按钮集合转换回 `Alert.Button`，因此 iOS 14 分支
+    /// 降级为**不带 message 的 alert**：标题照常显示，正文提示会丢失。
+    /// 这是 iOS 14 上的功能折中，不影响流程正确性。
+    ///
+    /// - Parameters:
+    ///   - title: 标题。
+    ///   - isPresented: 显示绑定。
+    ///   - actions: 按钮集合。
+    ///   - message: 正文提示，仅 iOS 15+ 生效。
+    func readingAlert<T: StringProtocol>(
+        _ title: T,
+        isPresented: Binding<Bool>,
+        @ViewBuilder actions: () -> some View,
+        message: @escaping () -> Text
+    ) -> some View {
+        if #available(iOS 15.0, *) {
+            self.alert(Text(title), isPresented: isPresented, actions: actions, message: message)
+        } else {
+            self.alert(Text(title), isPresented: isPresented, actions: actions)
+        }
+    }
+
+    /// 跨版本的 `confirmationDialog`。
+    ///
+    /// 注意：iOS 14 上没有 `confirmationDialog` 这一形态，这里同样降级为 alert，
+    /// 视觉样式为居中弹窗而非底部动作表，属已知差异。
+    func readingConfirmationDialog<T: StringProtocol>(
+        _ title: T,
+        isPresented: Binding<Bool>,
+        titleVisibility: Visibility = .automatic,
+        @ViewBuilder actions: () -> some View,
+        message: @escaping () -> Text
+    ) -> some View {
+        if #available(iOS 15.0, *) {
+            self.confirmationDialog(Text(title), isPresented: isPresented,
+                                    titleVisibility: titleVisibility,
+                                    actions: actions, message: message)
+        } else {
+            self.alert(Text(title), isPresented: isPresented, actions: actions)
+        }
+    }
+
+    /// 带 `presenting` 数据的 `alert`。
+    ///
+    /// iOS 15+ 原样透传；iOS 14 降级为不带数据与message 的 alert。
+    func readingAlert<T: StringProtocol, D>(
+        _ title: T,
+        isPresented: Binding<Bool>,
+        presenting data: D?,
+        @ViewBuilder actions: (D) -> some View,
+        message: @escaping (D) -> Text
+    ) -> some View {
+        if #available(iOS 15.0, *) {
+            self.alert(Text(title), isPresented: isPresented, presenting: data,
+                       actions: actions, message: message)
+        } else {
+            // iOS 14 无法在 alert 中携带数据，动作闭包退化为无参形式，
+            // 调用方需要自行从视图状态取数（已保证数据源与 presenting 一致）。
+            self.alert(Text(title), isPresented: isPresented) {
+                if let data {
+                    actions(data)
+                }
+            }
+        }
+    }
+
+    /// 带 `presenting` 数据的 `confirmationDialog`。
+    func readingConfirmationDialog<T: StringProtocol, D>(
+        _ title: T,
+        isPresented: Binding<Bool>,
+        titleVisibility: Visibility = .automatic,
+        presenting data: D?,
+        @ViewBuilder actions: (D) -> some View,
+        message: @escaping (D) -> Text
+    ) -> some View {
+        if #available(iOS 15.0, *) {
+            self.confirmationDialog(Text(title), isPresented: isPresented,
+                                    titleVisibility: titleVisibility, presenting: data,
+                                    actions: actions, message: message)
+        } else {
+            self.alert(Text(title), isPresented: isPresented) {
+                if let data {
+                    actions(data)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - alert(item:)（SwiftUI iOS 15+）
+
+extension View {
+    /// 跨版本的 `alert(item:content:)`，替代 iOS 15 才有的形态。
+    ///
+    /// iOS 14 只有 `alert(isPresented:content:)`。
+    /// `item` 为 nil 时把 `isPresented` 置为 false，即等价于「无数据时关闭」，
+    /// 因此这里用一个派生 binding 桥接两者。
+    func readingAlert<Item: Identifiable, Content: View>(
+        item: Binding<Item?>,
+        @ViewBuilder content: @escaping (Item) -> Content
+    ) -> some View {
+        if #available(iOS 15.0, *) {
+            self.alert(item: item, content: content)
+        } else {
+            self.alert(isPresented: Binding(
+                get: { item.wrappedValue != nil },
+                set: { if !$0 { item.wrappedValue = nil } }
+            )) {
+                if let value = item.wrappedValue {
+                    content(value)
+                }
+            }
+        }
+    }
+}

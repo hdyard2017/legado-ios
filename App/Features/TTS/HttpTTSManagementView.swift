@@ -163,7 +163,7 @@ struct HttpTTSManagementView: View {
         ) { result in
             if case .failure(let error) = result { model.errorMessage = error.localizedDescription }
         }
-        .alert("在线朗读引擎", isPresented: Binding(
+        .readingAlert("在线朗读引擎", isPresented: Binding(
             get: { model.errorMessage != nil },
             set: { if !$0 { model.errorMessage = nil } }
         )) {

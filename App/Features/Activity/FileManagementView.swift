@@ -168,7 +168,7 @@ struct FileManagementView: View {
             case .failure(let error): model.errorMessage = error.localizedDescription
             }
         }
-        .alert("重命名文件", isPresented: Binding(get: { renameURL != nil }, set: { if !$0 { renameURL = nil } }), presenting: renameURL) { url in
+        .readingAlert("重命名文件", isPresented: Binding(get: { renameURL != nil }, set: { if !$0 { renameURL = nil } }), presenting: renameURL) { url in
             TextField("文件名", text: $newName)
             Button("取消", role: .cancel) { renameURL = nil }
             Button("保存") {
@@ -183,7 +183,7 @@ struct FileManagementView: View {
 
     private var deletionView: some View {
         importAndRenameView
-        .confirmationDialog("删除 \(pendingDeletion.count) 个文件？", isPresented: Binding(get: { !pendingDeletion.isEmpty }, set: { if !$0 { pendingDeletion = [] } }), titleVisibility: .visible, presenting: pendingDeletion) { urls in
+        .readingConfirmationDialog("删除 \(pendingDeletion.count) 个文件？", isPresented: Binding(get: { !pendingDeletion.isEmpty }, set: { if !$0 { pendingDeletion = [] } }), titleVisibility: .visible, presenting: pendingDeletion) { urls in
             Button("删除文件并移出书架", role: .destructive) {
                 pendingDeletion = []
                 Task {
@@ -215,7 +215,7 @@ struct FileManagementView: View {
                 }
             }
         }
-        .confirmationDialog("缓存正文不完整", isPresented: $confirmsPartialExport, titleVisibility: .visible, presenting: model.partialExport) { file in
+        .readingConfirmationDialog("缓存正文不完整", isPresented: $confirmsPartialExport, titleVisibility: .visible, presenting: model.partialExport) { file in
             Button("导出已缓存内容") {
                 model.readyExport = file
                 model.partialExport = nil
@@ -227,7 +227,7 @@ struct FileManagementView: View {
         .sheet(item: $model.readyExport, onDismiss: { model.finishExport() }) { file in
             FileExportPicker(url: file.url) { model.readyExport = nil }
         }
-        .alert("文件操作失败", isPresented: Binding(get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } })) {
+        .readingAlert("文件操作失败", isPresented: Binding(get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } })) {
             Button("好") { model.errorMessage = nil }
         } message: { Text(model.errorMessage ?? "未知错误") }
     }

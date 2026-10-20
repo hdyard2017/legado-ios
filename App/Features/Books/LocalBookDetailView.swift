@@ -99,7 +99,7 @@ struct LocalBookDetailView: View {
         .sheet(isPresented: $showsTableOfContents) {
             LocalBookTableOfContentsView(book: book, chapters: model.chapters)
         }
-        .confirmationDialog("从书架移除《\(book.name)》？", isPresented: $showsRemoveConfirmation) {
+        .readingConfirmationDialog("从书架移除《\(book.name)》？", isPresented: $showsRemoveConfirmation) {
             Button("移出书架", role: .destructive) {
                 Task { await library.remove(bookURL: book.bookUrl); dismiss() }
             }

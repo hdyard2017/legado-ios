@@ -67,10 +67,10 @@ struct ReplaceRuleEditorView: View {
                     }.disabled(isSaving || isTesting)
                 }
             }
-            .alert("规则提示", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
+            .readingAlert("规则提示", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
                 Button("好", role: .cancel) {}
             } message: { Text(errorMessage ?? "") }
-            .confirmationDialog("放弃未保存的修改？", isPresented: $showsDiscard, titleVisibility: .visible) {
+            .readingConfirmationDialog("放弃未保存的修改？", isPresented: $showsDiscard, titleVisibility: .visible) {
                 Button("放弃修改", role: .destructive) { dismiss() }
             }
             .onChange(of: rule) { _ in testResult = nil }

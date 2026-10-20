@@ -363,7 +363,7 @@ private struct SourceGroupManagerView: View {
             .navigationTitle("书源分组")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() } } }
-            .alert("重命名分组", isPresented: Binding(
+            .readingAlert("重命名分组", isPresented: Binding(
                 get: { renaming != nil },
                 set: { if !$0 { renaming = nil } }
             )) {
@@ -656,7 +656,7 @@ struct SourceImportReviewView: View {
             }
         }
         .readingInteractiveDismissDisabled()
-        .alert("导入保存失败", isPresented: Binding(get: { importError != nil }, set: { if !$0 { importError = nil } })) {
+        .readingAlert("导入保存失败", isPresented: Binding(get: { importError != nil }, set: { if !$0 { importError = nil } })) {
             Button("好", role: .cancel) {}
         } message: { Text(importError ?? "") }
     }

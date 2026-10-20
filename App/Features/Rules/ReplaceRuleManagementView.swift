@@ -90,7 +90,7 @@ struct ReplaceRuleManagementView: View {
             case .failure(let error): library.notice = .init(kind: .error, title: "无法选择文件", detail: error.localizedDescription)
             }
         }
-        .alert(item: $library.notice) { notice in
+        .readingAlert(item: $library.notice) { notice in
             Alert(title: Text(notice.title), message: Text(notice.detail), dismissButton: .default(Text("好")))
         }
     }
