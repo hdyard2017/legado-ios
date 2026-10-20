@@ -65,7 +65,7 @@ struct RSSHomeView: View {
             .readingAlert("RSS操作失败", isPresented: Binding(get: { library.errorMessage != nil }, set: { if !$0 { library.errorMessage = nil } })) {
             Button("好") { library.errorMessage = nil }
         } message: { Text(library.errorMessage ?? "") })
-        return status.confirmationDialog(section == 1 ? "确定清空全部RSS收藏？" : "确定清空全部RSS阅读记录？", isPresented: $confirmsClear, titleVisibility: Visibility.visible) {
+        return status.readingConfirmationDialog(section == 1 ? "确定清空全部RSS收藏？" : "确定清空全部RSS阅读记录？", isPresented: $confirmsClear, titleVisibility: .visible) {
             Button("清空") { Task { if section == 1 { await library.clearStars() } else { await library.clearRecords() } } }
             .readingRole(.destructive)
             Button("取消") {}
