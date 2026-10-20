@@ -1234,3 +1234,431 @@ private struct ReadingConfirmationAlertModifier<Item: Identifiable>: ViewModifie
         )
     }
 }
+
+// MARK: - 标题可见性（iOS 15+ 的 Visibility）
+
+/// `Visibility` 的跨版本表示。
+///
+/// SwiftUI 的 `Visibility` 类型本身在 iOS 14 SDK 中不存在，
+/// 不能出现在低版本可编译的函数签名里，这里自建等价枚举。
+enum ReadingTitleVisibility {
+    case automatic
+    case visible
+    case hidden
+
+    @available(iOS 15.0, *)
+    var swiftUIValue: Visibility {
+        switch self {
+        case .automatic: return .automatic
+        case .visible: return .visible
+        case .hidden: return .hidden
+        }
+    }
+}
+
+// MARK: - Button role（SwiftUI iOS 15+）
+
+/// 按钮角色的跨版本表示。
+///
+/// `ButtonRole` 类型本身在 iOS 14 SDK 中不存在，不能出现在低版本可编译的
+/// 签名里，因此自建枚举。
+enum ReadingButtonRole {
+    case destructive
+    case cancel
+}
+
+extension View {
+    /// 为按钮补上 iOS 14 上等价的外观。
+    ///
+    /// - iOS 15+：不做任何事，样式由 `Button(role:)` 原生处理。
+    /// - iOS 14：`.destructive` 退化为 `.bordered` + 红色 tint；
+    ///   `.cancel` 保持普通样式，仅靠文案区分。
+    func readingRole(_ role: ReadingButtonRole) -> some View {
+        modifier(ReadingButtonRoleModifier(role: role))
+    }
+}
+
+private struct ReadingButtonRoleModifier: ViewModifier {
+    var role: ReadingButtonRole
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if #available(iOS 15.0, *) {
+            content
+        } else {
+            switch role {
+            case .destructive:
+                content.readingButtonStyle(.bordered).readingTint(.red)
+            case .cancel:
+                content.readingButtonStyle(.bordered)
+            }
+        }
+    }
+}
+
+// MARK: - ButtonStyle（SwiftUI iOS 15+）
+
+/// 按钮样式的跨版本表示。
+enum ReadingButtonStyle {
+    case bordered
+    case borderedProminent
+    case borderless
+}
+
+extension View {
+    /// iOS 14+ 可用的按钮样式入口，替代 iOS 15 的 PrimitiveButtonStyle。
+    ///
+    /// - iOS 15+：原样使用系统样式。
+    /// - iOS 14：退化为 `.bordered`（带描边）或 `.plain`（无描边）。
+    func readingButtonStyle(_ style: ReadingButtonStyle) -> some View {
+        modifier(ReadingButtonStyleModifier(style: style))
+    }
+}
+
+private struct ReadingButtonStyleModifier: ViewModifier {
+    var style: ReadingButtonStyle
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if #available(iOS 15.0, *) {
+            switch style {
+            case .bordered: content.buttonStyle(.bordered)
+            case .borderedProminent: content.buttonStyle(.borderedProminent)
+            case .borderless: content.buttonStyle(.borderless)
+            }
+        } else {
+            switch style {
+            case .bordered, .borderedProminent:
+                content.buttonStyle(ReadingBorderedButtonStyle())
+            case .borderless:
+                content.buttonStyle(.plain)
+            }
+        }
+    }
+}
+
+/// iOS 14 上的描边按钮样式，对应 iOS 15 的 `.bordered`。
+private struct ReadingBorderedButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .strokeBorder(
+                        configuration.isPressed
+                            ? Color.secondary.opacity(0.6)
+                            : Color.secondary.opacity(0.35),
+                        lineWidth: 1
+                    )
+            )
+            .contentShape(Rectangle())
+            .opacity(configuration.isPressed ? 0.65 : 1)
+    }
+}
+
+// MARK: - Material 材质（iOS 14）
+
+/// 模糊材质的跨版本表示。
+///
+/// iOS 15 起 `Material` 遵循 `ShapeStyle`，可直接传给 `fill()`/`background()`；
+/// iOS 14 上 Material 只是 `UIColor`，必须走 `Color(UIColor)`。
+enum ReadingMaterial {
+    case ultraThin
+    case thin
+    case regular
+    case thick
+    case ultraThick
+
+    /// iOS 14 可用的等价颜色：按深浅色模式区分的半透明系统色。
+    var legacyColor: Color {
+        switch self {
+        case .ultraThin: return Color(UIColor { $0.userInterfaceStyle == .dark
+            ? UIColor(white: 0.18, alpha: 0.62) : UIColor(white: 1, alpha: 0.62) })
+        case .thin: return Color(UIColor { $0.userInterfaceStyle == .dark
+            ? UIColor(white: 0.16, alpha: 0.72) : UIColor(white: 1, alpha: 0.72) })
+        case .regular: return Color(UIColor { $0.userInterfaceStyle == .dark
+            ? UIColor(white: 0.14, alpha: 0.82) : UIColor(white: 1, alpha: 0.82) })
+        case .thick: return Color(UIColor { $0.userInterfaceStyle == .dark
+            ? UIColor(white: 0.12, alpha: 0.9) : UIColor(white: 1, alpha: 0.9) })
+        case .ultraThick: return Color(UIColor { $0.userInterfaceStyle == .dark
+            ? UIColor(white: 0.1, alpha: 0.96) : UIColor(white: 1, alpha: 0.96) })
+        }
+    }
+}
+
+extension View {
+    /// 用材质填充背景，iOS 14 上退化为等效的半透明系统色。
+    func readingMaterialBackground(_ material: ReadingMaterial) -> some View {
+        modifier(ReadingMaterialBackgroundModifier(material: material))
+    }
+}
+
+private struct ReadingMaterialBackgroundModifier: ViewModifier {
+    var material: ReadingMaterial
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if #available(iOS 15.0, *) {
+            switch material {
+            case .ultraThin: content.background(.ultraThinMaterial)
+            case .thin: content.background(.thinMaterial)
+            case .regular: content.background(.regularMaterial)
+            case .thick: content.background(.thickMaterial)
+            case .ultraThick: content.background(.ultraThickMaterial)
+            }
+        } else {
+            content.background(material.legacyColor)
+        }
+    }
+}
+
+// MARK: - 数值输入框（TextField value:format: 是 iOS 15+）
+
+/// 整数输入框，替代 iOS 15 才有的 `TextField(_:value:format:)`。
+///
+/// 该初始化器依赖 `FormatStyle`（iOS 15+）；这里改用 iOS 13 就有的
+/// 字符串绑定 + `Int64` 手动解析，回车提交，非法输入回退原值。
+struct ReadingNumberField: View {
+    let title: String
+    @Binding var value: Int64
+    @State private var text: String = ""
+
+    init(title: String, value: Binding<Int64>) {
+        self.title = title
+        self._value = value
+    }
+
+    var body: some View {
+        TextField(title, text: $text)
+            .onAppear { text = String(value) }
+            .onChange(of: value) { text = String($0) }
+            .onSubmit { commit() }
+    }
+
+    private func commit() {
+        let trimmed = text.trimmingCharacters(in: .whitespaces)
+        guard let parsed = Int64(trimmed) else {
+            text = String(value)
+            return
+        }
+        if parsed != value { value = parsed }
+    }
+}
+
+extension ReadingNumberField {
+    /// `Int` 绑定重载。
+    init(title: String, value: Binding<Int>) {
+        self.init(title: title, value: Binding<Int64>(
+            get: { Int64(value.wrappedValue) },
+            set: { value.wrappedValue = Int($0) }
+        ))
+    }
+}
+
+// MARK: - View.tint（SwiftUI iOS 16+）
+
+extension View {
+    /// `View.tint(_:)` 的 iOS 14 等价实现。
+    ///
+    /// `tint(_:)` 这个 View 扩展是 iOS 16 才有的；iOS 14/15 上
+    /// 只能用 `.accentColor` 近似。传 nil 时不做任何处理。
+    func readingTint(_ color: Color?) -> some View {
+        modifier(ReadingTintModifier(color: color))
+    }
+}
+
+private struct ReadingTintModifier: ViewModifier {
+    var color: Color?
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if #available(iOS 16.0, *) {
+            content.tint(color)
+        } else if let color {
+            content.accentColor(color)
+        } else {
+            content
+        }
+    }
+}
+
+// MARK: - 安全区插入与焦点（iOS 15+）
+
+extension View {
+    /// `safeAreaInset(edge:spacing:content:)` 的 iOS 14 等价实现。
+    ///
+    /// iOS 15 才提供该修饰符。iOS 14 上 top 边缘用 VStack 把内容顶到
+    /// 安全区之前，bottom 边缘用 VStack 把内容压到安全区之后——
+    /// 在列表/表单场景下与 safeAreaInset 的视觉效果基本一致。
+    @ViewBuilder
+    func readingSafeAreaInset(
+        edge: Edge,
+        spacing: CGFloat = 0,
+        @ViewBuilder content: () -> some View
+    ) -> some View {
+        if #available(iOS 15.0, *) {
+            safeAreaInset(edge: edge, spacing: spacing, content: content)
+        } else {
+            switch edge {
+            case .top:
+                VStack(spacing: spacing) {
+                    content()
+                    self
+                }
+            case .bottom:
+                VStack(spacing: spacing) {
+                    self
+                    content()
+                }
+            default:
+                self
+            }
+        }
+    }
+}
+
+// MARK: - View.task（SwiftUI iOS 15+）
+
+extension View {
+    /// `.task {}` 的 iOS 14 等价实现。
+    ///
+    /// iOS 15+ 转发原生；iOS 14 用 `onAppear` 触发一次异步任务。
+    /// 差异：原生 task 会在视图消失时取消任务，onAppear 不会；
+    /// 本项目这些任务都是短时读取，无实际影响。
+    func readingTask(priority: TaskPriority = .userInitiated, _ action: @escaping () async -> Void) -> some View {
+        modifier(ReadingTaskModifier(priority: priority, action: action))
+    }
+
+    /// `.task(id:) {}` 的 iOS 14 等价实现。
+    ///
+    /// 用 `onChange(of:)` 检测 id 变化，手动取消上一轮任务后重启，
+    /// 语义与原生 `task(id:)` 一致。
+    func readingTask<T: Equatable>(id: T, priority: TaskPriority = .userInitiated, _ action: @escaping () async -> Void) -> some View {
+        modifier(ReadingTaskIDModifier(id: id, priority: priority, action: action))
+    }
+
+    /// `.refreshable` 的 iOS 14 等价实现。
+    ///
+    /// 下拉刷新是 iOS 15+ 能力，iOS 14 上退化为空操作，
+    /// 数据仍可通过页面内按钮或重新进入页面加载。
+    func readingRefreshable(_ action: @escaping () async -> Void) -> some View {
+        modifier(ReadingRefreshableModifier(action: action))
+    }
+}
+
+private struct ReadingTaskModifier: ViewModifier {
+    var priority: TaskPriority
+    var action: () async -> Void
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if #available(iOS 15.0, *) {
+            content.task(priority: priority) { await action() }
+        } else {
+            content.onAppear {
+                Task(priority: priority) { await action() }
+            }
+        }
+    }
+}
+
+private struct ReadingTaskIDModifier<T: Equatable>: ViewModifier {
+    let id: T
+    var priority: TaskPriority
+    var action: () async -> Void
+
+    @State private var current: Task<Void, Never>?
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear { run() }
+            .onChange(of: id) { _ in run() }
+    }
+
+    private func run() {
+        current?.cancel()
+        current = Task(priority: priority) { await action() }
+    }
+}
+
+private struct ReadingRefreshableModifier: ViewModifier {
+    var action: () async -> Void
+
+    func body(content: Content) -> some View {
+        if #available(iOS 15.0, *) {
+            content.refreshable { await action() }
+        } else {
+            content
+        }
+    }
+}
+
+// MARK: - View.searchable（SwiftUI iOS 15+）
+
+extension View {
+    /// `.searchable(text:prompt:)` 的 iOS 14 等价入口。
+    ///
+    /// 作者已在 DesignSystem 为带 `isPresented` 的形态做过封装，
+    /// 这里补上不带 `isPresented` 的常用重载。
+    func readingSearchable(text: Binding<String>, prompt: String) -> some View {
+        modifier(ReadingSearchBoxModifier(text: text, prompt: prompt))
+    }
+}
+
+private struct ReadingSearchBoxModifier: ViewModifier {
+    @Binding var text: String
+    let prompt: String
+
+    func body(content: Content) -> some View {
+        if #available(iOS 15.0, *) {
+            content.searchable(text: text, prompt: prompt)
+        } else {
+            content.readingSafeAreaInset(edge: .top, spacing: 0) {
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.secondary)
+                        .accessibilityHidden(true)
+                    TextField(prompt, text: $text)
+                        .readingInputConfiguration(autocapitalization: .never, disableAutocorrection: true)
+                        .readingSubmitLabel(.search)
+                    if !text.isEmpty {
+                        Button {
+                            text = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.secondary)
+                        }
+                        .accessibilityLabel("清除搜索")
+                    }
+                }
+                .padding(10)
+                .background(RoundedRectangle(cornerRadius: 10).fill(ReadingTheme.groupedCanvas))
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(ReadingTheme.canvas)
+            }
+        }
+    }
+}
+
+// MARK: - 日期时间格式化（Date.FormatStyle 是 iOS 15+）
+
+extension Date {
+    /// `Text(date, format: .dateTime.month().day().hour().minute().second())`
+    /// 的 iOS 14 等价实现，输出「M月d日 HH:mm:ss」。
+    func readingFormattedTimestamp() -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "zh_CN")
+        formatter.dateFormat = "M月d日 HH:mm:ss"
+        return formatter.string(from: self)
+    }
+}
+
+// MARK: - DynamicTypeSize（SwiftUI iOS 15+）
+
+extension EnvironmentValues {
+    /// iOS 14+ 可用的「是否处于超大字体」判断。
+    ///
+    /// `DynamicTypeSize` 类型与 `\.dynamicTypeSize` 环境值都是 iOS 15 才有的；
+    /// iOS 14 上改用 `\.sizeCategory` 判断，二者语义一致
+    /// （accessibility1~5 对应 AX1~AX5）。
+    var readingIsAccessibilitySize: Bool {
+        sizeCategory >= .accessibilityMedium
+    }
+}
