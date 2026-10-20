@@ -88,6 +88,11 @@ FAMILIES: list[tuple[str, str, str, str]] = [
     ("onSubmit.of", r"\.onSubmit\s*\(\s*of\s*:", "15.0", "readingOnSubmit(of:)"),
     ("AsyncBytes", r"\bURLSession\.AsyncBytes\b|\bsession\.bytes\s*\(", "15.0", "降级为 data(for:) + 分块"),
     ("json5Allowed", r"\.json5Allowed\b", "15.0", "仅 .fragmentsAllowed"),
+    # iOS 15 的 overlay 闭包版 overlay(alignment:content:)；
+    # iOS 14 只有 overlay(_:alignment:)，闭包版要包 AnyView。
+    ("overlay.closure", r"\.overlay\s*\(\s*alignment\s*:", "15.0", "overlay(AnyView(...), alignment:)"),
+    # iOS 15 的 safeAreaInset 签名 spacing 是 CGFloat?
+    ("safeAreaInset", r"\.safeAreaInset\s*\(", "15.0", "readingSafeAreaInset"),
     # --- iOS 17 ---
     ("scrollTargetBehavior", r"\.scrollTargetBehavior\s*\(", "17.0", "自建"),
     ("scrollPosition", r"\.scrollPosition\s*\(", "17.0", "自建"),

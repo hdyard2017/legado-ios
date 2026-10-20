@@ -171,7 +171,7 @@ struct FileManagementView: View {
         }
         .readingAlert("重命名文件", isPresented: Binding(get: { renameURL != nil }, set: { if !$0 { renameURL = nil } }), presenting: renameURL, messageText: "保留 TXT 格式，书架中的书名、书签和阅读进度不变。", buttons: [
             ReadingAlertButton("取消", kind: .cancel),
-            ReadingAlertButton("保存", kind: .destructive) { [renameURL] in
+            ReadingAlertButton("保存", kind: .destructive) {
                 guard let url = renameURL else { return }
                 let name = newName
                 renameURL = nil
@@ -193,12 +193,13 @@ struct FileManagementView: View {
         importAndRenameView
         .readingConfirmationDialog("删除 \(pendingDeletion.count) 个文件？", isPresented: Binding(get: { !pendingDeletion.isEmpty }, set: { if !$0 { pendingDeletion = [] } }), titleVisibility: .visible, presenting: pendingDeletion, messageText: "将删除应用内文件及对应书架条目，系统“文件”中用于导入的原文件保留。", buttons: [
             ReadingAlertButton("取消", kind: .cancel),
-            ReadingAlertButton("删除文件并移出书架", kind: .destructive) { [pendingDeletion] in
+            ReadingAlertButton("删除文件并移出书架", kind: .destructive) {
+                let urls = pendingDeletion
                 pendingDeletion = []
                 Task {
                     await model.run(library) {
                         var failures: [String] = []
-                        for url in pendingDeletion {
+                        for url in urls {
                             do { try await library.deleteLocalFile(at: url) }
                             catch { failures.append("\(filename(for: url))：\(error.localizedDescription)") }
                         }

@@ -1047,15 +1047,19 @@ extension View {
     }
 }
 
-/// 监听 UITextField 的回车通知，模拟 iOS 15 的 `onSubmit`。
+/// 监听 UITextField 的回车事件，模拟 iOS 15 的 `onSubmit`。
 private struct ReadingReturnKeyModifier: ViewModifier {
     let action: () -> Void
 
     func body(content: Content) -> some View {
-        // `UITextField.textDidEndOnExitNotification` 这个名字在 UIKit 里并不存在，
-        // 真正对应「按下回车」的是 `UITextField.didEndOnExitNotification`。
+        // 用 UIKit 的公开通知常量 `UITextFieldTextDidEndOnExit`
+        // （`Notification.Name.UITextFieldTextDidEndOnExit`），
+        // 它在用户按下回车键时发出。
+        //
+        // 注意：不能写成 `UITextField.textDidEndOnExitNotification`，
+        // UIKit 里并没有这个静态成员。
         content.onReceive(
-            NotificationCenter.default.publisher(for: UITextField.didEndOnExitNotification)
+            NotificationCenter.default.publisher(for: Notification.Name.UITextFieldTextDidEndOnExit)
         ) { _ in
             action()
         }
@@ -1235,7 +1239,9 @@ extension View {
             title: String(title),
             isPresented: isPresented,
             actions: { AnyView(actionViews) },
-            message: message.map { view in { view(data) } },
+            message: message.map { view in
+                { data.map(view) ?? Text("") }
+            },
             plainMessage: messageText,
             buttons: buttons,
             style: style
@@ -1289,7 +1295,9 @@ extension View {
             title: String(title),
             isPresented: isPresented,
             actions: { AnyView(actionViews) },
-            message: message.map { view in { view(data) } },
+            message: message.map { view in
+                { data.map(view) ?? Text("") }
+            },
             plainMessage: messageText,
             buttons: buttons,
             style: .actionSheet
@@ -1705,7 +1713,7 @@ struct ReadingNumberField: View {
         TextField(title, text: $text)
             .onAppear { text = String(value) }
             .onChange(of: value) { text = String($0) }
-            .onSubmit { commit() }
+            .readingOnSubmit { commit() }
     }
 
     private func commit() {
@@ -1772,7 +1780,7 @@ extension View {
             // 必须用尾随闭包形式：写成 `content: content` 会报
             // "no exact matches in call to instance method 'safeAreaInset'"，
             // 因为 iOS 15 的 spacing 是 CGFloat? 且 content 需要 ViewBuilder。
-            safeAreaInset(edge: edge, spacing: spacing) {
+            safeAreaInset(edge: edge, spacing: CGFloat?(spacing)) {
                 content()
             }
         } else {
@@ -1892,7 +1900,10 @@ private struct ReadingSearchBoxModifier: ViewModifier {
             // iOS 14：在列表上方插入一个搜索框。
             // 这里用 overlay 而非 safeAreaInset——后者会再套一层修饰符，
             // 在大型 List 上容易触发编译器类型检查超时。
-            content.overlay(alignment: .top) {
+            // iOS 14 的 `overlay` 只有 `overlay(_:alignment:)` 形式，
+            // 闭包版 `overlay(alignment:content:)` 是 iOS 15 才有的。
+            // 这里用 AnyView 包一层，走 iOS 14 支持的形态。
+            content.overlay(AnyView(
                 HStack(spacing: 8) {
                     Image(systemName: "magnifyingglass")
                         .foregroundColor(.secondary)
@@ -1915,7 +1926,7 @@ private struct ReadingSearchBoxModifier: ViewModifier {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
                 .background(ReadingTheme.canvas)
-            }
+            ), alignment: .top)
         }
     }
 }
