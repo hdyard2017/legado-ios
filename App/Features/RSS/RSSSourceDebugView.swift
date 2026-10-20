@@ -50,9 +50,9 @@ struct RSSSourceDebugView: View {
                     }
                 } header: { Text(report.passed ? "调试通过" : "发现兼容问题") }
                 if !report.articles.isEmpty {
-                    Section("文章样本") { ForEach(report.articles.prefix(10)) { Text($0.title) } }
+                    Section { ForEach(report.articles.prefix(10)) { Text($0.title) } } header: { Text("文章样本") }
                 }
-                if let preview = report.contentPreview { Section("正文样本") { Text(preview).readingTextSelection() } }
+                if let preview = report.contentPreview { Section { Text(preview).readingTextSelection() } header: { Text("正文样本") } }
             }
         }
         .navigationTitle("RSS源调试")

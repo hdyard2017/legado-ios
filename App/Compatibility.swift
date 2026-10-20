@@ -1622,3 +1622,69 @@ private struct ReadingRefreshableModifier: ViewModifier {
         }
     }
 }
+
+extension Date {
+    /// `Text(date, format: .dateTime.month().day().hour().minute().second())`
+    /// 的 iOS 14 等价实现。
+    ///
+    /// `Date.FormatStyle` 与 `Text(_:format:)` 都是 iOS 15 才有的。
+    /// 这里用 `DateFormatter` 组合出相同格式：`M月d日 HH:mm:ss`。
+    func readingFormattedTimestamp() -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "zh_CN")
+        formatter.dateFormat = "M月d日 HH:mm:ss"
+        return formatter.string(from: self)
+    }
+}
+
+// MARK: - View.searchable（SwiftUI iOS 15+）
+
+extension View {
+    /// `.searchable(text:prompt:)` 的 iOS 14 等价入口。
+    ///
+    /// SwiftUI 的 `searchable` 是 iOS 15 才有的。作者已在
+    /// `App/DesignSystem.swift` 为带 `isPresented` 的形态做了兼容封装，
+    /// 这里补上不带 `isPresented` 的常用重载。
+    ///
+    /// - iOS 15+：原样转发系统实现。
+    /// - iOS 14：顶部插入自定义搜索框（复用 DesignSystem 中的降级样式）。
+    func readingSearchable(text: Binding<String>, prompt: String) -> some View {
+        modifier(ReadingSearchBoxModifier(text: text, prompt: prompt))
+    }
+}
+
+private struct ReadingSearchBoxModifier: ViewModifier {
+    @Binding var text: String
+    let prompt: String
+
+    func body(content: Content) -> some View {
+        if #available(iOS 15.0, *) {
+            content.searchable(text: text, prompt: prompt)
+        } else {
+            content.readingSafeAreaInset(edge: .top, spacing: 0) {
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.secondary)
+                        .accessibilityHidden(true)
+                    TextField(prompt, text: $text)
+                        .readingInputConfiguration(autocapitalization: .never, disableAutocorrection: true)
+                        .readingSubmitLabel(.search)
+                    if !text.isEmpty {
+                        Button {
+                            text = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.secondary)
+                        }
+                        .accessibilityLabel("清除搜索")
+                    }
+                }
+                .padding(10)
+                .background(RoundedRectangle(cornerRadius: 10).fill(ReadingTheme.groupedCanvas))
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(ReadingTheme.canvas)
+            }
+        }
+    }
+}

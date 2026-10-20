@@ -931,7 +931,7 @@ struct ReaderView: View {
                         Text("\(chapterNumber) / \(chapterCount) 章").fixedSize()
                     }
                     Spacer(minLength: 8)
-                    Text(chapterProgress, format: .percent.precision(.fractionLength(0)))
+                    Text(chapterProgress.readingFormattedPercent(fractionDigits: 0))
                 }
                 .font(.system(.caption, design: .monospaced))
                 .foregroundColor(.secondary)
@@ -1752,7 +1752,7 @@ struct ReaderView: View {
             .listStyle(.insetGrouped)
             .navigationTitle("目录")
             .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $tocSearch, prompt: "搜索章节")
+            .readingSearchable(text: $tocSearch, prompt: "搜索章节")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("关闭") { showsTableOfContents = false } }
                 ToolbarItem(placement: .topBarTrailing) {
@@ -1802,7 +1802,7 @@ struct ReaderView: View {
             }
             .navigationTitle("正文搜索")
             .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $contentSearchQuery, prompt: "搜索本章")
+            .readingSearchable(text: $contentSearchQuery, prompt: "搜索本章")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("关闭") { showsContentSearch = false }

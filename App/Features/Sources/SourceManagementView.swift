@@ -128,7 +128,7 @@ struct SourceManagementView: View {
         }
         .navigationTitle("书源")
         .background(ReadingTheme.groupedCanvas)
-        .searchable(text: $searchText, prompt: "名称、地址或分组")
+        .readingSearchable(text: $searchText, prompt: "名称、地址或分组")
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button(isSelecting ? "完成" : "选择") {
@@ -480,7 +480,7 @@ private struct SourceDetailView: View {
                 } header: { Text("账户") }
             }
             if let comment = current.bookSourceComment, !comment.isEmpty {
-                Section("说明") { Text(comment) }
+                Section { Text(comment)  } header: { Text("说明") }
             }
         }
         .navigationTitle(current.bookSourceName)

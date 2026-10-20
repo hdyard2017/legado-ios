@@ -24,7 +24,7 @@ struct RSSHomeView: View {
         })
         let navigation = AnyView(content
             .navigationTitle("RSS")
-            .searchable(text: $searchText, prompt: section == 0 ? "搜索订阅源" : "搜索文章"))
+            .readingSearchable(text: $searchText, prompt: section == 0 ? "搜索订阅源" : "搜索文章"))
         let actions = AnyView(navigation.toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Menu("RSS操作", systemImage: "ellipsis.circle") {
@@ -160,7 +160,7 @@ private struct RSSArticleListView: View {
         }
         .overlay(if: library.articles.isEmpty && !library.isWorking) { ReadingUnavailableView("没有文章", systemImage: "newspaper") }
         .navigationTitle(source.sourceName)
-        .searchable(text: $searchKey, prompt: "源内搜索")
+        .readingSearchable(text: $searchKey, prompt: "源内搜索")
         .readingRefreshable { await refresh() }
         .toolbar {
             ToolbarItem(placement: .primaryAction) { Button("刷新", systemImage: "arrow.clockwise") { Task { await refresh() } } }

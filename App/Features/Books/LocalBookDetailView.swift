@@ -141,7 +141,7 @@ private struct LocalBookTableOfContentsView: View {
                     }
                 }
             }
-            .searchable(text: $query, prompt: "搜索目录")
+            .readingSearchable(text: $query, prompt: "搜索目录")
             .navigationTitle("目录")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

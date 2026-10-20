@@ -69,7 +69,7 @@ struct ReplaceRuleManagementView: View {
         }
         .listStyle(.insetGrouped)
         .navigationTitle("净化规则")
-        .searchable(text: $query, prompt: "名称、匹配内容或分组")
+        .readingSearchable(text: $query, prompt: "名称、匹配内容或分组")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) { EditButton().disabled(library.rules.isEmpty || group != nil || !query.isEmpty) }
             ToolbarItem(placement: .primaryAction) {

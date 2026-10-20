@@ -41,7 +41,7 @@ struct DiagnosticLogView: View {
                             Text(levelTitle(entry.level)).font(.caption)
                                 .foregroundColor(entry.level == .error ? .red : .secondary)
                             Spacer()
-                            Text(entry.date, format: .dateTime.month().day().hour().minute().second())
+                            Text(entry.date.readingFormattedTimestamp())
                                 .font(.caption2).foregroundColor(.secondary)
                         }
                         Text(entry.message).font(.system(.footnote, design: .monospaced)).readingTextSelection()
@@ -51,7 +51,7 @@ struct DiagnosticLogView: View {
         }
         .navigationTitle("日志与诊断")
         .navigationBarTitleDisplayMode(.inline)
-        .searchable(text: $query, prompt: "搜索内容或分类")
+        .readingSearchable(text: $query, prompt: "搜索内容或分类")
         .readingTask { reload() }
         .readingRefreshable { reload() }
         .toolbar {

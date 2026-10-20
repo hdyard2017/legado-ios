@@ -95,7 +95,9 @@ private struct ReadingSearchModifier: ViewModifier {
     @Binding var text: String
     @Binding var isPresented: Bool
     let prompt: String
-    @FocusState private var isFocused: Bool
+    /// iOS 14 没有 SwiftUI 焦点系统，这里只表示「搜索框已激活」，
+    /// 用于决定是否显示取消按钮；真正的键盘焦点交给系统默认行为。
+    @State private var isFocused: Bool = false
 
     func body(content: Content) -> some View {
         if #available(iOS 17.0, *), !ReadingCompatibility.usesLegacyUI {
@@ -109,9 +111,8 @@ private struct ReadingSearchModifier: ViewModifier {
                                 .foregroundColor(.secondary)
                                 .accessibilityHidden(true)
                             TextField(prompt, text: $text)
-                                .readingFocusBinding($isFocused)
-                                .readingInputConfiguration(autocapitalization: .never)
-                                .readingInputConfiguration(disableAutocorrection: true)
+                                .onAppear { isFocused = true }
+                                .readingInputConfiguration(autocapitalization: .never, disableAutocorrection: true)
                                 .readingSubmitLabel(.search)
                             if !text.isEmpty {
                                 Button {

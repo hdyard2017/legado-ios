@@ -334,7 +334,7 @@ private struct BookTableOfContentsView: View {
                     }
                 }
             }
-            .searchable(text: $searchText, prompt: "搜索目录")
+            .readingSearchable(text: $searchText, prompt: "搜索目录")
             .navigationTitle("目录")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

@@ -1785,8 +1785,8 @@ private struct BookmarkEditorView: View {
     var body: some View {
         ReadingNavigationStack {
             Form {
-                Section("原文") { TextEditor(text: $bookText).frame(minHeight: 150) }
-                Section("摘要") { TextEditor(text: $content).frame(minHeight: 120) }
+                Section { TextEditor(text: $bookText).frame(minHeight: 150)  } header: { Text("原文") }
+                Section { TextEditor(text: $content).frame(minHeight: 120)  } header: { Text("摘要") }
                 Section {
                     Button("删除书签") {
                         Task { await activity.removeBookmark(bookmark); dismiss() }

@@ -119,7 +119,7 @@ struct FileManagementView: View {
         .listStyle(.insetGrouped)
         .environment(\.editMode, .constant(selecting ? .active : .inactive))
         .navigationTitle("文件管理")
-        .searchable(text: $query, prompt: tab == 0 ? "搜索本地文件" : "搜索缓存书籍")
+        .readingSearchable(text: $query, prompt: tab == 0 ? "搜索本地文件" : "搜索缓存书籍")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 if selecting {

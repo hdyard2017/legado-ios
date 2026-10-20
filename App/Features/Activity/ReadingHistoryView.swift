@@ -60,7 +60,7 @@ struct ReadingHistoryView: View {
             }
         }
         .navigationTitle("阅读记录")
-        .searchable(text: $searchText, prompt: "搜索")
+        .readingSearchable(text: $searchText, prompt: "搜索")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Menu("阅读记录选项", systemImage: "ellipsis.circle") {
