@@ -335,9 +335,7 @@ private struct BookshelfView: View {
                         .foregroundColor(selectedGroupID == group.id ? Color.primary : .secondary)
                         .frame(minHeight: 44)
                         .overlay(
-                            if selectedGroupID == group.id {
-                                Rectangle().fill(ReadingTheme.accent).frame(height: 2)
-                            }
+                            selectedGroupID == group.id ? AnyView(Rectangle().fill(ReadingTheme.accent).frame(height: 2)) : AnyView(Color.clear)
                         , alignment: .bottom)
                         .accessibilityAddTraits(selectedGroupID == group.id ? .isSelected : [])
                 }
@@ -421,14 +419,7 @@ private struct BookshelfGridItem: View {
             .frame(maxWidth: 180)
             .frame(maxWidth: .infinity)
             .overlay(
-                if book.lastCheckCount > 0 {
-                    Circle()
-                        .fill(ReadingTheme.coral)
-                        .frame(width: 7, height: 7)
-                        .overlay(Circle().stroke(ReadingTheme.canvas, lineWidth: 2))
-                        .offset(x: 3, y: -3)
-                        .accessibilityLabel("更新 \(book.lastCheckCount) 章")
-                }
+                book.lastCheckCount > 0 ? AnyView(Circle() .fill(ReadingTheme.coral) .frame(width: 7, height: 7) .overlay(Circle().stroke(ReadingTheme.canvas, lineWidth: 2)) .offset(x: 3, y: -3) .accessibilityLabel("更新 \(book.lastCheckCount) 章")) : AnyView(Color.clear)
             , alignment: .topTrailing)
             Text(book.name)
                 .font(.caption.weight(.semibold))
@@ -1485,14 +1476,7 @@ private struct SettingsView: View {
         .frame(minHeight: rowHeight)
         .contentShape(Rectangle())
         .overlay(
-            if showsSeparator {
-                Rectangle()
-                    .fill(ProfileTheme.separator)
-                    .frame(height: 0.5)
-                    .padding(.leading, 62)
-                    .padding(.trailing, 18)
-                    .accessibilityHidden(true)
-            }
+            showsSeparator ? AnyView(Rectangle() .fill(ProfileTheme.separator) .frame(height: 0.5) .padding(.leading, 62) .padding(.trailing, 18) .accessibilityHidden(true)) : AnyView(Color.clear)
         , alignment: .bottom)
         .accessibilityElement(children: .combine)
     }
