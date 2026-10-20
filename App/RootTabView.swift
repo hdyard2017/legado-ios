@@ -116,13 +116,10 @@ struct RootTabView: View {
         .onChange(of: sourceLibrary.notice?.id) { _ in
             if !sourceImportIsPresented { displayedSourceNotice = sourceLibrary.notice }
         }
-        .readingAlert(item: $displayedSourceNotice) { notice in
-            Alert(
-                title: Text(notice.title),
-                message: Text(notice.detail),
-                dismissButton: .default(Text("好")) { sourceLibrary.notice = nil }
-            )
-        }
+        .readingAlert(item: $displayedSourceNotice,
+                    title: { $0.title },
+                    message: { $0.detail },
+                    onConfirm: { _ in sourceLibrary.notice = nil })
     }
 
     private var requestedDemoPage: String? {

@@ -305,21 +305,18 @@ struct SourceBatchTestView: View {
                 .readingMaterialBackground(.ultraThin)
             }
         }
-        .readingAlert(item: $cleanupAction) { action in
-            Alert(
-                title: Text(action == .delete ? "删除失败书源？" : "停用失败书源？"),
-                message: Text("将处理已勾选的 \(model.selectedFailedIDs.count) 个书源。搜索不到当前关键词不一定代表书源永久失效。"),
-                primaryButton: .destructive(Text(action == .delete ? "删除" : "停用")) {
-                    let ids = model.selectedFailedIDs
-                    Task {
-                        if action == .delete { await library.remove(sourceIDs: ids) }
-                        else { await library.setEnabled(false, for: ids) }
-                        model.selectedFailedIDs = []
-                    }
-                },
-                secondaryButton: .cancel()
-            )
-        }
+        .readingConfirmationAlert(item: $cleanupAction,
+                                title: { $0 == .delete ? "删除失败书源？" : "停用失败书源？" },
+                                message: { _ in "将处理已勾选的 \(model.selectedFailedIDs.count) 个书源。搜索不到当前关键词不一定代表书源永久失效。" },
+                                confirmTitle: { $0 == .delete ? "删除" : "停用" },
+                                onConfirm: { action in
+                                    let ids = model.selectedFailedIDs
+                                    Task {
+                                        if action == .delete { await library.remove(sourceIDs: ids) }
+                                        else { await library.setEnabled(false, for: ids) }
+                                        model.selectedFailedIDs = []
+                                    }
+                                })
     }
 }
 

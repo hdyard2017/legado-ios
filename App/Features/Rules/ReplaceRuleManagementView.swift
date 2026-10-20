@@ -91,9 +91,7 @@ struct ReplaceRuleManagementView: View {
             case .failure(let error): library.notice = .init(kind: .error, title: "无法选择文件", detail: error.localizedDescription)
             }
         }
-        .readingAlert(item: $library.notice) { notice in
-            Alert(title: Text(notice.title), message: Text(notice.detail), dismissButton: .default(Text("好")))
-        }
+        .readingAlert(item: $library.notice, title: { $0.title }, message: { $0.detail })
     }
     private func edit(_ rule: ReplaceRule, test: Bool = false) { startsWithTest = test; editingRule = rule }
     private var exportJSON: String {
