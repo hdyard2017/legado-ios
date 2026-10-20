@@ -7,7 +7,7 @@ struct ReaderView: View {
 
     @Environment(\.readingDismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.readingIsAccessibilitySize) private var isAccessibilitySize
     @EnvironmentObject private var library: BookLibraryModel
     @EnvironmentObject private var sourceLibrary: SourceLibraryModel
     @EnvironmentObject private var replaceRules: ReplaceRuleLibraryModel
@@ -831,7 +831,6 @@ struct ReaderView: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .frame(maxWidth: .infinity)
-        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         .background(readerChromeBackground.ignoresSafeArea(edges: .top))
         .overlay(
             Rectangle().fill(Color(.separator).opacity(0.35)).frame(height: 0.5)
@@ -901,7 +900,6 @@ struct ReaderView: View {
         .padding(.top, 12)
         .padding(.bottom, 10)
         .frame(maxWidth: .infinity)
-        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         .background(readerChromeBackground.ignoresSafeArea(edges: .bottom))
         .overlay(
             Rectangle().fill(Color(.separator).opacity(0.35)).frame(height: 0.5)
@@ -909,7 +907,7 @@ struct ReaderView: View {
     }
 
     private var readerToolbarColumns: [GridItem] {
-        let count = dynamicTypeSize.isAccessibilitySize ? (model.canEditContent ? 3 : 2) : (model.canEditContent ? 5 : 4)
+        let count = isAccessibilitySize ? (model.canEditContent ? 3 : 2) : (model.canEditContent ? 5 : 4)
         return Array(repeating: GridItem(.flexible(), spacing: 0), count: count)
     }
 

@@ -3,7 +3,7 @@ import SwiftUI
 struct BookDetailView: View {
     @EnvironmentObject private var library: BookLibraryModel
     @EnvironmentObject private var sourceLibrary: SourceLibraryModel
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.readingIsAccessibilitySize) private var isAccessibilitySize
     @StateObject private var model: BookDetailViewModel
     @State private var showsSourceSwitch = false
     @State private var showsRemoveConfirmation = false
@@ -178,7 +178,7 @@ struct BookDetailView: View {
                     .font(.caption).foregroundColor(.secondary).lineLimit(2)
             }
             Group {
-                if dynamicTypeSize.isAccessibilitySize {
+                if isAccessibilitySize {
                     VStack(spacing: 12) { readingActions }
                 } else {
                     HStack(spacing: 12) { readingActions }
@@ -212,7 +212,7 @@ struct BookDetailView: View {
                 systemImage: library.contains(model.book) ? "checkmark" : "plus"
             )
             .font(.subheadline)
-            .frame(maxWidth: dynamicTypeSize.isAccessibilitySize ? .infinity : nil, minHeight: 28)
+            .frame(maxWidth: isAccessibilitySize ? .infinity : nil, minHeight: 28)
         }
         .readingButtonStyle(.bordered)
     }

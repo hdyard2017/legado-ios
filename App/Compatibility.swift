@@ -1688,3 +1688,16 @@ private struct ReadingSearchBoxModifier: ViewModifier {
         }
     }
 }
+
+// MARK: - DynamicTypeSize（SwiftUI iOS 15+）
+
+extension EnvironmentValues {
+    /// iOS 14+ 可用的「是否处于超大字体」判断。
+    ///
+    /// `DynamicTypeSize` 类型与 `\.dynamicTypeSize` 环境值都是 iOS 15 才有的；
+    /// iOS 14 上改用 `\.sizeCategory` 判断，二者语义一致
+    /// （accessibility1~5 对应 AX1~AX5）。
+    var readingIsAccessibilitySize: Bool {
+        sizeCategory >= .accessibilityMedium
+    }
+}

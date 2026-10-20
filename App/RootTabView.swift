@@ -142,7 +142,7 @@ struct RootTabView: View {
 }
 
 private struct BookshelfView: View {
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.readingIsAccessibilitySize) private var isAccessibilitySize
     @EnvironmentObject private var library: BookLibraryModel
     @EnvironmentObject private var sources: SourceLibraryModel
     @State private var showsLocalImporter = false
@@ -354,7 +354,7 @@ private struct BookshelfView: View {
 
     private var gridColumns: [GridItem] {
         let count = Int(bookshelfLayout.dropFirst(4)) ?? 3
-        let maximum = dynamicTypeSize.isAccessibilitySize ? 2 : 6
+        let maximum = isAccessibilitySize ? 2 : 6
         return Array(repeating: GridItem(.flexible(), spacing: 16, alignment: .top), count: max(2, min(count, maximum)))
     }
 
@@ -463,7 +463,7 @@ private struct BookshelfBookDestination: View {
 }
 
 private struct ContinueReadingCard: View {
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.readingIsAccessibilitySize) private var isAccessibilitySize
     let book: Book
 
     var body: some View {
@@ -501,7 +501,7 @@ private struct ContinueReadingCard: View {
                 .padding(.top, 20)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            if !dynamicTypeSize.isAccessibilitySize {
+            if !isAccessibilitySize {
                 BookCoverArtwork(title: book.name, author: book.author, remoteURL: book.coverUrl, width: 94, height: 140)
             }
         }
