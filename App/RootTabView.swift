@@ -1095,7 +1095,7 @@ struct SearchView: View {
             .padding(.top, 10)
         }
         .padding(16)
-        .background(RoundedRectangle(cornerRadius: 18).fill(.background))
+        .background(RoundedRectangle(cornerRadius: 18).fill(Color(UIColor.systemBackground)))
     }
 
     private var searchHistoryView: some View {
@@ -1524,6 +1524,11 @@ private struct ProfileSettingIcon: View {
                 Image(systemName: systemName)
                     .font(.system(size: 20, weight: .regular))
                     .symbolRenderingMode(.palette)
+                    // 原实现是 iOS 15 的 .foregroundStyle(ink, detail)，
+                    // 用于 palette 模式下的前景/背景分层。
+                    // iOS 14 没有双参数重载，改为叠加两次 foregroundColor：
+                    // 先铺背景层 detail，再以 ink 覆盖前景层。
+                    .foregroundColor(ProfileTheme.detail)
                     .foregroundColor(ProfileTheme.ink)
             }
         }

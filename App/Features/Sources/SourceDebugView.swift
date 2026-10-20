@@ -414,7 +414,7 @@ private struct DebugStepCard: View {
             }
         }
         .padding(14)
-        .background(RoundedRectangle(cornerRadius: 17, style: .continuous).fill(.background))
+        .background(RoundedRectangle(cornerRadius: 17, style: .continuous).fill(Color(UIColor.systemBackground)))
         .overlay(RoundedRectangle(cornerRadius: 17, style: .continuous).stroke(Color.readingPrimary.opacity(0.06)))
     }
 

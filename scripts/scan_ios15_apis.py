@@ -76,6 +76,10 @@ FAMILIES: list[tuple[str, str, str, str]] = [
     # 单独使用没问题；出问题的是链式调用（.secondary.opacity(...)）——
     # 那会让类型检查器解析到 iOS 15 的 ShapeStyle 扩展。
     ("Color.staticChained", r"(?<![.\w])\.(primary|secondary|tertiary)\s*\.\s*(opacity|blendMode|gradient)\s*\(", "15.0", "显式写成 Color.readingSecondary 等"),
+    # ShapeStyle 的 iOS 15 静态成员：.background / .quaternary
+    # 注意区分上下文——foregroundColor(.secondary) 是 Color? 参数（iOS13+ 合法），
+    # 而 fill(.background) 是 ShapeStyle 上下文（iOS15+ 才有 .background 成员）。
+    ("ShapeStyle.static", r"(\.fill|\.stroke)\s*\(\s*\.(background|quaternary)\b", "15.0", "Color(UIColor.systemBackground)"),
     ("Color.setFill", r"\.setFill\s*\(\s*\)", "15.0", "Color.readingSetFill()"),
     ("Color.setStroke", r"\.setStroke\s*\(\s*\)", "15.0", "Color.readingSetStroke()"),
     ("foregroundColor2", r"\.foregroundColor\s*\([^()]*?,[^()]*?\)", "15.0", "单色 + symbolRenderingMode"),
