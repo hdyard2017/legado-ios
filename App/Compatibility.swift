@@ -1025,7 +1025,7 @@ extension View {
         _ title: T,
         isPresented: Binding<Bool>,
         @ViewBuilder actions: () -> some View,
-        message: (@escaping () -> Text)? = nil
+        message: (() -> Text)? = nil
     ) -> some View {
         if #available(iOS 15.0, *) {
             if let message {
@@ -1050,7 +1050,7 @@ extension View {
         isPresented: Binding<Bool>,
         titleVisibility: ReadingTitleVisibility = .automatic,
         @ViewBuilder actions: () -> some View,
-        message: (@escaping () -> Text)? = nil
+        message: (() -> Text)? = nil
     ) -> some View {
         if #available(iOS 15.0, *) {
             if let message {
