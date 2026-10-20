@@ -29,17 +29,8 @@ struct SyntaxCodeEditor: UIViewRepresentable {
         // 改用target-action，行为与新写法一致。
         let coordinator = context.coordinator
         coordinator.textView = view
-        let symbolItems = ["@", "$", "{}", "[]", "##", "\n", "\t"].map { symbol -> UIBarButtonItem in
-            let identifier = "symbol:\(symbol)"
-            Coordinator.registerSymbol(identifier, text: symbol)
-            let item = UIBarButtonItem(
-                title: symbol == "\n" ? "↵" : symbol == "\t" ? "⇥" : symbol,
-                style: .plain,
-                target: coordinator,
-                action: #selector(Coordinator.insertSymbol(_:))
-            )
-            item.accessibilityIdentifier = identifier
-            return item
+        let symbolItems = ["@", "$", "{}", "[]", "##", "\n", "\t"].map { symbol in
+            coordinator.symbolItem(display: symbol == "\n" ? "↵" : symbol == "\t" ? "⇥" : symbol, symbol: symbol)
         }
         bar.items = [
             coordinator.toolbarItem(systemName: "magnifyingglass", label: "查找替换", action: #selector(Coordinator.presentFindAndReplaceFromToolbar(_:))),
@@ -83,10 +74,6 @@ struct SyntaxCodeEditor: UIViewRepresentable {
 
         // MARK: 工具栏 target-action（iOS 14 兼容层）
 
-        /// 记录每个符号按钮对应的插入文本，供 target-action 取用。
-        private static var symbolTexts: [String: String] = [:]
-        private static let symbolTextsLock = NSLock()
-
         /// 由 makeUIView 挂载，供工具栏 action 定位当前编辑框。
         weak var textView: UITextView?
 
@@ -101,22 +88,24 @@ struct SyntaxCodeEditor: UIViewRepresentable {
             return item
         }
 
-        static func registerSymbol(_ identifier: String, text: String) {
-            symbolTextsLock.lock()
-            defer { symbolTextsLock.unlock() }
-            symbolTexts[identifier] = text
-        }
-
-        static func symbolText(for identifier: String) -> String? {
-            symbolTextsLock.lock()
-            defer { symbolTextsLock.unlock() }
-            return symbolTexts[identifier]
+        /// 符号按钮：标题显示的是可视字符（如「↵」），插入的是真实文本（如换行符），
+        /// 因此把真实文本放在 `accessibilityIdentifier` 里，由 target-action 直接取用，
+        /// 无需额外的全局映射表。
+        func symbolItem(display: String, symbol: String) -> UIBarButtonItem {
+            let item = UIBarButtonItem(
+                title: display,
+                style: .plain,
+                target: self,
+                action: #selector(insertSymbol(_:))
+            )
+            item.accessibilityIdentifier = symbol
+            item.accessibilityLabel = display
+            return item
         }
 
         @objc func insertSymbol(_ sender: UIBarButtonItem) {
-            guard let identifier = sender.accessibilityIdentifier,
-                  let text = Self.symbolText(for: identifier) else { return }
-            textView?.insertText(text)
+            guard let symbol = sender.accessibilityIdentifier, !symbol.isEmpty else { return }
+            textView?.insertText(symbol)
         }
 
         @objc func presentFindAndReplaceFromToolbar(_ sender: UIBarButtonItem) {

@@ -139,7 +139,21 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            2>&1 | tee "${{ runner.temp }}/xcodebuild.log"
+            2>&1 | tee "$RUNNER_TEMP/xcodebuild.log"
+
+      # fork 仓库无 admin 权限时无法通过 API 拉取 job 日志，
+      # 因此把编译错误直接汇总到 run摘要，便于快速定位。
+      - name: Summarize build errors
+        if: failure()
+        run: |
+          LOG="$RUNNER_TEMP/xcodebuild.log"
+          {
+            echo '### 编译错误摘要'
+            echo ''
+            echo '```'
+            grep -nE "error:|error " "$LOG" | grep -vE "^\s*$" | head -60 || echo '未匹配到 error 行'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Verify deployment target of built binary
         run: |
@@ -191,6 +205,15 @@ jobs:
         with:
           name: Legado-xcresult
           path: ${{ runner.temp }}/LegadoBuild.xcresult
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload raw build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Legado-build-log
+          path: ${{ runner.temp }}/xcodebuild.log
           if-no-files-found: ignore
           retention-days: 7
 

@@ -387,25 +387,69 @@ extension ReadingRemoteImage where Content == AnyView {
     }
 }
 
+/// 远程图片加载器。
+///
+/// Swift 6 语言模式下，`@MainActor` 隔离的属性不能被 `URLSession` 的非隔离
+/// completion closure 直接访问；且 `deinit` 中不允许触碰隔离状态。
+/// 因此这里把状态更新收敛到主线程 actor，网络请求交给一个纯 Sendable 的 worker。
 @MainActor
 final class ReadingRemoteImageLoader: ObservableObject {
     @Published private(set) var phase: ReadingRemoteImagePhase = .empty
 
-    private static let cache = NSCache<NSURL, UIImage>()
-    private var task: URLSessionDataTask?
+    private let worker = ReadingRemoteImageWorker()
+    private var generation = 0
 
     func load(_ url: URL?) {
-        task?.cancel()
-        task = nil
-        guard let url else { phase = .empty; return }
+        generation &+= 1
+        let token = generation
+        worker.cancel()
 
-        if let cached = Self.cache.object(forKey: url as NSURL) {
+        guard let url else {
+            phase = .empty
+            return
+        }
+        if let cached = ReadingRemoteImageCache.image(for: url) {
             phase = .success(cached)
             return
         }
 
         phase = .empty
-        // 配置缓存策略：图片体积小、复用率高，交给 URLCache 处理。
+        worker.load(url) { [weak self] result in
+            // 回调已在主线程；token 防止旧请求覆盖新结果。
+            guard let self, self.generation == token else { return }
+            self.phase = result
+        }
+    }
+}
+
+/// 图片缓存，跨 actor 共享因此标记为 Sendable 包装。
+private enum ReadingRemoteImageCache {
+    private static let cache: NSCache<NSURL, UIImage> = {
+        let cache = NSCache<NSURL, UIImage>()
+        cache.countLimit = 200
+        return cache
+    }()
+
+    static func image(for url: URL) -> UIImage? {
+        cache.object(forKey: url as NSURL)
+    }
+
+    static func store(_ image: UIImage, for url: URL) {
+        cache.setObject(image, forKey: url as NSURL)
+    }
+}
+
+/// 执行网络请求，不持有任何主线程隔离状态。
+private final class ReadingRemoteImageWorker: @unchecked Sendable {
+    private var task: URLSessionDataTask?
+
+    func cancel() {
+        task?.cancel()
+        task = nil
+    }
+
+    func load(_ url: URL, completion: @escaping @MainActor (ReadingRemoteImagePhase) -> Void) {
+        // 图片体积小、复用率高，交给 URLCache 处理。
         let configuration = URLSessionConfiguration.default
         configuration.requestCachePolicy = .returnCacheDataElseLoad
         configuration.urlCache = URLCache(
@@ -415,24 +459,19 @@ final class ReadingRemoteImageLoader: ObservableObject {
         configuration.timeoutIntervalForRequest = 20
         let session = URLSession(configuration: configuration)
 
-        task = session.dataTask(with: url) { [weak self] data, _, _ in
-            guard let data, let image = UIImage(data: data) else {
-                Task { @MainActor in
-                    guard let self, self.task?.state != .canceling else { return }
-                    self.phase = .failure
-                }
-                return
+        let request = URLRequest(url: url)
+        task = session.dataTask(with: request) { data, _, _ in
+            let result: ReadingRemoteImagePhase
+            if let data, let image = UIImage(data: data) {
+                ReadingRemoteImageCache.store(image, for: url)
+                result = .success(image)
+            } else {
+                result = .failure
             }
-            Self.cache.setObject(image, forKey: url as NSURL)
-            Task { @MainActor in
-                guard let self, self.task?.state != .canceling else { return }
-                self.phase = .success(image)
-            }
+            Task { @MainActor in completion(result) }
         }
         task?.resume()
     }
-
-    deinit { task?.cancel() }
 }
 
 // MARK: TimelineView（SwiftUI iOS 15+）
@@ -452,29 +491,52 @@ struct ReadingPeriodicTimeline<Content: View>: View {
     }
 }
 
+/// 周期刷新的时间源。
+///
+/// Swift 6 语言模式下 `Timer` 的回调闭包是非隔离的，不能直接写
+/// `@MainActor` 隔离的属性；`deinit` 也不允许触碰隔离状态。
+/// 因此定时器句柄交给独立的 Sendable 容器管理，回调统一切回主线程。
 @MainActor
 final class ReadingTimelineTicker: ObservableObject {
     @Published private(set) var date = Date()
 
-    private var timer: Timer?
+    private let holder = TimerHolder()
 
     func start(interval: TimeInterval) {
         stop()
         date = Date()
-        let timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.date = Date() }
+        holder.start(interval: interval) { [weak self] in
+            self?.date = Date()
+        }
+    }
+
+    func stop() {
+        holder.cancel()
+    }
+}
+
+/// 持有 `Timer`，避免在 `@MainActor` 类型的 `deinit` 中访问隔离状态。
+private final class TimerHolder: @unchecked Sendable {
+    private var timer: Timer?
+
+    func start(interval: TimeInterval, onTick: @escaping @MainActor () -> Void) {
+        timer?.invalidate()
+        let timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
+            Task { @MainActor in onTick() }
         }
         // 注册到 .common 模式，避免滚动阅读时计时器被暂停。
         RunLoop.main.add(timer, forMode: .common)
         self.timer = timer
     }
 
-    func stop() {
+    func cancel() {
         timer?.invalidate()
         timer = nil
     }
 
-    deinit { timer?.invalidate() }
+    deinit {
+        timer?.invalidate()
+    }
 }
 
 extension ReadingPeriodicTimeline where Content == AnyView {
