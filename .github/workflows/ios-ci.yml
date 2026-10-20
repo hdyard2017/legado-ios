@@ -143,35 +143,16 @@ jobs:
 
       # fork 仓库无 admin 权限时无法通过 API 拉取 job 日志，
       # 因此把编译错误直接写成 annotation（公开可读），并汇总到 run 摘要。
+      #
+      # 关键设计：Swift 编译器默认「遇到第一个错误就停」，
+      # 若只导出第一条 error，每轮 CI 只能暴露一个错误类别，迭代极慢。
+      # 这里导出**全部** error 行（最多 60 条），每条一个 annotation，
+      # 通过 check-runs annotations API 一次即可读回所有问题。
       - name: Summarize build errors
         if: failure()
         run: |
           LOG="$RUNNER_TEMP/xcodebuild.log"
-          {
-            echo '### 编译错误摘要'
-            echo ''
-            echo '```'
-            grep -E "error:" "$LOG" | sort -u | head -40 || echo '未匹配到 error 行'
-            echo '```'
-            echo ''
-            echo '### 失败阶段'
-            echo '```'
-            grep -A 8 "The following build commands failed" "$LOG" || echo '（无该段落）'
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
-
-          # 取第一条错误做annotation，便于在 runs 列表页直接看到原因。
-          FIRST=$(grep -E "error:" "$LOG" | head -1 || true)
-          if [ -n "$FIRST" ]; then
-            echo "::error title=编译失败::${FIRST}"
-          fi
-
-          # 关键错误行也写入 workflow 命令，便于 API 读取。
-          {
-            echo "first_error<<EOF"
-            echo "$FIRST"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
+          python3 scripts/emit_build_errors.py "$LOG" "$GITHUB_STEP_SUMMARY" "$GITHUB_OUTPUT"
 
       - name: Verify deployment target of built binary
         run: |

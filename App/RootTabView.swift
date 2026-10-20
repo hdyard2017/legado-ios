@@ -549,7 +549,7 @@ private struct BookGroupManagerView: View {
                     }
                 } header: { Text("自定义分组") }
             }
-            .overlay(if customGroups.isEmpty { ReadingUnavailableView("没有自定义分组", systemImage: "rectangle.3.group", description: Text("点右上角加号新建分组。")) })
+            .overlay(customGroups.isEmpty ? AnyView(ReadingUnavailableView("没有自定义分组", systemImage: "rectangle.3.group", description: Text("点右上角加号新建分组。"))) : AnyView(Color.clear))
             .navigationTitle("书架分组")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("关闭") { dismiss() } }
@@ -609,7 +609,7 @@ private struct BookGroupSelectView: View {
                     }
                 }
             }
-            .overlay(if customGroups.isEmpty { ReadingUnavailableView("没有自定义分组", systemImage: "rectangle.3.group") })
+            .overlay(customGroups.isEmpty ? AnyView(ReadingUnavailableView("没有自定义分组", systemImage: "rectangle.3.group")) : AnyView(Color.clear))
             .navigationTitle("移至分组")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("取消") { dismiss() } }
@@ -1272,7 +1272,7 @@ private struct SettingsView: View {
                         .scaledToFill()
                         .frame(width: geometry.size.width, height: geometry.safeAreaInsets.top + 156)
                         .clipped()
-                        .overlay(if colorScheme == .dark { Color.black.opacity(0.62) })
+                        .overlay(colorScheme == .dark ? AnyView(Color.black.opacity(0.62)) : AnyView(Color.clear))
                         .overlay(
                             LinearGradient(
                                 colors: [ProfileTheme.canvas.opacity(0), ProfileTheme.canvas],
@@ -1464,7 +1464,7 @@ private struct SettingsView: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.horizontal, showsValuePill ? 10 : 0)
                     .padding(.vertical, showsValuePill ? 4 : 0)
-                    .overlay(if showsValuePill { Capsule().strokeBorder(ProfileTheme.separator, lineWidth: 0.5) })
+                    .overlay(showsValuePill ? AnyView(Capsule().strokeBorder(ProfileTheme.separator, lineWidth: 0.5)) : AnyView(Color.clear))
             }
             Image(systemName: isExternal ? "arrow.up.right" : "chevron.right")
                 .font(.caption.weight(.medium))

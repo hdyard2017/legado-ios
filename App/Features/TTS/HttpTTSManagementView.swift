@@ -112,7 +112,7 @@ struct HttpTTSManagementView: View {
             }
             .onDelete { offsets in Task { await model.delete(at: offsets) } }
         }
-        .overlay(if model.engines.isEmpty { ReadingUnavailableView("没有在线朗读引擎", systemImage: "waveform", description: Text("可恢复内置引擎或导入 HTTP TTS JSON。")) })
+        .overlay(model.engines.isEmpty ? AnyView(ReadingUnavailableView("没有在线朗读引擎", systemImage: "waveform", description: Text("可恢复内置引擎或导入 HTTP TTS JSON。"))) : AnyView(Color.clear))
         .navigationTitle("在线朗读引擎")
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {

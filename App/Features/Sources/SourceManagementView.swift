@@ -123,7 +123,7 @@ struct SourceManagementView: View {
                 .listStyle(.insetGrouped)
                 .readingScrollContentBackgroundHidden()
                 .background(ReadingTheme.groupedCanvas)
-                .overlay(if library.isWorking { ProgressView() })
+                .overlay(library.isWorking ? AnyView(ProgressView()) : AnyView(Color.clear))
             }
         }
         .navigationTitle("书源")
