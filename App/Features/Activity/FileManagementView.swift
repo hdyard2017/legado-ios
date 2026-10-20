@@ -258,7 +258,7 @@ struct FileManagementView: View {
         .sheet(item: $model.readyExport, onDismiss: { model.finishExport() }) { file in
             FileExportPicker(url: file.url) { model.readyExport = nil }
         }
-        .readingAlert("文件操作失败", messageText: model.errorMessage ?? "未知错误", isPresented: Binding(get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } })) {
+        .readingAlert("文件操作失败", isPresented: Binding(get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } }), messageText: model.errorMessage ?? "未知错误") {
             Button("好") { model.errorMessage = nil }
         }}
 

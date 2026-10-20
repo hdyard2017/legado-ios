@@ -1028,6 +1028,11 @@ extension View {
     /// - iOS 15+：使用系统 `onSubmit`。
     /// - iOS 14：SwiftUI 没有 `onSubmit`，
     ///   退化为监听 `UITextField` 的回车通知。
+    /// 必须标注 `@ViewBuilder`：两个分支返回不同类型
+    /// （`readingOnSubmit15` 的结果与 `readingSubmitOnReturn` 的结果），
+    /// 没有 ViewBuilder 时会报
+    /// "branches have mismatching types 'some View' and 'some View'"。
+    @ViewBuilder
     func readingOnSubmit(action: @escaping () -> Void) -> some View {
         if #available(iOS 15.0, *) {
             readingOnSubmit15(action: action)
@@ -1047,8 +1052,10 @@ private struct ReadingReturnKeyModifier: ViewModifier {
     let action: () -> Void
 
     func body(content: Content) -> some View {
+        // `UITextField.textDidEndOnExitNotification` 这个名字在 UIKit 里并不存在，
+        // 真正对应「按下回车」的是 `UITextField.didEndOnExitNotification`。
         content.onReceive(
-            NotificationCenter.default.publisher(for: UITextField.textDidEndOnExitNotification)
+            NotificationCenter.default.publisher(for: UITextField.didEndOnExitNotification)
         ) { _ in
             action()
         }
@@ -1216,7 +1223,14 @@ extension View {
         style: ReadingAlertStyle = .alert,
         @ViewBuilder actions: (D) -> some View
     ) -> some View {
-        let actionViews = actions(data)
+        // `data` 为 nil 时弹窗不显示（与 iOS 15 的 presenting 语义一致），
+        // 但 `@ViewBuilder actions` 闭包需要一个具体值。
+        // 这里在 data 为 nil 时传一个占位空视图，
+        // 由于 isPresented 同样为 false，弹窗不会真的出现。
+        let actionViews: AnyView = {
+            guard let data else { return AnyView(EmptyView()) }
+            return AnyView(actions(data))
+        }()
         return modifier(ReadingAlertModifier(
             title: String(title),
             isPresented: isPresented,
@@ -1267,7 +1281,10 @@ extension View {
         buttons: [ReadingAlertButton] = [],
         @ViewBuilder actions: (D) -> some View
     ) -> some View {
-        let actionViews = actions(data)
+        let actionViews: AnyView = {
+            guard let data else { return AnyView(EmptyView()) }
+            return AnyView(actions(data))
+        }()
         return modifier(ReadingAlertModifier(
             title: String(title),
             isPresented: isPresented,
@@ -1937,9 +1954,10 @@ extension View {
     /// iOS 15 才支持滑动操作；iOS 14 上退化为空操作，
     /// 用户仍可通过点击进入详情页完成同样的操作。
     /// - Parameter edge: 滑动方向。系统的 `swipeActions` 只支持左右，
-    ///   因此用 `HorizontalEdge` 而不是通用的 `Edge`。
+    ///   且 `HorizontalEdge` 类型本身是 iOS 15 才引入的，
+    ///   因此这里用自建的 `ReadingHorizontalEdge`。
     func readingSwipeActions(
-        edge: HorizontalEdge = .trailing,
+        edge: ReadingHorizontalEdge = .trailing,
         allowsFullSwipe: Bool = true,
         @ViewBuilder content: () -> some View
     ) -> some View {
@@ -1954,8 +1972,24 @@ extension View {
     }
 }
 
+/// 横向滑动方向的跨版本表示。
+///
+/// iOS 15 才引入 `HorizontalEdge` 类型，这里自建等价枚举。
+enum ReadingHorizontalEdge {
+    case leading
+    case trailing
+
+    @available(iOS 15.0, *)
+    var swiftUIValue: HorizontalEdge {
+        switch self {
+        case .leading: return .leading
+        case .trailing: return .trailing
+        }
+    }
+}
+
 private struct ReadingSwipeActionsModifier: ViewModifier {
-    var edge: HorizontalEdge
+    var edge: ReadingHorizontalEdge
     var allowsFullSwipe: Bool
     /// 必须是 `() -> AnyView`：`() -> some View` 作为存储属性
     /// 没有底层类型可推断，编译器会报
@@ -1964,7 +1998,9 @@ private struct ReadingSwipeActionsModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         if #available(iOS 15.0, *) {
-            content.swipeActions(edge: edge, allowsFullSwipe: allowsFullSwipe, content: self.content)
+            content.swipeActions(edge: edge.swiftUIValue,
+                                 allowsFullSwipe: allowsFullSwipe,
+                                 content: self.content)
         } else {
             content
         }
@@ -2088,7 +2124,7 @@ private struct ReadingConfirmationAlertModifier<Item: Identifiable>: ViewModifie
                 get: { item.wrappedValue != nil },
                 set: { if !$0 { item.wrappedValue = nil } }
             ),
-            message: item.wrappedValue.map(message),
+            messageText: item.wrappedValue.map(message),
             buttons: [
                 ReadingAlertButton("取消", kind: .cancel),
                 ReadingAlertButton(item.wrappedValue.map(confirmTitle) ?? "", kind: .destructive) { [item] in
@@ -2147,18 +2183,17 @@ private struct ReadingItemAlertModifier<Item: Identifiable>: ViewModifier {
                 get: { item.wrappedValue != nil },
                 set: { if !$0 { item.wrappedValue = nil } }
             ),
-            actions: {
-                Button(confirmTitle) {
-                    if let value = item.wrappedValue { onConfirm(value) }
-                }
-            },
-            message: { Text(item.wrappedValue.map(message) ?? "") },
+            messageText: item.wrappedValue.map(message),
             buttons: [
                 ReadingAlertButton(confirmTitle) { [item] in
                     if let value = item.wrappedValue { onConfirm(value) }
                 }
             ]
-        )
+        ) {
+            Button(confirmTitle) {
+                if let value = item.wrappedValue { onConfirm(value) }
+            }
+        }
     }
 }
 // MARK: - 颜色工具（iOS 14 可用）

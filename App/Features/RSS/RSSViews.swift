@@ -500,7 +500,7 @@ private struct RSSPhotoView: View {
                 ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() } }
             }
             .readingTask(id:  value) { await load() }
-            .readingAlert("图片", messageText: message ?? "", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) { Button("好") { message = nil } }}
+            .readingAlert("图片", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } }), messageText: message ?? "") { Button("好") { message = nil } }}
     }
 
     private func load() async {

@@ -42,13 +42,15 @@ struct SourceEditorView: View {
                 )) {
                     if let debugSource { SourceDebugView(source: debugSource) }
                 }
-                .readingAlert("无法完成操作", messageText: errorMessage ?? "") }
-                .readingConfirmationDialog("放弃未保存的修改？", isPresented: $showsDiscard, titleVisibility: .visible) {
-                    Button("放弃修改") { dismiss() }
-                    .readingRole(.destructive, isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
+                .readingAlert("无法完成操作", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } }), messageText: errorMessage ?? "") {
                     Button("好") {}
                     .readingRole(.cancel)
-                }}
+                }
+                .readingConfirmationDialog("放弃未保存的修改？", isPresented: $showsDiscard, titleVisibility: .visible) {
+                    Button("放弃修改") { dismiss() }
+                    .readingRole(.destructive)
+                }
+        }
         .readingInteractiveDismissDisabled(isDirty || isSaving)
     }
 
