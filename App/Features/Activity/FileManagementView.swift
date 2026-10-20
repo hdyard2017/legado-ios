@@ -154,7 +154,7 @@ struct FileManagementView: View {
             }
         }
         .disabled(model.isWorking)
-        .overlay(if: model.isWorking) { ProgressView("正在处理文件…").padding().readingMaterialBackground(.regular) }
+        .overlay(model.isWorking ? AnyView(ProgressView("正在处理文件…").padding().readingMaterialBackground(.regular)) : AnyView(Color.clear))
         .readingTask { await model.reload(library) }
         .onChange(of: library.books) { _ in Task { await model.reload(library) } }
         .onChange(of: query) { _ in selection.removeAll() }

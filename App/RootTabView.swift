@@ -669,7 +669,7 @@ private struct LocalBookImportReviewView: View {
                     }
                 }
             }
-            .overlay(if: isImporting { ProgressView("正在导入…") })
+            .overlay(isImporting ? AnyView(ProgressView("正在导入…")) : AnyView(Color.clear))
             .navigationTitle("导入本地书")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

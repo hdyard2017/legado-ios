@@ -61,7 +61,7 @@ struct RSSHomeView: View {
             if case .failure(let error) = result { library.errorMessage = error.localizedDescription }
         })
         let status = AnyView(exporting
-            .overlay(if: library.isWorking) { ProgressView().readingControlSize(.large) }
+            .overlay(library.isWorking ? AnyView(ProgressView().readingControlSize(.large)) : AnyView(Color.clear))
             .readingAlert("RSS操作失败", isPresented: Binding(get: { library.errorMessage != nil }, set: { if !$0 { library.errorMessage = nil } })) {
             Button("好") { library.errorMessage = nil }
         } message: { Text(library.errorMessage ?? "") })
@@ -123,7 +123,7 @@ struct RSSHomeView: View {
                 let values = offsets.map { filteredStars[$0] }
                 Task { for value in values { await library.removeStar(value) } }
             }
-        }.overlay(if: filteredStars.isEmpty) { ReadingUnavailableView("没有收藏", systemImage: "star") }.listStyle(.plain)
+        }.overlay(filteredStars.isEmpty ? AnyView(ReadingUnavailableView("没有收藏", systemImage: "star")) : AnyView(Color.clear)).listStyle(.plain)
     }
 
     private var recordList: some View {
@@ -131,7 +131,7 @@ struct RSSHomeView: View {
             if let source = library.sources.first(where: { $0.sourceUrl == record.origin }) {
                 NavigationLink { RSSArticleDetailView(article: record.article, source: source) } label: { RSSArticleRow(article: record.article) }
             } else { RSSArticleRow(article: record.article) }
-        }.overlay(if: filteredRecords.isEmpty) { ReadingUnavailableView("没有阅读记录", systemImage: "clock") }.listStyle(.plain)
+        }.overlay(filteredRecords.isEmpty ? AnyView(ReadingUnavailableView("没有阅读记录", systemImage: "clock")) : AnyView(Color.clear)).listStyle(.plain)
     }
 
     private var filteredSources: [RssSource] { library.sources.filter { searchText.isEmpty || $0.sourceName.localizedCaseInsensitiveContains(searchText) || $0.sourceUrl.localizedCaseInsensitiveContains(searchText) || ($0.sourceGroup ?? "").localizedCaseInsensitiveContains(searchText) } }
@@ -158,7 +158,7 @@ private struct RSSArticleListView: View {
             }
             articleCollection
         }
-        .overlay(if: library.articles.isEmpty && !library.isWorking) { ReadingUnavailableView("没有文章", systemImage: "newspaper") }
+        .overlay(library.articles.isEmpty && !library.isWorking ? AnyView(ReadingUnavailableView("没有文章", systemImage: "newspaper")) : AnyView(Color.clear))
         .navigationTitle(source.sourceName)
         .readingSearchable(text: $searchKey, prompt: "源内搜索")
         .readingRefreshable { await refresh() }
@@ -292,7 +292,7 @@ private struct RSSArticleCard: View {
         }
         .background(style == 3 ? Color(.secondarySystemBackground) : .clear)
         .clipShape(RoundedRectangle(cornerRadius: style == 3 ? 12 : 0, style: .continuous))
-        .overlay(if: style == 3) { RoundedRectangle(cornerRadius: 12).stroke(.primary.opacity(0.08)) }
+        .overlay(style == 3 ? AnyView(RoundedRectangle(cornerRadius: 12).stroke(.primary.opacity(0.08))) : AnyView(Color.clear))
     }
 
     @ViewBuilder private var articleImage: some View {
