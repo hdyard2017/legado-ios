@@ -1076,25 +1076,41 @@ private struct ReadingReturnKeyObserver: UIViewRepresentable {
     func makeUIView(context: Context) -> UIView {
         let view = UIView(frame: .zero)
         view.isUserInteractionEnabled = false
-        // 视图出现后异步查找第一响应者（此时文本框可能还没获得焦点）。
+        // 视图出现后延后一拍再查找第一响应者
+        // （此刻文本框可能还没获得焦点）。
+        //
+        // 用 `DispatchQueue.main.async` 而不是 `Task`：
+        // `Task` 的闭包是 `sending` 的，捕获 `context` 会报
+        // "sending value of non-Sendable type ... risks causing data races"。
+        let coordinator = context.coordinator
         DispatchQueue.main.async {
-            context.coordinator.attach()
+            coordinator.attach()
         }
         return view
     }
 
     func updateUIView(_ uiView: UIView, context: Context) {
+        let coordinator = context.coordinator
         DispatchQueue.main.async {
-            context.coordinator.attach()
+            coordinator.attach()
         }
     }
 
     func makeCoordinator() -> Coordinator { Coordinator(action: action) }
 
-    /// 与项目内其他 `UIViewRepresentable` 的协调器保持一致，
-    /// 不额外标注 `@MainActor`——`UIViewRepresentable` 的
-    /// `makeCoordinator` / `updateUIView` 本身已在主线程上下文。
-    final class Coordinator: NSObject {
+    /// 协调器标注 `@unchecked Sendable`。
+    ///
+    /// 它会通过 `DispatchQueue.main.async { }` 被调用，
+    /// 而该闭包是 `sending` 的；若协调器不是 `Sendable`，
+    /// 编译器会报
+    /// "sending value of non-Sendable type 'Coordinator' risks causing data races"。
+    ///
+    /// 它的全部状态（`observed` 文本框、`action` 闭包）都只在主线程访问，
+    /// 因此 `@unchecked Sendable` 是安全的——
+    /// 项目内 `ReaderSpeechController` / `AppDiagnostics` 等处也是同样写法。
+    final class Coordinator: NSObject, @unchecked Sendable {
+        /// 回车回调。只在主线程被调用（`DispatchQueue.main.async`），
+        /// 因此闭包本身无需额外标注 `@Sendable`。
         private let action: () -> Void
         private weak var observed: UITextField?
 
@@ -1102,15 +1118,13 @@ private struct ReadingReturnKeyObserver: UIViewRepresentable {
             self.action = action
         }
 
-        deinit {
-            // 移除 target-action，避免文本框持有已释放的协调器。
-            observed?.removeTarget(self, action: #selector(handleExit), for: .editingDidEndOnExit)
-        }
-
         /// 找到当前第一响应者文本框并挂上回车监听。
+        ///
+        /// 只在主线程被调用（`DispatchQueue.main.async`）。
         func attach() {
             guard let field = Self.currentFirstResponder() as? UITextField else { return }
             guard observed !== field else { return }
+            // 先摘掉上一个文本框上的监听，避免重复触发。
             observed?.removeTarget(self, action: #selector(handleExit), for: .editingDidEndOnExit)
             observed = field
             field.addTarget(self, action: #selector(handleExit), for: .editingDidEndOnExit)
