@@ -32,99 +32,112 @@ struct SourceEditorView: View {
 
     var body: some View {
         ReadingNavigationStack {
-            VStack(spacing: 0) {
-                Picker("编辑模式", selection: Binding(get: { mode }, set: { value in switchMode(value) })) {
-                    Text("字段编辑").tag(0)
-                    Text("JSON").tag(1)
-                }.pickerStyle(.segmented).padding(.horizontal).padding(.vertical, 8)
-                if mode == 1 {
-                    SyntaxCodeEditor(text: $jsonText, language: .json)
-                } else {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack {
-                            ForEach(BookSourceEditorSchema.sections) { section in
-                                Button(section.title) { sectionID = section.id }
-                                    .buttonStyle(.bordered)
-                                    .tint(sectionID == section.id ? ReadingTheme.accent : .secondary)
-                            }
-                            Button("选项") { sectionID = "options" }.buttonStyle(.bordered)
-                                .tint(sectionID == "options" ? ReadingTheme.accent : .secondary)
-                        }.padding(.horizontal)
-                    }.padding(.vertical, 6)
-                    Form {
-                        if sectionID == "options" { options }
-                        else {
-                            Section(currentSection.title) {
-                                ForEach(currentSection.fields) { field in
-                                    NavigationLink {
-                                        RuleCodeFieldView(title: field.title, path: field.path, text: string(field.path),
-                                                          language: field.isJavaScript ? .javascript : .rule, help: field.help)
-                                    } label: {
-                                        VStack(alignment: .leading, spacing: 5) {
-                                            Text(field.title)
-                                            Text(document.value(at: field.path)?.stringValue.isEmpty == false ? document.value(at: field.path)!.stringValue : field.path)
-                                                .font(.caption.monospaced()).foregroundStyle(.secondary).lineLimit(2)
-                                        }
-                                    }
-                                }
-                            }
-                            Section {
-                                Text("点击字段可全屏编辑规则。支持 @css:、XPath、$. JSONPath、@js:、{{key}}、{{page}} 和 ## 替换语法。未识别的扩展字段保留在 JSON 中。")
-                                    .font(.footnote).foregroundStyle(.secondary)
-                            }
-                        }
-                        if !validation.isEmpty {
-                            Section("静态检查") {
-                                ForEach(validation) { issue in
-                                    Label("\(issue.field)：\(issue.message)", systemImage: issue.severity == .error ? "xmark.circle" : "exclamationmark.triangle")
-                                        .font(.footnote).foregroundStyle(issue.severity == .error ? .red : .orange)
-                                }
-                            }
-                        }
-                    }
+            editorContent
+                .navigationTitle(original == nil ? "新建书源" : "编辑书源")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar { editorToolbar }
+                .readingNavigationDestination(isPresented: Binding(
+                    get: { debugSource != nil },
+                    set: { if !$0 { debugSource = nil } }
+                )) {
+                    if let debugSource { SourceDebugView(source: debugSource) }
                 }
-            }
-            .navigationTitle(original == nil ? "新建书源" : "编辑书源")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") { if isDirty { showsDiscard = true } else { dismiss() } }
+                .alert("无法完成操作", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
+                    Button("好", role: .cancel) {}
+                } message: { Text(errorMessage ?? "") }
+                .confirmationDialog("放弃未保存的修改？", isPresented: $showsDiscard, titleVisibility: .visible) {
+                    Button("放弃修改", role: .destructive) { dismiss() }
                 }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Menu("更多", systemImage: "ellipsis.circle") {
-                        Button("格式化 JSON", systemImage: "text.alignleft") { perform { try synchronize(); jsonText = try document.json() } }
-                        Button("校验配置", systemImage: "checkmark.shield") { check() }
-                        Button("调试当前草稿", systemImage: "stethoscope") { perform { try synchronize(); debugSource = try document.source() } }
-                        Button("复制 JSON", systemImage: "doc.on.doc") { perform { try synchronize(); UIPasteboard.general.string = try document.json() } }
-                        Button("粘贴 JSON", systemImage: "doc.on.clipboard") {
-                            perform {
-                                guard let value = UIPasteboard.general.string else { return }
-                                let pasted = try BookSourceEditorDocument(json: value)
-                                _ = try JSONDecoder().decode(BookSource.self, from: Data(pasted.json().utf8))
-                                document = pasted
-                                jsonText = try pasted.json()
-                            }
-                        }
-                    }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(isSaving ? "保存中" : "保存", action: save).disabled(isSaving)
-                }
-            }
-            .readingNavigationDestination(isPresented: Binding(
-                get: { debugSource != nil },
-                set: { if !$0 { debugSource = nil } }
-            )) {
-                if let debugSource { SourceDebugView(source: debugSource) }
-            }
-            .alert("无法完成操作", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
-                Button("好", role: .cancel) {}
-            } message: { Text(errorMessage ?? "") }
-            .confirmationDialog("放弃未保存的修改？", isPresented: $showsDiscard, titleVisibility: .visible) {
-                Button("放弃修改", role: .destructive) { dismiss() }
+        }
+        .readingInteractiveDismissDisabled(isDirty || isSaving)
+    }
+
+    // body 拆成子视图，避免单个 ViewBuilder 表达式过大导致编译器类型检查超时。
+    private var editorContent: some View {
+        VStack(spacing: 0) {
+            Picker("编辑模式", selection: Binding(get: { mode }, set: { value in switchMode(value) })) {
+                Text("字段编辑").tag(0)
+                Text("JSON").tag(1)
+            }.pickerStyle(.segmented).padding(.horizontal).padding(.vertical, 8)
+            if mode == 1 {
+                SyntaxCodeEditor(text: $jsonText, language: .json)
+            } else {
+                sectionTabs
+                Form { fieldSections }
             }
         }
-        .interactiveDismissDisabled(isDirty || isSaving)
+    }
+
+    private var sectionTabs: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack {
+                ForEach(BookSourceEditorSchema.sections) { section in
+                    Button(section.title) { sectionID = section.id }
+                        .buttonStyle(.bordered)
+                        .tint(sectionID == section.id ? ReadingTheme.accent : .secondary)
+                }
+                Button("选项") { sectionID = "options" }.buttonStyle(.bordered)
+                    .tint(sectionID == "options" ? ReadingTheme.accent : .secondary)
+            }.padding(.horizontal)
+        }.padding(.vertical, 6)
+    }
+
+    @ViewBuilder private var fieldSections: some View {
+        if sectionID == "options" { options }
+        else {
+            Section(currentSection.title) {
+                ForEach(currentSection.fields) { field in
+                    NavigationLink {
+                        RuleCodeFieldView(title: field.title, path: field.path, text: string(field.path),
+                                          language: field.isJavaScript ? .javascript : .rule, help: field.help)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text(field.title)
+                            Text(document.value(at: field.path)?.stringValue.isEmpty == false ? document.value(at: field.path)!.stringValue : field.path)
+                                .font(.caption.monospaced()).foregroundStyle(.secondary).lineLimit(2)
+                        }
+                    }
+                }
+            }
+            Section {
+                Text("点击字段可全屏编辑规则。支持 @css:、XPath、$. JSONPath、@js:、{{key}}、{{page}} 和 ## 替换语法。未识别的扩展字段保留在 JSON 中。")
+                    .font(.footnote).foregroundStyle(.secondary)
+            }
+        }
+        if !validation.isEmpty {
+            Section("静态检查") {
+                ForEach(validation) { issue in
+                    Label("\(issue.field)：\(issue.message)", systemImage: issue.severity == .error ? "xmark.circle" : "exclamationmark.triangle")
+                        .font(.footnote).foregroundStyle(issue.severity == .error ? .red : .orange)
+                }
+            }
+        }
+    }
+
+    @ToolbarContentBuilder private var editorToolbar: some ToolbarContent {
+        ToolbarItem(placement: .cancellationAction) {
+            Button("取消") { if isDirty { showsDiscard = true } else { dismiss() } }
+        }
+        ToolbarItem(placement: .topBarTrailing) {
+            Menu("更多", systemImage: "ellipsis.circle") {
+                Button("格式化 JSON", systemImage: "text.alignleft") { perform { try synchronize(); jsonText = try document.json() } }
+                Button("校验配置", systemImage: "checkmark.shield") { check() }
+                Button("调试当前草稿", systemImage: "stethoscope") { perform { try synchronize(); debugSource = try document.source() } }
+                Button("复制 JSON", systemImage: "doc.on.doc") { perform { try synchronize(); UIPasteboard.general.string = try document.json() } }
+                Button("粘贴 JSON", systemImage: "doc.on.clipboard") {
+                    perform {
+                        guard let value = UIPasteboard.general.string else { return }
+                        let pasted = try BookSourceEditorDocument(json: value)
+                        _ = try JSONDecoder().decode(BookSource.self, from: Data(pasted.json().utf8))
+                        document = pasted
+                        jsonText = try pasted.json()
+                    }
+                }
+            }
+        }
+        ToolbarItem(placement: .confirmationAction) {
+            Button(isSaving ? "保存中" : "保存", action: save).disabled(isSaving)
+        }
     }
 
     private var options: some View {

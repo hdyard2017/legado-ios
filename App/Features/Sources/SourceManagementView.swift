@@ -655,7 +655,7 @@ struct SourceImportReviewView: View {
                 }
             }
         }
-        .interactiveDismissDisabled()
+        .readingInteractiveDismissDisabled()
         .alert("导入保存失败", isPresented: Binding(get: { importError != nil }, set: { if !$0 { importError = nil } })) {
             Button("好", role: .cancel) {}
         } message: { Text(importError ?? "") }

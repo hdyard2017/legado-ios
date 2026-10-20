@@ -639,7 +639,7 @@ private struct BookGroupSelectView: View {
                 selected = Set(customGroups.filter { (book.group & $0.groupId) != 0 }.map(\.groupId))
             }
         }
-        .interactiveDismissDisabled()
+        .readingInteractiveDismissDisabled()
     }
 }
 
@@ -700,7 +700,7 @@ private struct LocalBookImportReviewView: View {
                 }
             }
         }
-        .interactiveDismissDisabled(isImporting)
+        .readingInteractiveDismissDisabled(isImporting)
     }
 
     private func finish() {

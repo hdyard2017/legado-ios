@@ -76,7 +76,7 @@ struct ReplaceRuleEditorView: View {
             .onChange(of: rule) { _ in testResult = nil }
             .onChange(of: testTitle + testContent + testBook + testSource) { _ in testResult = nil }
         }
-        .interactiveDismissDisabled(rule != original || isSaving)
+        .readingInteractiveDismissDisabled(rule != original || isSaving)
     }
 
     private var configuration: some View {

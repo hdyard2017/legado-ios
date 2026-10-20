@@ -966,3 +966,28 @@ struct ReadingSubmitTriggers: OptionSet {
         return result
     }
 }
+
+// MARK: - interactiveDismissDisabled（SwiftUI iOS 15+）
+
+extension View {
+    /// `interactiveDismissDisabled(_:)` 的 iOS 14 等价实现。
+    ///
+    /// iOS 15 才允许禁止手势下滑关闭 sheet，iOS 14 没有对应能力。
+    /// 低版本退化为空操作：用户仍可下滑关闭，属于已知的体验差异，
+    /// 不影响功能正确性。
+    func readingInteractiveDismissDisabled(_ disabled: Bool = true) -> some View {
+        modifier(ReadingInteractiveDismissModifier(disabled: disabled))
+    }
+}
+
+private struct ReadingInteractiveDismissModifier: ViewModifier {
+    var disabled: Bool
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if #available(iOS 15.0, *) {
+            content.interactiveDismissDisabled(disabled)
+        } else {
+            content
+        }
+    }
+}
